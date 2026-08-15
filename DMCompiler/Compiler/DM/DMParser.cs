@@ -169,7 +169,7 @@ namespace DMCompiler.Compiler.DM {
                 if (Current().Type != TokenType.EndOfFile) {
                     Token skipFrom = Current();
                     LocateNextTopLevel();
-                    Warning($"Error recovery had to skip to {Current().Location}", token: skipFrom);
+                    Emit(WarningCode.ErrorRecoveryActivated, $"Error recovery had to skip to {Current().Location} due to bad token {skipFrom.PrintableText} at {skipFrom.Location}");
                 }
             }
 
@@ -1910,14 +1910,11 @@ namespace DMCompiler.Compiler.DM {
                 DMASTExpression? b = ExpressionTernary(isTernaryB: true);
                 RequireExpression(ref b);
 
-                if (b is DMASTVoid) b = new DMASTConstantNull(b.Location);
-
                 Consume(TokenType.DM_Colon, "Expected ':'");
                 Whitespace();
 
                 DMASTExpression? c = ExpressionTernary(isTernaryB);
                 RequireExpression(ref c);
-                if (c is DMASTVoid) c = new DMASTConstantNull(c.Location);
 
                 return new DMASTTernary(a.Location, a, b, c);
             }
@@ -2253,7 +2250,8 @@ namespace DMCompiler.Compiler.DM {
                 ConsumeRightParenthesis();
 
                 if (inner is null) {
-                    inner = new DMASTVoid(loc);
+                    Emit(WarningCode.BadExpression, loc, "Attempt to use a void expression");
+                    return new DMASTInvalidExpression(loc);
                 } else {
                     inner = new DMASTExpressionWrapped(loc, inner);
                 }
@@ -2765,6 +2763,13 @@ namespace DMCompiler.Compiler.DM {
                                 "Expected 3 to 5 arguments for rgb()");
 
                         return new DMASTRgb(identifier.Location, callParameters);
+                    }
+                    case "image": {
+                        if (callParameters.Length < 1)
+                            Emit(WarningCode.InvalidArgumentCount, callLoc,
+                                "Expected at least 1 argument for image()");
+
+                        goto default;
                     }
                     case "animate": {
                         if (callParameters.Length is < 1)

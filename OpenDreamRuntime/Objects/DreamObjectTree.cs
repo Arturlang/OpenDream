@@ -15,8 +15,10 @@ using Robust.Server.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Exceptions;
+using Robust.Shared.Utility;
 using MethodImplAttribute = System.Runtime.CompilerServices.MethodImplAttribute;
 using MethodImplOptions = System.Runtime.CompilerServices.MethodImplOptions;
+
 
 namespace OpenDreamRuntime.Objects;
 
@@ -62,7 +64,6 @@ public sealed partial class DreamObjectTree {
     [Dependency] private DreamManager _dreamManager = default!;
     [Dependency] private DreamRefManager _refManager = default!;
     [Dependency] private IDreamMapManager _dreamMapManager = default!;
-    [Dependency] private IMapManager _mapManager = default!;
     [Dependency] private IDreamDebugManager _dreamDebugManager = default!;
     [Dependency] private IEntitySystemManager _entitySystemManager = default!;
     [Dependency] private IEntityManager _entityManager = default!;
@@ -107,7 +108,7 @@ public sealed partial class DreamObjectTree {
 
     public TreeEntry GetTreeEntry(string path) {
         if (!_pathToType.TryGetValue(path, out TreeEntry? type)) {
-            throw new Exception($"Object '{path}' does not exist");
+            throw new DMException($"Object '{path}' does not exist");
         }
 
         return type;
@@ -184,9 +185,9 @@ public sealed partial class DreamObjectTree {
         if (type.ObjectDefinition.IsSubtypeOf(Particles))
             return new DreamObjectParticles(type.ObjectDefinition);
         if (type.ObjectDefinition.IsSubtypeOf(Client))
-            throw new Exception("Cannot create objects of type /client");
+            throw new DMException("Cannot create objects of type /client");
         if (type.ObjectDefinition.IsSubtypeOf(Turf))
-            throw new Exception("New turfs must be created by the map manager");
+            throw new DMException("New turfs must be created by the map manager");
         if (type.ObjectDefinition.IsSubtypeOf(Exception))
             return new DreamObjectException(type.ObjectDefinition);
         if (type.ObjectDefinition.IsSubtypeOf(Callee))
@@ -379,11 +380,12 @@ public sealed partial class DreamObjectTree {
         //Third pass: Load each type's vars and procs
         //This must happen top-down from the root of the object tree for inheritance to work
         //Thus, the enumeration of GetAllDescendants()
+        var mapSystem = _entitySystemManager.GetEntitySystem<SharedMapSystem>();
         uint treeIndex = 0;
         foreach (TreeEntry type in GetAllDescendants(Root)) {
             int typeId = type.Id;
             DreamTypeJson jsonType = types[typeId];
-            var definition = new DreamObjectDefinition(_dreamManager, _refManager, this, _atomManager, _dreamMapManager, _mapManager, _dreamResourceManager, _walkManager, _entityManager, _serializationManager, _appearanceSystem, _transformSystem, _pvsOverrideSystem, _metaDataSystem, _verbSystem, _particlesSystem, type);
+            var definition = new DreamObjectDefinition(_dreamManager, _refManager, this, _atomManager, _dreamMapManager, mapSystem, _dreamResourceManager, _walkManager, _entityManager, _serializationManager, _appearanceSystem, _transformSystem, _pvsOverrideSystem, _metaDataSystem, _verbSystem, _particlesSystem, type);
 
             type.ObjectDefinition = definition;
             type.TreeIndex = treeIndex++;
@@ -589,6 +591,31 @@ public sealed class TreeEntry {
         Name = (lastSlash != -1) ? path.Substring(lastSlash + 1) : path;
         Path = path;
         Id = id;
+    }
+
+    public bool TryGetTypeVar(string field, out DreamValue value) {
+        switch(field) {
+            case "parent_type":
+                if(ParentEntry == ObjectDefinition.ObjectTree.Root)
+                    value = DreamValue.Null;
+                else
+                    value = new(ParentEntry);
+                return true;
+            case "type":
+                value = new(this);
+                return true;
+            case "vars":
+                // Unimplemented
+                value = DreamValue.Null;
+                return false;
+            default:
+                var success =
+                    (ObjectDefinition.Variables.TryGetValue(field, out value)) ||
+                    (ObjectDefinition.GlobalVariables.TryGetValue(field, out var globalIndex)) && ObjectDefinition.DreamManager.Globals.TryGetValue(globalIndex, out value);
+
+                value.IncRef(); // globals
+                return success;
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

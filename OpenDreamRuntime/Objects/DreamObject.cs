@@ -42,13 +42,20 @@ public class DreamObject {
 
     public virtual bool ShouldCallNew => true;
 
+    /// <summary>
+    ///     Whether this object gets deleted once nothing references it anymore.
+    ///     Objects that opt out are still reference counted, they just never die of their own accord;
+    ///     an explicit del() still deletes them.
+    /// </summary>
+    public virtual bool ShouldGarbageCollect => true;
+
     // Shortcuts to IoC dependencies & entity systems
     protected DreamManager DreamManager => ObjectDefinition.DreamManager;
     protected DreamRefManager DreamRefManager => ObjectDefinition.DreamRefManager;
     protected DreamObjectTree ObjectTree => ObjectDefinition.ObjectTree;
     protected AtomManager AtomManager => ObjectDefinition.AtomManager;
     protected IDreamMapManager DreamMapManager => ObjectDefinition.DreamMapManager;
-    protected IMapManager MapManager => ObjectDefinition.MapManager;
+    protected SharedMapSystem MapManager => ObjectDefinition.MapManager;
     protected DreamResourceManager DreamResourceManager => ObjectDefinition.DreamResourceManager;
     protected WalkManager WalkManager => ObjectDefinition.WalkManager;
     protected IEntityManager EntityManager => ObjectDefinition.EntityManager;
@@ -171,7 +178,8 @@ public class DreamObject {
         if (IsManagedByQdel()) {
             Deleting = true;
             HandleDeletion();
-        } else {
+        } else if (ShouldGarbageCollect) {
+            // Areas opt out of collection entirely (upstream #2679).
             Delete();
         }
     }
@@ -341,7 +349,7 @@ public class DreamObject {
             case "type":
             case "parent_type":
             case "vars":
-                throw new Exception($"Cannot set var \"{varName}\"");
+                throw new DMException($"Cannot set var \"{varName}\"");
             case "tag":
                 value.TryGetValueAsString(out var newTag);
 
@@ -349,13 +357,13 @@ public class DreamObject {
                 break;
             default:
                 if (ObjectDefinition.ConstVariables is not null && ObjectDefinition.ConstVariables.Contains(varName))
-                    throw new Exception($"Cannot set const var \"{varName}\" on {ObjectDefinition.Type}");
+                    throw new DMException($"Cannot set const var \"{varName}\" on {ObjectDefinition.Type}");
                 if (ObjectDefinition.GlobalVariables.TryGetValue(varName, out var globalIndex)) {
                     DreamManager.SetGlobal(globalIndex, value);
                     break;
                 }
                 if (!ObjectDefinition.Variables.ContainsKey(varName))
-                    throw new Exception($"Cannot set var \"{varName}\" on {ObjectDefinition.Type}");
+                    throw new DMException($"Cannot set var \"{varName}\" on {ObjectDefinition.Type}");
 
                 SetVariableValue(varName, value);
                 break;

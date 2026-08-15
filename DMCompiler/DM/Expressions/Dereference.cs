@@ -350,15 +350,15 @@ internal sealed class ScopeReference(DMObjectTree objectTree, Location location,
             return false;
         }
 
-        if (expression is Field && dmVar.TryAsConstant(compiler, out constant)) {
+        if (expression is Field or GlobalField && dmVar.TryAsConstant(compiler, out constant)) {
             return true;
         }
 
-        if (expression is not IConstantPath) {
-            constant = null;
-            return false;
+        if (dmVar.IsConst || expression is IConstantPath) {
+            return dmVar.Value!.TryAsConstant(compiler, out constant);
         }
 
-        return dmVar.Value!.TryAsConstant(compiler, out constant);
+        constant = null;
+        return false;
     }
 }

@@ -676,19 +676,22 @@ internal sealed partial class ControlBrowser : InterfaceControl {
             if (newUri is {Scheme: "http", Host: "127.0.0.1"}) {
                 Stream stream;
                 HttpStatusCode status;
-                var path = new ResPath(newUri.AbsolutePath);
-                if (path.Filename.Equals("favicon.ico", StringComparison.OrdinalIgnoreCase)) {
+                var resource = new ResPath(newUri.AbsolutePath);
+                var path = HttpUtility.UrlDecode(resource.CanonPath); // files are saved in decoded form
+
+                if (resource.Filename.Equals("favicon.ico", StringComparison.OrdinalIgnoreCase)) {
                     stream = Stream.Null;
                     status = HttpStatusCode.NotFound;
                 } else if (TryServeIconResourceUrl(newUri, out stream)) {
                     status = HttpStatusCode.OK;
-                } else if (!_dreamResource.EnsureCacheFile(newUri.AbsolutePath)) {
+                } else if (!_dreamResource.EnsureCacheFile(path)) {
                     stream = Stream.Null;
                     status = HttpStatusCode.NotFound;
                 } else {
                     try {
+                        // Shared read: the cache file may be rewritten while a browser holds it open.
                         stream = _resourceManager.UserData.Open(
-                            _dreamResource.GetCacheFilePath(newUri.AbsolutePath),
+                            _dreamResource.GetCacheFilePath(path),
                             FileMode.Open,
                             FileAccess.Read,
                             FileShare.ReadWrite | FileShare.Delete);
@@ -697,7 +700,7 @@ internal sealed partial class ControlBrowser : InterfaceControl {
                         stream = Stream.Null;
                         status = HttpStatusCode.NotFound;
                     } catch (Exception e) {
-                        _sawmill.Error($"Exception while loading file from {newUri}:\n{e}");
+                        _sawmill.Error($"Exception while loading file from {path}:\n{e}");
                         stream = Stream.Null;
                         status = HttpStatusCode.InternalServerError;
                     }
@@ -705,9 +708,10 @@ internal sealed partial class ControlBrowser : InterfaceControl {
 
                 var mimeType = TryParseResourceRef(newUri.AbsolutePath, out _) && newUri.Query != string.Empty
                     ? "image/png"
-                    : FileExtensionMimeTypes.GetValueOrDefault(path.Extension, "application/octet-stream");
+                    : FileExtensionMimeTypes.GetValueOrDefault(resource.Extension, "application/octet-stream");
                 if (status == HttpStatusCode.OK && mimeType == "text/html")
                     stream = AddBrowserShims(stream);
+
 
                 context.DoRespondStream(stream, mimeType, status);
             }

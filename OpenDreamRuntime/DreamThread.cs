@@ -90,7 +90,7 @@ namespace OpenDreamRuntime {
                 case "hidden":
                     return new DreamValue((Attributes & ProcAttributes.Hidden) == ProcAttributes.Hidden ? 1 : 0);
                 default:
-                    throw new Exception($"Cannot get field \"{field}\" from {OwningType}.{Name}()");
+                    throw new DMException($"Cannot get field \"{field}\" from {OwningType}.{Name}()");
             }
         }
 
@@ -154,6 +154,7 @@ namespace OpenDreamRuntime {
         public DreamObject? Usr;
         public int ArgumentCount;
         public abstract DreamProc? Proc { get; }
+        public ProcState? Caller { get; set; }
 
         protected void Initialize(DreamThread thread, bool waitFor) {
             Thread = thread;
@@ -396,6 +397,7 @@ namespace OpenDreamRuntime {
                 _stack.Push(_current);
             }
 
+            state.Caller = _current;
             _current = state;
         }
 
@@ -611,9 +613,17 @@ namespace OpenDreamRuntime {
             AppendStackTrace(ErrorMessageBuilder);
             ErrorMessageBuilder.AppendLine();
 
-            ErrorMessageBuilder.AppendLine("=C# StackTrace=");
-            ErrorMessageBuilder.AppendLine(exception.ToString());
-            ErrorMessageBuilder.AppendLine();
+            #if DEBUG
+                    ErrorMessageBuilder.AppendLine("=C# StackTrace=");
+                    ErrorMessageBuilder.AppendLine(exception.ToString());
+                    ErrorMessageBuilder.AppendLine();
+            #else
+                    if (exception is not DMException) {
+                        ErrorMessageBuilder.AppendLine("=C# StackTrace=");
+                        ErrorMessageBuilder.AppendLine(exception.ToString());
+                        ErrorMessageBuilder.AppendLine();
+                    }
+            #endif
 
             var msg = ErrorMessageBuilder.ToString();
 

@@ -48,7 +48,7 @@
 	var/x
 	var/y
 	var/z
-	var/list/vis_contents = list()
+	var/list/vis_contents
 
 	var/dir
 	var/icon

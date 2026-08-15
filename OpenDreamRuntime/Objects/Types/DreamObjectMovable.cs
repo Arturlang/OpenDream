@@ -36,6 +36,26 @@ public class DreamObjectMovable : DreamObjectAtom {
         set => SetScreenLoc(value);
     }
 
+    public DreamObjectParticles? Particles {
+        get;
+        set {
+            if(field == value)
+                return;
+
+            if(field is not null) {
+                field.DecRef();
+                field.RemoveOwner(this);
+            }
+
+            field = value;
+
+            if(value is not null) {
+                value.AddOwner(this);
+                value.IncRef();
+            }
+        }
+    }
+
     public DreamObjectMovable(DreamObjectDefinition objectDefinition) : base(objectDefinition) {
         Entity = AtomManager.CreateMovableEntity(this);
         SpriteComponent = EntityManager.GetComponent<DMISpriteComponent>(Entity);
@@ -64,8 +84,7 @@ public class DreamObjectMovable : DreamObjectAtom {
     protected override void HandleDeletion() {
         SetLoc(null);
         WalkManager.StopWalks(this);
-        _particles?.Delete();
-        _particles = null;
+        Particles = null;
         AtomManager.DeleteMovableEntity(this);
 
         _contents.DecRef();
@@ -132,8 +151,8 @@ public class DreamObjectMovable : DreamObjectAtom {
                 value = new DreamValue(locs);
                 return true;
             case "particles":
-                _particles?.IncRef();
-                value = new(_particles);
+                Particles?.IncRef();
+                value = new(Particles);
                 return true;
             default:
                 return base.TryGetVar(varName, out value);
@@ -155,7 +174,7 @@ public class DreamObjectMovable : DreamObjectAtom {
             }
             case "loc": {
                 if (!value.TryGetValueAsDreamObject<DreamObjectAtom>(out var newLoc) && !value.IsNull)
-                    throw new Exception($"Invalid loc {value}");
+                    throw new DMException($"Invalid loc {value}");
 
                 SetLoc(newLoc);
                 break;
@@ -198,21 +217,9 @@ public class DreamObjectMovable : DreamObjectAtom {
                 _boundHeight = boundHeight;
                 break;
             case "particles":
-                if (value.TryGetValueAsDreamObject<DreamObjectParticles>(out var particles)) {
-                    if (_particles == particles)
-                        break;
+                value.TryGetValueAsDreamObject<DreamObjectParticles>(out var particles);
 
-                    _particles?.Owner = null;
-                    particles.IncRef();
-                    _particles?.DecRef();
-                    _particles = particles;
-                    _particles.Owner = this;
-                } else {
-                    _particles?.Owner = null;
-                    _particles?.DecRef();
-                    _particles = null;
-                }
-
+                Particles = particles;
                 break;
             default:
                 base.SetVar(varName, value);
@@ -276,7 +283,7 @@ public class DreamObjectMovable : DreamObjectAtom {
                 }
                 break;
             case null:
-                TransformSystem.SetParent(Entity, EntityUid.Invalid);
+                TransformSystem.SetParent(Entity, MapManager.GetMapOrInvalid(MapId.Nullspace));
                 if (_hasLocRef) {
                     ReleaseLocRef();
                     _hasLocRef = false;

@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Sockets;
 using OpenDreamRuntime.Procs.Native;
 using OpenDreamRuntime.Resources;
@@ -314,7 +314,7 @@ public sealed partial class DreamObjectWorld : DreamObject {
                 break;
 
             default:
-                throw new Exception($"Cannot set var \"{varName}\" on world");
+                throw new DMException($"Cannot set var \"{varName}\" on world");
         }
     }
 

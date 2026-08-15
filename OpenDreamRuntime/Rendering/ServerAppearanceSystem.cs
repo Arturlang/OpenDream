@@ -7,6 +7,7 @@ using Robust.Shared.Player;
 using System.Diagnostics;
 using System.Threading;
 using OpenDreamRuntime.Objects.Types;
+using Robust.Shared.Map;
 using Robust.Shared.Serialization;
 using SharedAppearanceSystem = OpenDreamShared.Rendering.SharedAppearanceSystem;
 
@@ -33,6 +34,7 @@ public sealed partial class ServerAppearanceSystem : SharedAppearanceSystem {
     private uint _counter;
 
     [Dependency] private DreamManager _dreamManager = default!;
+    [Dependency] private AtomManager _atomManager = default!;
     [Dependency] private IPlayerManager _playerManager = default!;
     [Dependency] private IRobustSerializer _serializer = default!;
 
@@ -170,18 +172,39 @@ public sealed partial class ServerAppearanceSystem : SharedAppearanceSystem {
         }
     }
 
-    public void Animate(NetEntity entity, MutableAppearance targetAppearance, TimeSpan duration, AnimationEasing easing, int loop, AnimationFlags flags, int delay, bool chainAnim, uint? turfId, string? tag, string? command, string? atomRef) {
-        uint appearanceId = AddAppearance(targetAppearance).MustGetId();
+    public void Animate(EntityUid entity, MutableAppearance targetAppearance, TimeSpan duration, AnimationEasing easing, int loop, AnimationFlags flags, int delay, bool chainAnim, uint? turfId, string? tag, string? command, string? atomRef) {
+        var appearanceId = AddAppearance(targetAppearance).MustGetId();
+        var netEntity = GetNetEntity(entity);
+        var animateEvent = new AnimationEvent(netEntity, appearanceId, duration, easing, loop, flags, delay, chainAnim, turfId, tag, command, atomRef, stop: false);
 
-        RaiseNetworkEvent(new AnimationEvent(entity, appearanceId, duration, easing, loop, flags, delay, chainAnim, turfId, tag, command, atomRef, stop: false));
+        RaiseAnimationEvent(entity, animateEvent);
     }
 
-    public void StopAnimation(NetEntity entity, uint? turfId, string tag) {
-        RaiseNetworkEvent(new AnimationEvent(entity, 0, TimeSpan.Zero, default, 0, default, 0, false, turfId, tag, null, null, stop: true));
+    public void StopAnimation(EntityUid entity, uint? turfId, string tag) {
+        var netEntity = GetNetEntity(entity);
+        var stopEvent = new AnimationEvent(netEntity, 0, TimeSpan.Zero, default, 0, default, 0, false, turfId, tag, null, null, stop: true);
+
+        RaiseAnimationEvent(entity, stopEvent);
+    }
+
+    /// <summary>
+    /// Only send animation events to clients that can actually see the entity.
+    /// Entity-less animations (turfs, images) still have to go to everyone.
+    /// </summary>
+    private void RaiseAnimationEvent(EntityUid entity, AnimationEvent animationEvent) {
+        if (entity.IsValid())
+            RaiseNetworkEvent(animationEvent, Filter.Pvs(entity));
+        else
+            RaiseNetworkEvent(animationEvent); // TODO: Filter for non-entities
     }
 
     public void Flick(DreamObjectAtom atom, int iconId, string? iconState) {
-        RaiseNetworkEvent(new FlickEvent(_dreamManager.GetClientReference(atom), iconId, iconState));
+        var position = _atomManager.GetAtomPosition(atom);
+        var mapCoords = new MapCoordinates(position.X, position.Y, new(position.Z));
+        var clientRef = _dreamManager.GetClientReference(atom);
+        var flickEvent = new FlickEvent(clientRef, iconId, iconState);
+
+        RaiseNetworkEvent(flickEvent, Filter.Pvs(mapCoords));
     }
 }
 

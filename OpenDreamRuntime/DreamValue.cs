@@ -515,15 +515,19 @@ public struct DreamValue : IDisposable, IEquatable<DreamValue> {
             case DreamValueType.DreamObject: {
                 Debug.Assert(_refValue is DreamObject or null, "Failed to cast _refValue to DreamObject");
                 Debug.Assert(other._refValue is DreamObject or null, "Failed to cast other._refValue to DreamObject");
-                var dreamObject = Unsafe.As<DreamObject?>(_refValue);
-                var otherDreamObject = Unsafe.As<DreamObject?>(other._refValue);
+                var thisObj = Unsafe.As<DreamObject>(_refValue);
+                var otherObj = Unsafe.As<DreamObject>(other._refValue);
+                if (thisObj != null && thisObj.Deleted) {
+                    _refValue = null;
+                    thisObj = null;
+                }
 
-                if (dreamObject?.Deleted == true)
-                    dreamObject = null;
-                if (otherDreamObject?.Deleted == true)
-                    otherDreamObject = null;
+                if (otherObj != null && otherObj.Deleted) {
+                    other._refValue = null;
+                    otherObj = null;
+                }
 
-                return dreamObject?.RefId == otherDreamObject?.RefId;
+                return thisObj == otherObj;
             }
         }
 

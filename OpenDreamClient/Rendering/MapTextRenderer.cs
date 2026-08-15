@@ -236,7 +236,8 @@ public sealed class MapTextRenderer(IResourceCache resourceCache, MarkupTagManag
         if (Color.TryFromName(value, out var color))
             return color;
 
-        return Color.TryFromHex(value);
+        // RobustToolbox v288 changed TryFromHex to the bool/out-param form.
+        return Color.TryFromHex(value, out var hexColor) ? hexColor : null;
     }
 
     private static int? ParseFontSize(string value) {

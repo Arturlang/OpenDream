@@ -12,7 +12,6 @@ using OpenDreamRuntime.Resources;
 using OpenDreamShared.Dream;
 using Robust.Shared.Map;
 using Dependency = Robust.Shared.IoC.DependencyAttribute;
-
 namespace OpenDreamRuntime;
 
 public sealed partial class AtomManager {
@@ -575,7 +574,6 @@ public sealed partial class AtomManager {
         MutableAppearance appearance;
         EntityUid targetEntity;
         DMISpriteComponent? targetComponent = null;
-        NetEntity ent = NetEntity.Invalid;
         uint? turfId = null;
 
         if (atom is DreamObjectMovable movable) {
@@ -605,7 +603,6 @@ public sealed partial class AtomManager {
         animate(appearance);
 
         if(targetComponent is not null) {
-            ent = _entityManager.GetNetEntity(targetEntity);
             // Don't send the updated appearance to clients, they will animate it
             DMISpriteSystem?.SetSpriteAppearance(new(targetEntity, targetComponent), appearance, dirty: false);
         } else if (atom is DreamObjectTurf turf) {
@@ -622,17 +619,18 @@ public sealed partial class AtomManager {
             atomRef = _refManager.GetRefString(atomValue);
         }
 
-        AppearanceSystem?.Animate(ent, appearance, duration, easing, loop, flags, delay, chainAnim, turfId, tag, command, atomRef);
+        // Pass the EntityUid so ServerAppearanceSystem can PVS-filter the event.
+        AppearanceSystem?.Animate(targetEntity, appearance, duration, easing, loop, flags, delay, chainAnim, turfId, tag, command, atomRef);
     }
 
     public void StopAppearanceAnimation(DreamObject atom, string tag) {
-        NetEntity ent = NetEntity.Invalid;
+        EntityUid entity = EntityUid.Invalid;
         uint? turfId = null;
 
         if (atom is DreamObjectMovable movable) {
-            ent = _entityManager.GetNetEntity(movable.Entity);
+            entity = movable.Entity;
         } else if (atom is DreamObjectImage { IsMutableAppearance: false } image) {
-            ent = _entityManager.GetNetEntity(image.Entity);
+            entity = image.Entity;
         } else if (atom is DreamObjectTurf turf) {
             turfId = turf.Appearance.MustGetId();
         } else if (atom is DreamObjectArea or DreamObjectClient or DreamObjectFilter) {
@@ -641,7 +639,7 @@ public sealed partial class AtomManager {
             throw new ArgumentException($"Cannot stop appearance animation of {atom}");
         }
 
-        AppearanceSystem?.StopAnimation(ent, turfId, tag);
+        AppearanceSystem?.StopAnimation(entity, turfId, tag);
     }
 
     public bool TryCreateAppearanceFrom(DreamValue value, [NotNullWhen(true)] out MutableAppearance? appearance) {

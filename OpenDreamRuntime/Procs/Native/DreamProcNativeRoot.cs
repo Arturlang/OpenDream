@@ -84,7 +84,7 @@ internal static class DreamProcNativeRoot {
     public static DreamValue NativeProc_ascii2text(NativeProc.Bundle bundle, DreamObject? src, DreamObject? usr) {
         DreamValue ascii = bundle.GetArgument(0, "N");
         if (!ascii.TryGetValueAsInteger(out int asciiValue))
-            throw new Exception($"{ascii} is not a number");
+            throw new DMException($"{ascii} is not a number");
 
         return new DreamValue(char.ConvertFromUtf32(asciiValue));
     }
@@ -256,17 +256,17 @@ internal static class DreamProcNativeRoot {
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ClampLowerBoundNotANumber() {
-        throw new Exception("Lower bound is not a number");
+        throw new DMException("Lower bound is not a number");
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ClampUpperBoundNotANumber() {
-        throw new Exception("Upper bound is not a number");
+        throw new DMException("Upper bound is not a number");
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void ClampUnexpectedType() {
-        throw new Exception("Clamp expects a number or list");
+        throw new DMException("Clamp expects a number or list");
     }
 
     [DreamProc("cmptext")]
@@ -597,7 +597,7 @@ internal static class DreamProcNativeRoot {
         if (file.TryGetValueAsDreamResource(out var resource)) {
             filePath = resource.ResourcePath;
         } else if(!file.TryGetValueAsString(out filePath)) {
-            throw new Exception($"{file} is not a valid file");
+            throw new DMException($"{file} is not a valid file");
         }
 
         if (filePath == null)
@@ -637,7 +637,7 @@ internal static class DreamProcNativeRoot {
             return path;
         }
 
-        throw new Exception("Invalid path argument");
+        throw new DMException("Invalid path argument");
     }
 
     [DreamProc("file2text")]
@@ -732,7 +732,7 @@ internal static class DreamProcNativeRoot {
         if (start > text.Length || start == 0) return new DreamValue(0);
 
         if (start < 0) {
-            start = text.Length + start + 1; //1-indexed
+            start = Math.Max(text.Length + start + 1, 1); //1-indexed
         }
 
         if (end < 0) {
@@ -788,7 +788,15 @@ internal static class DreamProcNativeRoot {
         int start = bundle.GetArgument(2, "Start").MustGetValueAsInteger(); //1-indexed
         int end = bundle.GetArgument(3, "End").MustGetValueAsInteger(); //1-indexed
 
-        if (start <= 0 || start > text.Length || end < 0) return new DreamValue(0);
+        if (start > text.Length || start == 0) return new DreamValue(0);
+
+        if (start < 0) {
+            start = Math.Max(text.Length + start + 1, 1); //1-indexed
+        }
+
+        if (end < 0) {
+            end = text.Length + end + 1; //1-indexed
+        }
 
         if (end == 0 || end > text.Length + 1) {
             end = text.Length + 1;
@@ -798,12 +806,8 @@ internal static class DreamProcNativeRoot {
             return regex.FindHelper(text, start - 1, end - start);
         }
 
-        int needleIndex = text.IndexOf(needle ?? string.Empty, start - 1, end - start, StringComparison.InvariantCulture);
-        if (needleIndex != -1) {
-            return new DreamValue(needleIndex + 1); //1-indexed
-        } else {
-            return new DreamValue(0);
-        }
+        int needleIndex = text.IndexOf(needle, start - 1, end - start, StringComparison.InvariantCulture);
+        return new DreamValue(needleIndex + 1); //1-indexed
     }
 
     [DreamProc("findtextEx_char")]
@@ -997,7 +1001,7 @@ internal static class DreamProcNativeRoot {
             return new DreamValue((fi.LastWriteTime - new DateTime(2000, 1, 1)).TotalMilliseconds / 100);
         }
 
-        throw new Exception("Invalid path argument");
+        throw new DMException("Invalid path argument");
     }
 
     [DreamProc("get_step_to")]
@@ -1122,6 +1126,9 @@ internal static class DreamProcNativeRoot {
     [DreamProcParameter("Icon", Type = DreamValueTypeFlag.DreamResource)]
     [DreamProcParameter("mode", Type = DreamValueTypeFlag.Float, DefaultValue = 0)]
     public static DreamValue NativeProc_icon_states(NativeProc.Bundle bundle, DreamObject? src, DreamObject? usr) {
+        // TODO: implement mode=0 and mode=2 when TILED_ICON_MAP is implemented
+        // var mode = bundle.GetArgument(1, "mode").MustGetValueAsInteger();
+
         var arg = bundle.GetArgument(0, "Icon");
 
         if (arg.TryGetValueAsDreamObject<DreamObjectIcon>(out var iconObj)) {
@@ -1132,7 +1139,7 @@ internal static class DreamProcNativeRoot {
         } else if (arg.IsNull) {
             return DreamValue.Null;
         } else {
-            throw new Exception($"Bad icon {arg}");
+            throw new DMException($"Bad icon {arg}");
         }
     }
 
@@ -1371,7 +1378,7 @@ internal static class DreamProcNativeRoot {
                 return new DreamValue(jsonElement.GetString() ?? ""); // it shouldn't be null but it was throwing a warning
             case JsonValueKind.Number:
                 if (!jsonElement.TryGetSingle(out float floatValue)) {
-                    throw new Exception("Invalid number " + jsonElement);
+                    throw new DMException("Invalid number " + jsonElement);
                 }
 
                 return new DreamValue(floatValue);
@@ -1382,7 +1389,7 @@ internal static class DreamProcNativeRoot {
             case JsonValueKind.Null:
                 return DreamValue.Null;
             default:
-                throw new Exception("Invalid ValueKind " + jsonElement.ValueKind);
+                throw new DMException("Invalid ValueKind " + jsonElement.ValueKind);
         }
     }
 
@@ -1471,7 +1478,7 @@ internal static class DreamProcNativeRoot {
         } else if (value.TryGetValueAsDreamResource(out var dreamResource)) {
             writer.WriteStringValue(dreamResource.ResourcePath);
         } else {
-            throw new Exception($"Cannot json_encode {value}");
+            throw new DMException($"Cannot json_encode {value}");
         }
     }
 
@@ -1480,7 +1487,7 @@ internal static class DreamProcNativeRoot {
     [MustDisposeResource]
     public static DreamValue NativeProc_json_decode(NativeProc.Bundle bundle, DreamObject? src, DreamObject? usr) {
         if (!bundle.GetArgument(0, "JSON").TryGetValueAsString(out var jsonString)) {
-            throw new Exception("Unknown value");
+            throw new DMException("Unknown value");
         }
 
         JsonElement jsonRoot = JsonSerializer.Deserialize<JsonElement>(jsonString);
@@ -1520,7 +1527,7 @@ internal static class DreamProcNativeRoot {
             return new DreamValue(0);
         }
 
-        throw new Exception($"Cannot check length of {value}");
+        throw new DMException($"Cannot check length of {value}");
     }
 
     [DreamProc("length_char")]
@@ -1540,7 +1547,7 @@ internal static class DreamProcNativeRoot {
         DreamValue valFactor = bundle.GetArgument(2, "factor");
 
         if (!valFactor.TryGetValueAsFloatCoerceNull(out var factor))
-            throw new Exception($"lerp factor {valFactor} is not a num");
+            throw new DMException($"lerp factor {valFactor} is not a num");
 
         if (valA.TryGetValueAsFloatCoerceNull(out var floatA) && valB.TryGetValueAsFloatCoerceNull(out var floatB)) {
             return new DreamValue(floatA + (floatB - floatA) * factor);
@@ -1843,7 +1850,7 @@ internal static class DreamProcNativeRoot {
             else if (max.TryGetValueAsString(out var rString) && string.Compare(lString, rString, StringComparison.Ordinal) > 0)
                 max = value;
         } else {
-            throw new Exception($"Cannot compare {max} and {value}");
+            throw new DMException($"Cannot compare {max} and {value}");
         }
 
         return max;
@@ -1883,7 +1890,7 @@ internal static class DreamProcNativeRoot {
     [DreamProc("md5")]
     [DreamProcParameter("T", Type = DreamValueTypeFlag.String | DreamValueTypeFlag.DreamResource)]
     public static DreamValue NativeProc_md5(NativeProc.Bundle bundle, DreamObject? src, DreamObject? usr) {
-        if(bundle.Arguments.Length > 1) throw new Exception("md5() only takes one argument");
+        if(bundle.Arguments.Length > 1) throw new DMException("md5() only takes one argument");
         DreamValue arg = bundle.GetArgument(0, "T");
 
         byte[] bytes;
@@ -1924,7 +1931,7 @@ internal static class DreamProcNativeRoot {
             else if (min.TryGetValueAsString(out var rString) && string.Compare(lString, rString, StringComparison.Ordinal) <= 0)
                 min = value;
         } else {
-            throw new Exception($"Cannot compare {min} and {value}");
+            throw new DMException($"Cannot compare {min} and {value}");
         }
 
         return min;
@@ -2618,68 +2625,11 @@ internal static class DreamProcNativeRoot {
     public static DreamValue NativeProc_replacetext(NativeProc.Bundle bundle, DreamObject? src, DreamObject? usr) {
         DreamValue haystack = bundle.GetArgument(0, "Haystack");
         DreamValue needle = bundle.GetArgument(1, "Needle");
-        DreamValue replacementArg = bundle.GetArgument(2, "Replacement");
-        bundle.GetArgument(3, "Start").TryGetValueAsInteger(out var start); //1-indexed
-        bundle.GetArgument(4, "End").TryGetValueAsInteger(out var end); //1-indexed
+        DreamValue replacement = bundle.GetArgument(2, "Replacement");
+        bundle.GetArgument(3, "Start").TryGetValueAsInteger(out var start);
+        bundle.GetArgument(4, "End").TryGetValueAsInteger(out var end);
 
-        if (needle.TryGetValueAsDreamObject<DreamObjectRegex>(out var regexObject)) {
-            // According to the docs, this is the same as /regex.Replace()
-            return DreamProcNativeRegex.RegexReplace(regexObject, haystack, replacementArg, start, end);
-        }
-
-        if (!haystack.TryGetValueAsString(out var text)) {
-            return DreamValue.Null;
-        }
-
-        if (start == 0) { // Return unmodified if Start is 0
-            return new(text);
-        } else if (start < 0) { // Negative wrap-around
-            start = Math.Max(start + text.Length + 1, 1);
-        }
-
-        var arg3 = replacementArg.TryGetValueAsString(out var replacement);
-
-        if (end <= 0) { // Zero or negative wrap-around
-            end = Math.Max(end + text.Length + 1, start);
-        }
-
-        if (needle.IsNull) { // Insert the replacement after each char except the last
-            if (!arg3) { // No change if no Replacement was given
-                return new DreamValue(text);
-            }
-
-            // A Start of 2 is the same as 1. This only happens when Needle is null.
-            if (start == 1)
-                start = 2;
-
-            // End cannot reach the last char
-            end = Math.Min(end, text.Length);
-
-            StringBuilder result = new StringBuilder();
-            for (int i = 0; i < text.Length; i++) {
-                result.Append(text[i]);
-                if (i >= start - 2 && i < end - 1)
-                    result.Append(replacement);
-            }
-
-            return new DreamValue(result.ToString());
-        }
-
-        if (needle.TryGetValueAsString(out var needleStr)) {
-            string before = text.Substring(0, start - 1);
-            string after = text.Substring(end - 1);
-            string textSub = text.Substring(start - 1, end - start);
-            string replaced = textSub.Replace(needleStr, replacement, StringComparison.OrdinalIgnoreCase);
-
-            StringBuilder newTextBuilder = new();
-            newTextBuilder.Append(before);
-            newTextBuilder.Append(replaced);
-            newTextBuilder.Append(after);
-
-            return new DreamValue(newTextBuilder.ToString());
-        }
-
-        throw new Exception($"Invalid needle {needle}");
+        return DreamProcNativeHelpers.HandleReplaceText(haystack, needle, replacement, start, end, false);
     }
 
     [DreamProc("replacetext_char")]
@@ -2701,53 +2651,12 @@ internal static class DreamProcNativeRoot {
     [DreamProcParameter("End", Type = DreamValueTypeFlag.Float, DefaultValue = 0)]
     public static DreamValue NativeProc_replacetextEx(NativeProc.Bundle bundle, DreamObject? src, DreamObject? usr) {
         DreamValue haystack = bundle.GetArgument(0, "Haystack");
-        DreamValue needleArg = bundle.GetArgument(1, "Needle");
-        DreamValue replacementArg = bundle.GetArgument(2, "Replacement");
+        DreamValue needle = bundle.GetArgument(1, "Needle");
+        DreamValue replacement = bundle.GetArgument(2, "Replacement");
+        bundle.GetArgument(3, "Start").TryGetValueAsInteger(out var start);
+        bundle.GetArgument(4, "End").TryGetValueAsInteger(out var end);
 
-        bundle.GetArgument(3, "Start").TryGetValueAsInteger(out var start); //1-indexed
-        bundle.GetArgument(4, "End").TryGetValueAsInteger(out var end); //1-indexed
-
-        if (needleArg.TryGetValueAsDreamObject<DreamObjectRegex>(out var regexObject)) {
-            return DreamProcNativeRegex.RegexReplace(regexObject, haystack, replacementArg, start, end);
-        }
-
-        if (!haystack.TryGetValueAsString(out var text)) {
-            return DreamValue.Null;
-        }
-
-        var arg3 = replacementArg.TryGetValueAsString(out var replacement);
-
-        if (!needleArg.TryGetValueAsString(out var needle)) {
-            if (!arg3) {
-                return new DreamValue(text);
-            }
-
-            //Insert the replacement after each char except the last char
-            //TODO: Properly support non-default start/end values
-            if (text.Length == 0) {
-                return DreamValue.EmptyString;
-            }
-
-            StringBuilder result = new StringBuilder();
-            for (var pos = 0; pos < text.Length; pos++) {
-                result.Append(text[pos]);
-                if (pos < text.Length - 1)
-                    result.Append(replacement);
-            }
-            return new DreamValue(result.ToString());
-        }
-
-        if (start == 0) { // Return unmodified
-            return new(text);
-        } else if (start < 0) { // Negative wrap-around
-            start = Math.Max(start + text.Length + 1, 1);
-        }
-
-        if (end <= 0) { // Zero and negative wrap-around
-            end = Math.Max(end + text.Length + 1, start);
-        }
-
-        return new DreamValue(text.Substring(start - 1, end - start).Replace(needle, replacement, StringComparison.Ordinal));
+        return DreamProcNativeHelpers.HandleReplaceText(haystack, needle, replacement, start, end, true);
     }
 
     [DreamProc("replacetextEx_char")]
@@ -2822,7 +2731,7 @@ internal static class DreamProcNativeRoot {
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void Rgb2NumBadColor() {
-        throw new Exception("bad color");
+        throw new DMException("bad color");
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -2858,22 +2767,22 @@ internal static class DreamProcNativeRoot {
                 string[] diceList = diceInput.Split('d');
                 if (diceList.Length < 2) {
                     if (!int.TryParse(diceList[0], out sides))
-                        throw new Exception($"Invalid dice value: {diceInput}");
+                        throw new DMException($"Invalid dice value: {diceInput}");
                 } else {
                     if (!int.TryParse(diceList[0], out dice))
-                        throw new Exception($"Invalid dice value: {diceInput}");
+                        throw new DMException($"Invalid dice value: {diceInput}");
 
                     if (!int.TryParse(diceList[1], out sides)) {
                         string[] sideList = diceList[1].Split('+');
 
                         if (!int.TryParse(sideList[0], out sides) || !int.TryParse(sideList[1], out modifier))
-                            throw new Exception($"Invalid dice value: {diceInput}");
+                            throw new DMException($"Invalid dice value: {diceInput}");
                     }
                 }
             } else if (arg.IsNull) {
                 return new DreamValue(1);
             } else if (!arg.TryGetValueAsInteger(out sides)) {
-                throw new Exception($"Invalid dice value: {arg}");
+                throw new DMException($"Invalid dice value: {arg}");
             }
         } else if (!bundle.GetArgument(0, "ndice").TryGetValueAsInteger(out dice) || !bundle.GetArgument(1, "sides").TryGetValueAsInteger(out sides)) {
             return new DreamValue(0);
@@ -2909,7 +2818,7 @@ internal static class DreamProcNativeRoot {
     [DreamProc("sha1")]
     [DreamProcParameter("T", Type = DreamValueTypeFlag.String | DreamValueTypeFlag.DreamResource)]
     public static DreamValue NativeProc_sha1(NativeProc.Bundle bundle, DreamObject? src, DreamObject? usr) {
-        if (bundle.Arguments.Length > 1) throw new Exception("sha1() only takes one argument");
+        if (bundle.Arguments.Length > 1) throw new DMException("sha1() only takes one argument");
         DreamValue arg = bundle.GetArgument(0, "T");
         byte[] bytes;
 
@@ -2982,7 +2891,7 @@ internal static class DreamProcNativeRoot {
     [DreamProc("sign")]
     [DreamProcParameter("A", Type = DreamValueTypeFlag.Float)]
     public static DreamValue NativeProc_sign(NativeProc.Bundle bundle, DreamObject? src, DreamObject? usr) {
-        if (bundle.Arguments.Length != 1) throw new Exception($"expected 1 argument (found {bundle.Arguments.Length})");
+        if (bundle.Arguments.Length != 1) throw new DMException($"expected 1 argument (found {bundle.Arguments.Length})");
         DreamValue arg = bundle.GetArgument(0, "A");
 
         // Any non-num returns 0
@@ -3167,7 +3076,7 @@ internal static class DreamProcNativeRoot {
             end = Math.Min(end + text.Length + 1, text.Length);
 
         if(start == 0 || start > text.Length || start > end)
-            throw new Exception("bad text or out of bounds");
+            throw new DMException("bad text or out of bounds");
 
         string result = text.Remove(start - 1, (end-start)).Insert(start - 1, insertText ?? string.Empty);
 
@@ -3203,7 +3112,7 @@ internal static class DreamProcNativeRoot {
             end = Math.Min(end + textElements.LengthInTextElements + 1, textElements.LengthInTextElements);
 
         if(start == 0 || start > textElements.LengthInTextElements || start > end)
-            throw new Exception("bad text or out of bounds");
+            throw new DMException("bad text or out of bounds");
 
         string result = textElements.SubstringByTextElements(0, start - 1);
         result += insertText ?? string.Empty;
@@ -3427,7 +3336,7 @@ internal static class DreamProcNativeRoot {
         } else if (value.IsNull) {
             return DreamValue.Null;
         } else {
-            throw new Exception($"Invalid argument to text2num: {value}");
+            throw new DMException($"Invalid argument to text2num: {value}");
         }
     }
 
@@ -3551,18 +3460,16 @@ internal static class DreamProcNativeRoot {
         DreamValue dirArg = bundle.GetArgument(0, "dir");
         DreamValue angleArg = bundle.GetArgument(1, "angle");
 
+        if (dirArg.TryGetValueAsDreamObject<DreamObjectIcon>(out var icon)) {
+            DreamObjectIcon clonedIcon = icon.Clone();
+
+            icon.Turn(angleArg);
+            return new(clonedIcon);
+        }
+
         // Handle an invalid angle, defaults to 0
         if (!angleArg.TryGetValueAsFloat(out float angle)) {
             angle = 0;
-        }
-
-        // If Dir is actually an icon, call /icon.Turn
-        if (dirArg.TryGetValueAsDreamObject<DreamObjectIcon>(out var icon)) {
-            // Clone icon here since it's specified to return a new one
-            DreamObjectIcon clonedIcon = icon.Clone();
-
-            DreamProcNativeIcon._NativeProc_TurnInternal(clonedIcon, angle);
-            return new(clonedIcon);
         }
 
         // If Dir is actually a matrix, call /matrix.Turn
@@ -3575,7 +3482,7 @@ internal static class DreamProcNativeRoot {
 
         // If Dir is not an integer, throw
         if (!dirArg.TryGetValueAsInteger(out int possibleDir)) {
-            throw new Exception("expected icon, matrix or integer");
+            throw new DMException("expected icon, matrix or integer");
         }
 
         AtomDirection dir = (AtomDirection)possibleDir;
@@ -3719,7 +3626,7 @@ internal static class DreamProcNativeRoot {
     [DreamProcParameter("Max", Type = DreamValueTypeFlag.Float)]
     [DreamProcParameter("inclusive", Type = DreamValueTypeFlag.Float, DefaultValue = 0)]
     public static DreamValue NativeProc_values_cut_over(NativeProc.Bundle bundle, DreamObject? src, DreamObject? usr) {
-        if (bundle.Arguments.Length < 2 || bundle.Arguments.Length > 3) throw new Exception($"expected 2-3 arguments (found {bundle.Arguments.Length})");
+        if (bundle.Arguments.Length < 2 || bundle.Arguments.Length > 3) throw new DMException($"expected 2-3 arguments (found {bundle.Arguments.Length})");
 
         DreamValue argList = bundle.GetArgument(0, "Alist");
         DreamValue argMax = bundle.GetArgument(1, "Max");
@@ -3733,7 +3640,7 @@ internal static class DreamProcNativeRoot {
     [DreamProcParameter("Min", Type = DreamValueTypeFlag.Float)]
     [DreamProcParameter("inclusive", Type = DreamValueTypeFlag.Float, DefaultValue = 0)]
     public static DreamValue NativeProc_values_cut_under(NativeProc.Bundle bundle, DreamObject? src, DreamObject? usr) {
-        if (bundle.Arguments.Length < 2 || bundle.Arguments.Length > 3) throw new Exception($"expected 2-3 arguments (found {bundle.Arguments.Length})");
+        if (bundle.Arguments.Length < 2 || bundle.Arguments.Length > 3) throw new DMException($"expected 2-3 arguments (found {bundle.Arguments.Length})");
 
         DreamValue argList = bundle.GetArgument(0, "Alist");
         DreamValue argMin = bundle.GetArgument(1, "Min");
@@ -3796,7 +3703,7 @@ internal static class DreamProcNativeRoot {
     [DreamProcParameter("A", Type = DreamValueTypeFlag.DreamObject)]
     [DreamProcParameter("B", Type = DreamValueTypeFlag.DreamObject)]
     public static DreamValue NativeProc_values_dot(NativeProc.Bundle bundle, DreamObject? src, DreamObject? usr) {
-        if (bundle.Arguments.Length != 2) throw new Exception("expected 2 arguments");
+        if (bundle.Arguments.Length != 2) throw new DMException("expected 2 arguments");
 
         DreamValue argA = bundle.GetArgument(0, "A");
         DreamValue argB = bundle.GetArgument(1, "B");
@@ -3824,7 +3731,7 @@ internal static class DreamProcNativeRoot {
     [DreamProc("values_product")]
     [DreamProcParameter("Alist", Type = DreamValueTypeFlag.DreamObject)]
     public static DreamValue NativeProc_values_product(NativeProc.Bundle bundle, DreamObject? src, DreamObject? usr) {
-        if (bundle.Arguments.Length != 1) throw new Exception("expected 1 argument");
+        if (bundle.Arguments.Length != 1) throw new DMException("expected 1 argument");
 
         DreamValue arg = bundle.GetArgument(0, "Alist");
 
@@ -3843,7 +3750,7 @@ internal static class DreamProcNativeRoot {
     [DreamProc("values_sum")]
     [DreamProcParameter("Alist", Type = DreamValueTypeFlag.DreamObject)]
     public static DreamValue NativeProc_values_sum(NativeProc.Bundle bundle, DreamObject? src, DreamObject? usr) {
-        if (bundle.Arguments.Length != 1) throw new Exception("expected 1 argument");
+        if (bundle.Arguments.Length != 1) throw new DMException("expected 1 argument");
 
         DreamValue arg = bundle.GetArgument(0, "Alist");
 
@@ -4055,7 +3962,7 @@ internal static class DreamProcNativeRoot {
         }
 
         if (connection == null) {
-            throw new Exception($"Invalid client {player}");
+            throw new DMException($"Invalid client {player}");
         }
 
         return await connection.WinExists(controlId);
@@ -4079,7 +3986,7 @@ internal static class DreamProcNativeRoot {
         }
 
         if (connection == null) {
-            throw new Exception($"Invalid client {player}");
+            throw new DMException($"Invalid client {player}");
         }
 
         if (string.IsNullOrEmpty(controlId) && paramsValue == "hwmode") {
