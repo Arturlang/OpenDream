@@ -1,6 +1,7 @@
 // NOBYOND - implementation smoke test is not a BYOND parity test
 /proc/RunTest()
 	var/image/image = new
+	var/obj/vis_target = new
 	image.contents = list("inside")
 	image.density = 1
 	image.gender = FEMALE
@@ -13,7 +14,7 @@
 	image.suffix = "suffix"
 	image.text = "text"
 	image.verbs = list()
-	image.vis_contents = list(image)
+	image.vis_contents = list(vis_target)
 
 	ASSERT(image.contents.len == 1)
 	ASSERT(image.contents[1] == "inside")

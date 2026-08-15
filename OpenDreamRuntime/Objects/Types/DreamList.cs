@@ -689,8 +689,9 @@ internal sealed class DreamGlobalVars(DreamObjectDefinition listDef) : DreamList
             throw new DMException($"Invalid var index {key}");
         }
 
-        var root = ObjectTree.Root.ObjectDefinition;
-        if (!root.GlobalVariables.TryGetValue(varName, out var globalId)) {
+        // GlobalNames covers type-scoped statics too, which root.GlobalVariables does not.
+        int globalId = DreamManager.GlobalNames.IndexOf(varName);
+        if (globalId == -1) {
             throw new DMException($"Invalid global {varName}");
         }
 
@@ -701,8 +702,8 @@ internal sealed class DreamGlobalVars(DreamObjectDefinition listDef) : DreamList
 
     public override void SetValue(DreamValue key, DreamValue value, bool allowGrowth = false) {
         if (key.TryGetValueAsString(out var varName)) {
-            var root = ObjectTree.Root.ObjectDefinition;
-            if (!root.GlobalVariables.TryGetValue(varName, out var globalId)) {
+            int globalId = DreamManager.GlobalNames.IndexOf(varName);
+            if (globalId == -1) {
                 throw new DMException($"Cannot set value of undefined global \"{varName}\"");
             }
 

@@ -2992,9 +2992,8 @@ namespace OpenDreamRuntime.Procs {
         #region Helpers
 
         public static bool IsEqual(DreamValue first, DreamValue second) {
-            if (first.Type != second.Type)
-                return false;
-
+            // Mismatched types are unequal, except that a modified type still compares
+            // equal to the plain type it was derived from.
             if (first.Type != second.Type) {
                 if (first.Type == DreamValue.DreamValueType.DreamType &&
                     second.Type == DreamValue.DreamValueType.ModifiedDreamType)

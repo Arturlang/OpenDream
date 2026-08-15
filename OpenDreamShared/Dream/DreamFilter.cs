@@ -121,7 +121,8 @@ public sealed partial record DreamFilterBlur : DreamFilter {
 
 [Serializable, NetSerializable]
 public sealed partial record DreamFilterColor : DreamFilter {
-    [ViewVariables, DataField("color", required: true)] public ColorMatrix Color;
+    // Not required: BYOND accepts filter(type="color") with no color, which is a no-op.
+    [ViewVariables, DataField("color")] public ColorMatrix Color = ColorMatrix.Identity;
     [ViewVariables, DataField("space")] public float Space; // Default is FILTER_COLOR_RGB = 0
 }
 

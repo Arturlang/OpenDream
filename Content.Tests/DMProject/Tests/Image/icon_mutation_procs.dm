@@ -8,7 +8,12 @@
 	I.SwapColor("#ff0000", "#00ff00")
 	ASSERT(I.GetPixel(1, 1) == "#00ff00")
 
-	I.MapColors("#00ff00", "#0000ff")
+	// MapColors takes colour-matrix components, not from/to pairs. An identity
+	// matrix has to leave the icon untouched.
+	I.MapColors(1,0,0, 0,1,0, 0,0,1)
+	ASSERT(I.GetPixel(1, 1) == "#00ff00")
+
+	I.SwapColor("#00ff00", "#0000ff")
 	ASSERT(I.GetPixel(1, 1) == "#0000ff")
 
 	I.Shift(EAST, 1, FALSE)
