@@ -22,13 +22,20 @@ public sealed class Splitter : Container {
         }
     }
 
+    /// <summary>
+    /// Thickness of the drag handle, in pixels.
+    /// </summary>
+    /// <remarks>
+    /// Nothing assigns this, so the initializer is the only thing keeping the handle
+    /// grabbable - without it the splitter is zero pixels wide and cannot be dragged.
+    /// </remarks>
     public float SplitterWidth {
         get;
         set {
             field = value;
             InvalidateMeasure();
         }
-    }
+    } = 5f;
 
     public Control? Left {
         get => _left;

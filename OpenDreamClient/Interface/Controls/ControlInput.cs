@@ -35,6 +35,12 @@ internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlW
     protected override void UpdateElementDescriptor() {
         base.UpdateElementDescriptor();
 
+        // TODO: honour ControlDescriptor.TextColor here. Only INFO reads text-color today,
+        // so a skin that darkens the input bar keeps DreamStylesheet's black font and ends
+        // up with black text on a black background. LineEdit resolves its colour from the
+        // "font-color" style property and Robust has no per-instance style override, so this
+        // needs either an OpenDream LineEdit subclass or a dynamic stylesheet rule.
+
         ResetText();
     }
 

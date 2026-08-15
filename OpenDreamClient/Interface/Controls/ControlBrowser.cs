@@ -743,6 +743,14 @@ internal sealed partial class ControlBrowser : InterfaceControl {
         try {
             Uri newUri = new Uri(context.Url);
 
+            // The error shim reports through an <img> src, which arrives here as a resource
+            // request rather than as a navigation, so BeforeBrowseHandler never sees it.
+            if (newUri is {Scheme: "byond", Host: "odlog"}) {
+                HandleBrowserLog(newUri.Query);
+                context.DoCancel();
+                return;
+            }
+
             if (newUri is {Scheme: "http", Host: "127.0.0.1"}) {
                 Stream stream;
                 HttpStatusCode status;
