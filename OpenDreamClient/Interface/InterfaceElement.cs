@@ -81,6 +81,15 @@ public partial class InterfaceElement {
             (MappingDataNode)_serializationManager.WriteValue(ElementDescriptor.GetType(), ElementDescriptor, alwaysWrite: true);
 
         foreach (var property in original.Keys) {
+            // Prefer whatever the element reports live. The descriptor only holds the values
+            // declared in the DMF, so geometry like size/pos would otherwise come back as it
+            // was written rather than as it was laid out - and TGUI reads its size from a
+            // wildcard winget, so a stale value there mislays the whole interface.
+            if (TryGetProperty(property, out var liveValue)) {
+                yield return (property, liveValue);
+                continue;
+            }
+
             if (!original.TryGet(property, out var node) ||
                 !_serializationManager.TryGetVariableType(ElementDescriptor.GetType(), property, out var propertyDef)) {
                 continue;

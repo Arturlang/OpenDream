@@ -11,6 +11,22 @@ public abstract class OpenDreamCVars {
     public static readonly CVarDef<int> DownloadTimeout =
         CVarDef.Create("opendream.download_timeout", 30, CVar.CLIENTONLY);
 
+    /// <summary>
+    /// When set to a file path, the client writes a JSON dump of every skin element's
+    /// computed properties there shortly after the interface loads, then keeps going.
+    /// Used to diff skin geometry against DreamSeeker without needing a human to look at it.
+    /// Empty (the default) disables the dump entirely.
+    /// </summary>
+    public static readonly CVarDef<string> SkinDumpPath =
+        CVarDef.Create("opendream.skin_dump_path", string.Empty, CVar.CLIENTONLY);
+
+    /// <summary>
+    /// Seconds to wait after the interface loads before writing <see cref="SkinDumpPath"/>,
+    /// so that anchoring and splitter layout have settled.
+    /// </summary>
+    public static readonly CVarDef<float> SkinDumpDelay =
+        CVarDef.Create("opendream.skin_dump_delay", 10f, CVar.CLIENTONLY);
+
     public static readonly CVarDef<bool> AlwaysShowExceptions =
         CVarDef.Create("opendream.always_show_exceptions", false, CVar.SERVERONLY);
 

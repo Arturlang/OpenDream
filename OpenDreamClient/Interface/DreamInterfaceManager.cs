@@ -26,6 +26,8 @@ using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using System.Linq;
 using System.Web;
+using OpenDreamShared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Map;
 
 namespace OpenDreamClient.Interface;
@@ -47,6 +49,7 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
     [Dependency] private IRobustRandom _random = default!;
     [Dependency] private ITimerManager _timerManager = default!;
     [Dependency] private IUriOpener _uriOpener = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
     [Dependency] private IGameController _gameController = default!;
     [Dependency] private ITaskManager _taskManager = default!;
     [Dependency] private IDreamSoundEngine _soundEngine = default!;
@@ -1357,6 +1360,88 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
         if (DefaultWindow.GetClydeWindow() is { } clydeWindow) {
             ClydeWindowIdToControl.Add(clydeWindow.Id, DefaultWindow);
         }
+
+        ScheduleSkinDump();
+    }
+
+    /// <summary>
+    /// Writes every skin element's computed properties to the path in
+    /// <see cref="OpenDreamCVars.SkinDumpPath"/>, if one is configured.
+    ///
+    /// This is the client-side half of the skin parity harness: it produces the same
+    /// information as the "Dump Skin State" verb without needing anyone to click anything,
+    /// so a headless run can be diffed against a DreamSeeker capture.
+    /// </summary>
+    private void ScheduleSkinDump() {
+        var dumpPath = _cfg.GetCVar(OpenDreamCVars.SkinDumpPath);
+        if (string.IsNullOrWhiteSpace(dumpPath))
+            return;
+
+        var delay = _cfg.GetCVar(OpenDreamCVars.SkinDumpDelay);
+
+        // Delayed so anchoring and splitter layout have settled by the time we read them.
+        Timer.Spawn(TimeSpan.FromSeconds(delay), () => {
+            try {
+                WriteSkinDump(dumpPath);
+                _sawmill.Info($"Skin dump written to {dumpPath}");
+            } catch (Exception e) {
+                _sawmill.Error($"Failed to write skin dump to {dumpPath}: {e}");
+            }
+        });
+    }
+
+    /// <remarks>
+    /// Content assemblies are sandboxed and cannot touch System.IO, so the dump goes through
+    /// Robust's UserData. The path is relative to the client's user data directory.
+    /// </remarks>
+    private void WriteSkinDump(string dumpPath) {
+        var json = new StringBuilder();
+        json.Append("{\"engine\":\"opendream\",\"reference_window_size\":");
+
+        var mainWindowSize = WinGet("mainwindow", "size", forceJson: true);
+        json.Append(string.IsNullOrEmpty(mainWindowSize) ? "\"\"" : mainWindowSize);
+
+        json.Append(",\"containers\":[");
+        var containerIds = Windows.Keys.OrderBy(id => id, StringComparer.Ordinal).ToArray();
+        for (var i = 0; i < containerIds.Length; i++) {
+            if (i > 0)
+                json.Append(',');
+            json.Append('"').Append(HttpUtility.JavaScriptStringEncode(containerIds[i])).Append('"');
+        }
+
+        json.Append("],\"elements\":{");
+
+        var first = true;
+        foreach (var containerId in containerIds) {
+            // The window/pane itself, then each of its child controls.
+            AppendElement(json, containerId, containerId, ref first);
+
+            foreach (var control in Windows[containerId].ChildControls) {
+                var childId = control.Id.Value;
+                AppendElement(json, $"{containerId}.{childId}", childId, ref first);
+            }
+        }
+
+        json.Append("}}");
+
+        var path = new ResPath(dumpPath).ToRootedPath();
+        _resourceManager.UserData.CreateDir(path.Directory);
+
+        using var writer = _resourceManager.UserData.OpenWriteText(path);
+        writer.Write(json.ToString());
+    }
+
+    private void AppendElement(StringBuilder json, string queryId, string outputId, ref bool first) {
+        var properties = WinGet(queryId, "*", forceJson: true);
+        if (string.IsNullOrEmpty(properties) || properties == "{}")
+            return;
+
+        if (!first)
+            json.Append(',');
+        first = false;
+
+        json.Append('"').Append(HttpUtility.JavaScriptStringEncode(outputId)).Append("\":");
+        json.Append(properties);
     }
 
     private void OnWindowFocused(WindowFocusedEventArgs args) {

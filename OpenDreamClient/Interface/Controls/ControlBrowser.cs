@@ -21,6 +21,57 @@ using Robust.Shared.Utility;
 namespace OpenDreamClient.Interface.Controls;
 
 internal sealed partial class ControlBrowser : InterfaceControl {
+    /// <summary>
+    /// Reports uncaught script errors back to the client log.
+    ///
+    /// CEF's console output is not exposed through IWebViewControl, so a page that dies on a
+    /// script error is otherwise completely silent - you only see the browser's own error text.
+    /// This routes them through the byond:// interception that is already in place.
+    /// </summary>
+    private const string BrowserErrorShim = """
+        <script>
+        (function() {
+            if (window.__opendreamErrorShim)
+                return;
+
+            window.__opendreamErrorShim = true;
+
+            function report(kind, message, source, line) {
+                try {
+                    var text = kind + ": " + String(message);
+                    if (source)
+                        text += " (" + String(source) + (line ? ":" + String(line) : "") + ")";
+
+                    // Fire-and-forget; the client cancels the navigation and logs the query.
+                    var img = new Image();
+                    img.src = "byond://odlog?text=" + encodeURIComponent(text);
+                } catch (e) {
+                    // Never let the reporter itself throw.
+                }
+            }
+
+            window.addEventListener("error", function(event) {
+                if (event && event.message)
+                    report("script error", event.message, event.filename, event.lineno);
+                else if (event && event.target && event.target.src)
+                    report("resource error", "failed to load " + event.target.src);
+            }, true);
+
+            window.addEventListener("unhandledrejection", function(event) {
+                report("unhandled rejection", event && event.reason ? event.reason : "unknown");
+            });
+
+            var originalConsoleError = window.console && window.console.error;
+            if (originalConsoleError) {
+                window.console.error = function() {
+                    report("console.error", Array.prototype.join.call(arguments, " "));
+                    return originalConsoleError.apply(window.console, arguments);
+                };
+            }
+        })();
+        </script>
+        """;
+
     private const string BrowserStorageShim = """
         <script>
         (function() {
@@ -509,16 +560,32 @@ internal sealed partial class ControlBrowser : InterfaceControl {
     private WebViewControl _webView = default!;
     private Vector2i _geometryOrigin;
 
+    /// <summary>
+    /// Surfaces a script error reported by <see cref="BrowserErrorShim"/>.
+    /// </summary>
+    /// <param name="query">The query portion of byond://odlog?text=...</param>
+    private void HandleBrowserLog(string query) {
+        var text = HttpUtility.ParseQueryString(query).Get("text");
+        if (string.IsNullOrEmpty(text))
+            return;
+
+        _sawmill.Error($"[{ControlDescriptor.Id.Value}] {text}");
+    }
+
     private Stream AddBrowserShims(Stream stream) {
         using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, leaveOpen: false);
         var html = reader.ReadToEnd();
         html = DisableRemoteTguiStorageCdn(html);
 
         if (html.Contains("window.__opendreamStorageShim", StringComparison.Ordinal) &&
-            html.Contains("window.__opendreamGeometryShim", StringComparison.Ordinal))
+            html.Contains("window.__opendreamGeometryShim", StringComparison.Ordinal) &&
+            html.Contains("window.__opendreamErrorShim", StringComparison.Ordinal))
             return new MemoryStream(Encoding.UTF8.GetBytes(html));
 
         var shims = string.Empty;
+        // First, so it is installed before anything else on the page can throw.
+        if (!html.Contains("window.__opendreamErrorShim", StringComparison.Ordinal))
+            shims += BrowserErrorShim;
         if (!html.Contains("window.__opendreamStorageShim", StringComparison.Ordinal))
             shims += BrowserStorageShim;
         if (!html.Contains("window.__opendreamGeometryShim", StringComparison.Ordinal)) {
@@ -655,6 +722,9 @@ internal sealed partial class ControlBrowser : InterfaceControl {
                         return;
                     case "winget":
                         HandleEmbeddedWinget(newUri.Query);
+                        return;
+                    case "odlog":
+                        HandleBrowserLog(newUri.Query);
                         return;
                     default: {
                         var msg = new MsgTopic { Query = newUri.Query };
