@@ -3,11 +3,15 @@ using OpenDreamShared.Interface.Descriptors;
 using OpenDreamShared.Interface.DMF;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.IoC;
+using Robust.Shared.Maths;
+using static Robust.Client.UserInterface.StylesheetHelpers;
 
 namespace OpenDreamClient.Interface.Controls;
 
 internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlWindow window) : InterfaceControl(controlDescriptor, window) {
     private LineEdit _textBox = default!;
+    private Color? _appliedTextColor;
 
     private ControlDescriptorInput InputDescriptor => (ControlDescriptorInput)ControlDescriptor;
 
@@ -35,13 +39,39 @@ internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlW
     protected override void UpdateElementDescriptor() {
         base.UpdateElementDescriptor();
 
-        // TODO: honour ControlDescriptor.TextColor here. Only INFO reads text-color today,
-        // so a skin that darkens the input bar keeps DreamStylesheet's black font and ends
-        // up with black text on a black background. LineEdit resolves its colour from the
-        // "font-color" style property and Robust has no per-instance style override, so this
-        // needs either an OpenDream LineEdit subclass or a dynamic stylesheet rule.
-
+        UpdateTextColor();
         ResetText();
+    }
+
+    /// <summary>
+    /// Applies the DMF text-color to the LineEdit.
+    ///
+    /// LineEdit resolves its colour from the "font-color" style property with no
+    /// per-instance override, so a skin that darkens the input bar was getting
+    /// DreamStylesheet's black-on-black. Robust does allow a per-subtree stylesheet,
+    /// so we append one higher-priority LineEdit rule to the base sheet.
+    /// </summary>
+    private void UpdateTextColor() {
+        var textColor = ControlDescriptor.TextColor.Value;
+        Color? wanted = textColor != Color.Transparent ? textColor : null;
+        if (wanted == _appliedTextColor)
+            return;
+
+        _appliedTextColor = wanted;
+        if (wanted == null) {
+            _textBox.Stylesheet = null;
+            return;
+        }
+
+        var baseSheet = IoCManager.Resolve<IUserInterfaceManager>().Stylesheet;
+        var rules = new List<StyleRule>(baseSheet?.Rules ?? []) {
+            // Appended last: later rules win at equal specificity.
+            Element<LineEdit>()
+                .Prop("font-color", wanted.Value)
+                .Prop("cursor-color", wanted.Value),
+        };
+
+        _textBox.Stylesheet = new Stylesheet(rules);
     }
 
     public override bool TryGetProperty(string property, [NotNullWhen(true)] out IDMFProperty? value) {

@@ -144,11 +144,11 @@ public sealed class DreamIcon(DreamManager dreamManager, DreamResourceManager re
             }
         }
 
-        for (var i = 0; i < span * imageHeight; i++) {
-            if (pixels[i].A == 0)
-                pixels[i] = new Rgba32(192, 192, 192, 0);
-        }
-
+        // Transparent pixels must stay (0,0,0,0). This used to write (192,192,192,0), and
+        // blend operations that read RGB regardless of alpha (ICON_OR, ICON_ADD, ...) then
+        // OR'd 0xC0 into every channel whenever a generated icon was used as a blend
+        // source - washing composited icons out into pastel smears. Bubberstation's antag
+        // preference previews were the visible casualty.
         Image<Rgba32> dmiImage = Image.LoadPixelData<Rgba32>(pixels, span, imageHeight);
 
         PixelArrayPool.Return(pixels, clearArray: true);

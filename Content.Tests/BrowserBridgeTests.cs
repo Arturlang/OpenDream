@@ -42,7 +42,14 @@ public sealed class BrowserBridgeTests {
 
         var script = BrowserBridgeScript.FormatOutputCall("update", message);
 
-        Assert.That(script, Is.EqualTo("update(\"{\\\"type\\\":\\\"props\\\",\\\"payload\\\":{\\\"size\\\":\\\"640x456\\\"}}\")"));
+        Assert.Multiple(() => {
+            // The decoded payload is passed to the function as a JS string literal...
+            Assert.That(script, Does.Contain("update(\"{\\\"type\\\":\\\"props\\\",\\\"payload\\\":{\\\"size\\\":\\\"640x456\\\"}}\")"));
+            // ...wrapped so a throw inside the call is reported instead of being masked
+            // as "Script error." at :0 (injected scripts have no source URL).
+            Assert.That(script, Does.StartWith("try{update("));
+            Assert.That(script, Does.Contain("byond://odlog"));
+        });
     }
 
     [Test]
