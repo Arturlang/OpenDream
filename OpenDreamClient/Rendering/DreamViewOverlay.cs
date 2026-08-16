@@ -203,6 +203,8 @@ internal sealed partial class DreamViewOverlay : Overlay {
             _lookupSystem.GetEntitiesIntersecting(args.MapId, worldAABB.Scale(1.2f), EntitiesInView, MapLookupFlags);
         }
 
+        LogSpriteCensus(args.MapId, worldAABB, seeVis);
+
         var eyeTile = _mapSystem.GetTileRef(gridUid, grid, eyeCoords);
         var tiles = CalculateTileVisibility(gridUid, grid, eyeTile, seeVis);
 
@@ -219,6 +221,108 @@ internal sealed partial class DreamViewOverlay : Overlay {
         worldHandle.DrawTexture(
             MouseMapRenderEnabled ? _mouseMapRenderTarget!.Texture : _baseRenderTarget!.Texture,
             args.WorldAABB.BottomLeft);
+    }
+
+    private int _censusFrames;
+
+    /// <summary>
+    /// Periodic one-line census of the sprite pipeline, to pinpoint which stage loses
+    /// entities when objects exist server-side but nothing renders. Each count is a
+    /// stage: entities with a sprite component at all (replication), entities the
+    /// spatial lookup found (lookup trees), entities passing the visibility gate, and
+    /// how many of those are still waiting on their appearance (nothing to draw).
+    /// </summary>
+    private void LogSpriteCensus(MapId mapId, Box2 worldAABB, int seeVis) {
+        if (++_censusFrames % 300 != 1)
+            return;
+
+        var total = 0;
+        var onMap = 0;
+        var inBox = 0;
+        var samples = 0;
+        var offMapSamples = 0;
+        var sampleText = "";
+        var mapHistogram = new Dictionary<MapId, int>();
+
+        var detached = 0;
+        var offMapRoots = 0;
+        var metaQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
+        var all = _entityManager.AllEntityQueryEnumerator<DMISpriteComponent, TransformComponent>();
+        while (all.MoveNext(out var uid, out _, out var xform)) {
+            total++;
+            if ((metaQuery.GetComponent(uid).Flags & MetaDataFlags.Detached) != 0)
+                detached++;
+            mapHistogram[xform.MapID] = mapHistogram.GetValueOrDefault(xform.MapID) + 1;
+
+            if (xform.MapID != mapId) {
+                if (xform.ParentUid == EntityUid.Invalid)
+                    offMapRoots++;
+
+                if (offMapSamples < 3 && xform.ParentUid != EntityUid.Invalid && xform.LocalPosition != System.Numerics.Vector2.Zero) {
+                    // The interesting ones: real local coordinates, wrong map - their chain
+                    // is rooted somewhere it shouldn't be. Walk to the root.
+                    offMapSamples++;
+                    var root = uid;
+                    var depth = 0;
+                    while (depth < 20 && _xformQuery.GetComponent(root).ParentUid != EntityUid.Invalid) {
+                        root = _xformQuery.GetComponent(root).ParentUid;
+                        depth++;
+                    }
+
+                    var rootHasSprite = _spriteQuery.HasComponent(root);
+                    sampleText += $" [CHAIN {_entityManager.GetNetEntity(uid)} local={xform.LocalPosition} depth={depth} root={_entityManager.GetNetEntity(root)} rootSprite={rootHasSprite}]";
+                }
+
+                continue;
+            }
+
+            onMap++;
+            var worldPos = _transformSystem.GetWorldPosition(uid);
+            if (!worldAABB.Contains(worldPos)) {
+                // These are the mystery: on the right map, but not where the view is.
+                if (offMapSamples < 6) {
+                    offMapSamples++;
+                    sampleText += $" [MAP2-ELSEWHERE {uid} pos={worldPos} parent={xform.ParentUid}]";
+                }
+
+                continue;
+            }
+
+            inBox++;
+            if (samples < 3) {
+                samples++;
+                sampleText += $" [IN {uid} pos={worldPos} parent={xform.ParentUid}]";
+            }
+        }
+
+        var histogramText = string.Join(",", mapHistogram.OrderBy(pair => pair.Key.GetHashCode()).Select(pair => $"{pair.Key}:{pair.Value}"));
+
+        // The chains above rooted at net entity 1 - inspect what that root actually is here.
+        var rootText = "";
+        if (_entityManager.TryGetEntity(new NetEntity(1), out var rootUid)) {
+            var rootXform = _xformQuery.GetComponent(rootUid.Value);
+            var compNames = string.Join("+", _entityManager.GetComponents(rootUid.Value).Select(c => c.GetType().Name).Take(8));
+            rootText = $" net1: uid={rootUid} map={rootXform.MapID} parent={rootXform.ParentUid} comps={compNames}";
+        }
+
+        var inView = EntitiesInView.Count;
+        var visible = 0;
+        var noAppearance = 0;
+
+        foreach (var entity in EntitiesInView) {
+            if (!_spriteQuery.TryGetComponent(entity, out var sprite))
+                continue;
+
+            if (!_spriteSystem.IsVisible(sprite, _xformQuery.GetComponent(entity), seeVis, worldAABB))
+                continue;
+
+            visible++;
+            if (sprite.Icon.Appearance == null)
+                noAppearance++;
+        }
+
+        _sawmill.Debug(
+            $"sprite census: map={mapId} aabb={worldAABB} dmiSprites={total} onMap={onMap} inBox={inBox} inView={inView} visible={visible} noAppearance={noAppearance} detached={detached} offMapRoots={offMapRoots} maps=({histogramText}){rootText}{sampleText}");
     }
 
     public Texture? RenderScreenObjectsForMapControl(DrawingHandleWorld handle, Vector2i viewportSize, string mapControlId) {

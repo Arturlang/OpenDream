@@ -8,7 +8,9 @@ using OpenDreamRuntime.Objects;
 using OpenDreamRuntime.Objects.Types;
 using OpenDreamRuntime.Procs;
 using OpenDreamRuntime.Procs.Native;
+using OpenDreamRuntime.Rendering;
 using OpenDreamRuntime.Resources;
+using System.Linq;
 using OpenDreamShared;
 using OpenDreamShared.Dream;
 using Robust.Server;
@@ -106,9 +108,119 @@ public sealed partial class DreamManager {
         IsShutDown = true;
     }
 
+    private int _censusTicks;
+
+    /// <summary>
+    /// Server-side twin of the client's sprite census: histogram of where the sprite
+    /// entities actually live according to the server. If this is correct while the
+    /// client's histogram shows everything in nullspace, the defect is in replication;
+    /// if it is wrong here too, placement never happened.
+    /// </summary>
+    private void LogEntityCensus() {
+        if (++_censusTicks % 300 != 1)
+            return;
+
+        var total = 0;
+        var nullParent = 0;
+        var histogram = new Dictionary<Robust.Shared.Map.MapId, int>();
+        var query = _entityManager.AllEntityQueryEnumerator<DMISpriteComponent, TransformComponent>();
+        while (query.MoveNext(out _, out _, out var xform)) {
+            total++;
+            histogram[xform.MapID] = histogram.GetValueOrDefault(xform.MapID) + 1;
+            if (xform.ParentUid == EntityUid.Invalid)
+                nullParent++;
+        }
+
+        // Classify the nullspace population: live movables legitimately at loc=null,
+        // image entities, or orphans - entities whose DreamObject is gone. Orphans mean
+        // the entity leak is in deletion; a flood of live-movables means creation.
+        var nullMovable = 0;
+        var movableSamples = 0;
+        var orphanSamples = 0;
+        var movableSampleRing = new string[5];
+        var orphanSampleRing = new string[5];
+        var nullMovableDeleting = 0;
+        var nullOrphan = 0;
+        var nullTypeHistogram = new Dictionary<string, int>();
+        var orphanQuery = _entityManager.AllEntityQueryEnumerator<DMISpriteComponent, TransformComponent>();
+        while (orphanQuery.MoveNext(out var uid, out _, out var xform)) {
+            if (xform.MapID != Robust.Shared.Map.MapId.Nullspace)
+                continue;
+
+            if (_atomManager.TryGetMovableFromEntity(uid, out var movable)) {
+                nullMovable++;
+                if (movable.Deleting || movable.Deleted)
+                    nullMovableDeleting++;
+                else {
+                    // Ring buffer: keep the NEWEST samples (leaked entities are recent).
+                    var type = movable.ObjectDefinition.Type.ToString();
+                    movableSampleRing[movableSamples++ % movableSampleRing.Length] = type;
+                    nullTypeHistogram[type] = nullTypeHistogram.GetValueOrDefault(type) + 1;
+                }
+            } else {
+                nullOrphan++;
+                var icon = "?";
+                if (_entityManager.TryGetComponent<Rendering.DMISpriteComponent>(uid, out var orphanSprite) && orphanSprite.Appearance is { } app)
+                    icon = $"i{app.Icon?.ToString() ?? "-"}:{app.IconState ?? "-"}";
+                orphanSampleRing[orphanSamples++ % orphanSampleRing.Length] = icon;
+            }
+        }
+
+        var histogramText = string.Join(",", histogram.OrderBy(pair => pair.Key.GetHashCode()).Select(pair => $"{pair.Key}:{pair.Value}"));
+
+        // The same lookup query the client's renderer makes, asked of the server's own
+        // trees. PVS sending is driven by this data - an empty answer here while the
+        // transform histogram is full means entities never entered the lookup trees.
+        var lookupSystem = _entityManager.System<Robust.Shared.GameObjects.EntityLookupSystem>();
+        var probe = new HashSet<EntityUid>();
+        lookupSystem.GetEntitiesIntersecting(new Robust.Shared.Map.MapId(2), new Robust.Shared.Maths.Box2(100, 130, 125, 150), probe,
+            Robust.Shared.GameObjects.LookupFlags.Approximate | Robust.Shared.GameObjects.LookupFlags.Uncontained);
+
+        Logger.GetSawmill("opendream.census").Info(
+            $"server sprite census: total={total} nullParent={nullParent} maps=({histogramText}) lookupProbeMap2={probe.Count} null[movables={nullMovable} deleting={nullMovableDeleting} orphans={nullOrphan}] " +
+            $"movNewest=({string.Join(",", movableSampleRing.Where(x => x != null))}) " +
+            $"orphNewest=({string.Join(",", orphanSampleRing.Where(x => x != null))}) " +
+            $"nullTop=({string.Join(",", nullTypeHistogram.OrderByDescending(pair => pair.Value).Take(6).Select(pair => $"{pair.Key}x{pair.Value}"))}) " +
+            $"pvsOverrides=({DescribePvsOverrideSets()})");
+    }
+
+    /// <summary>
+    /// Reads PvsOverrideSystem's internal override sets via reflection. Only overridden
+    /// entities can reach a client from nullspace, so these counts identify which
+    /// override path is flooding the PVS budget.
+    /// </summary>
+    private string DescribePvsOverrideSets() {
+        var pvsOverride = _entityManager.System<Robust.Server.GameStates.PvsOverrideSystem>();
+        var type = pvsOverride.GetType();
+
+        int CountMember(string name) {
+            const System.Reflection.BindingFlags flags =
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic;
+            object? value = type.GetField(name, flags)?.GetValue(pvsOverride)
+                            ?? type.GetProperty(name, flags)?.GetValue(pvsOverride);
+
+            // HashSet<T> doesn't implement the non-generic ICollection, so count via the
+            // reflected Count property instead.
+            static int CountOf(object? collection) {
+                if (collection == null)
+                    return -1;
+                if (collection is System.Collections.IDictionary dict)
+                    return dict.Values.Cast<object?>().Sum(CountOf);
+                return collection.GetType().GetProperty("Count")?.GetValue(collection) as int? ?? -1;
+            }
+
+            return CountOf(value);
+        }
+
+        return $"global={CountMember("GlobalOverride")} force={CountMember("ForceSend")} " +
+               $"session={CountMember("SessionOverrides")} sessionForce={CountMember("SessionForceSend")}";
+    }
+
     public void Update() {
         if (!Initialized || WorldInstance.Deleted)
             return;
+
+        LogEntityCensus();
 
         using (Profiler.BeginZone("Tick", color: (uint)Color.OrangeRed.ToArgb())) {
             CurrentTickStart = Environment.TickCount64;
