@@ -15,6 +15,7 @@ using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.WebView;
+using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
@@ -664,6 +665,7 @@ internal sealed partial class ControlBrowser : InterfaceControl {
     private const uint DreamResourceRefType = 0x27000000;
 
     [Dependency] private IClyde _clyde = default!;
+    [Dependency] private ITaskManager _taskManager = default!;
     [Dependency] private IConfigurationManager _cfg = default!;
     [Dependency] private IResourceManager _resourceManager = default!;
     [Dependency] private IClientNetManager _netManager = default!;
@@ -829,10 +831,14 @@ internal sealed partial class ControlBrowser : InterfaceControl {
     private void HandleNativeDragBeacon(string query) {
         var what = HttpUtility.ParseQueryString(query).Get("e");
 
-        if (what == "start")
-            NativeDragStarted?.Invoke();
-        else
-            NativeDragEnded?.Invoke();
+        // Beacons arrive on a CEF thread, where Robust's thread-local IoC (and most of
+        // Robust) is off-limits - marshal to the game thread before anyone acts on this.
+        _taskManager.RunOnMainThread(() => {
+            if (what == "start")
+                NativeDragStarted?.Invoke();
+            else
+                NativeDragEnded?.Invoke();
+        });
     }
 
     private static int _injectionSequence;

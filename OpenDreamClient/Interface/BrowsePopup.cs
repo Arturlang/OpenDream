@@ -7,6 +7,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Log;
 using System.Numerics;
 
 namespace OpenDreamClient.Interface;
@@ -52,27 +53,37 @@ internal sealed class BrowsePopup {
 
     /// <summary>
     /// Begins moving the window from real mouse input instead of letting the page drag
-    /// itself. The page's own drag derives positions from a faked MouseEvent.screenX whose
-    /// backing geometry races the mouse events following each move, which stutters.
+    /// itself. Raised on the game thread (ControlBrowser marshals the page's beacon).
     ///
-    /// Release comes from the page too (see the geometry shim): clicks consumed by UI
-    /// controls never reach the input manager's key state, so IsKeyDown(MouseLeft) reads
-    /// false during the entire drag and cannot be used to detect the release.
+    /// Release also comes from the page: clicks consumed by UI controls never reach the
+    /// input manager's key state, so IsKeyDown(MouseLeft) reads false during the entire
+    /// drag and cannot be used to detect the release.
     /// </summary>
     private void StartNativeDrag() {
+        if (_closed)
+            return;
+
         _inputManager ??= IoCManager.Resolve<IInputManager>();
 
         var mouse = (Vector2i)_inputManager.MouseScreenPosition.Position;
         _nativeDragOffset = mouse - _window.GlobalPixelPosition;
         _nativeDragging = true;
+        Logger.GetSawmill("opendream.popup").Debug(
+            $"native drag start: mouse={mouse} window={_window.GlobalPixelPosition} offset={_nativeDragOffset}");
     }
 
     private void EndNativeDrag() {
+        if (_nativeDragging)
+            Logger.GetSawmill("opendream.popup").Debug("native drag end");
+
         _nativeDragging = false;
     }
 
     /// <summary>
-    /// Advances an active native drag. Called every frame by the interface manager.
+    /// Advances a native drag. Called every frame by the interface manager, on the game
+    /// thread. Moving the window from real mouse input has no page round-trips, unlike
+    /// TGUI's own screenX-derived drag, whose backing geometry races the mouse events
+    /// that follow each move and stutters.
     /// </summary>
     public void ProcessNativeDrag() {
         if (!_nativeDragging || _inputManager == null)
