@@ -1062,6 +1062,14 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
                     if (property == null)
                         return string.Empty;
 
+                    // forceJson must be honoured here like everywhere else in WinGet.
+                    // TGUI windows are browse popups, and TGUI boots with winget(id, "pos")
+                    // expecting JSON - returning AsRaw() here handed "400,120" to a caller
+                    // that splices the result into a JS object literal, which is a syntax
+                    // error the page can only see as a masked "Script error." at :0.
+                    if (forceJson)
+                        return property.AsJson();
+
                     return forceSnowflake ? property.AsSnowflake() : property.AsRaw();
                 }
 

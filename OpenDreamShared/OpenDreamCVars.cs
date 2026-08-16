@@ -20,6 +20,15 @@ public abstract class OpenDreamCVars {
         CVarDef.Create("opendream.disable_browser_storage_shim", false, CVar.CLIENTONLY);
 
     /// <summary>
+    /// Skips the geometry shim, which redefines Element.prototype.getBoundingClientRect,
+    /// MouseEvent.prototype.screenX/screenY and window.screenLeft/screenTop.
+    /// Diagnostic toggle: patching DOM prototypes underneath a framework is invasive enough
+    /// to be worth ruling out on its own.
+    /// </summary>
+    public static readonly CVarDef<bool> DisableBrowserGeometryShim =
+        CVarDef.Create("opendream.disable_browser_geometry_shim", false, CVar.CLIENTONLY);
+
+    /// <summary>
     /// When set to a file path, the client writes a JSON dump of every skin element's
     /// computed properties there shortly after the interface loads, then keeps going.
     /// Used to diff skin geometry against DreamSeeker without needing a human to look at it.

@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using OpenDreamShared;
@@ -70,6 +71,36 @@ internal sealed partial class ControlBrowser : InterfaceControl {
                     return originalConsoleError.apply(window.console, arguments);
                 };
             }
+
+            // The page's message entrypoint gets assigned later (window.update = ...), and a
+            // throw inside it is masked because the caller is an injected URL-less script.
+            // Trapping the assignment lets us wrap the real function and report the actual
+            // exception - name, message, stack and the offending input - from inside the page.
+            (function() {
+                var realUpdate;
+                var wrappedUpdate = function() {
+                    try {
+                        return realUpdate.apply(this, arguments);
+                    } catch (e) {
+                        var input;
+                        try { input = String(arguments[0]).slice(0, 400); } catch (e2) { input = "?"; }
+                        report("update() threw",
+                            String(e && e.name) + ": " + String(e && e.message) +
+                            "\n  input: " + input +
+                            "\n  stack: " + String(e && e.stack).slice(0, 1200));
+                        throw e;
+                    }
+                };
+
+                try {
+                    Object.defineProperty(window, "update", {
+                        configurable: true,
+                        get: function() { return realUpdate && wrappedUpdate; },
+                        set: function(fn) { realUpdate = fn; }
+                    });
+                } catch (e) {
+                }
+            })();
         })();
         </script>
         """;
@@ -151,11 +182,16 @@ internal sealed partial class ControlBrowser : InterfaceControl {
                 return;
 
             var geometry = { x: __OPENDREAM_GEOMETRY_X__, y: __OPENDREAM_GEOMETRY_Y__ };
+            var screenDims = { w: __OPENDREAM_SCREEN_W__, h: __OPENDREAM_SCREEN_H__ };
 
             window.__opendreamGeometryShim = {
-                set: function(x, y) {
+                set: function(x, y, w, h) {
                     geometry.x = Number(x) || 0;
                     geometry.y = Number(y) || 0;
+                    if (Number(w) > 0)
+                        screenDims.w = Number(w);
+                    if (Number(h) > 0)
+                        screenDims.h = Number(h);
                 }
             };
 
@@ -185,6 +221,26 @@ internal sealed partial class ControlBrowser : InterfaceControl {
                 });
             } catch (err) {
             }
+
+            // Under offscreen rendering, CEF reports the embedded control's dimensions as
+            // the screen. TGUI clamps every window to screen.availWidth/Height, so a tiny
+            // or zero "screen" shrinks each window it opens down to nothing.
+            function defineScreenNumber(name, getter) {
+                try {
+                    Object.defineProperty(window.screen, name, {
+                        configurable: true,
+                        get: getter
+                    });
+                } catch (err) {
+                }
+            }
+
+            defineScreenNumber("width", function() { return screenDims.w; });
+            defineScreenNumber("height", function() { return screenDims.h; });
+            defineScreenNumber("availWidth", function() { return screenDims.w; });
+            defineScreenNumber("availHeight", function() { return screenDims.h; });
+            defineScreenNumber("availLeft", function() { return 0; });
+            defineScreenNumber("availTop", function() { return 0; });
 
             var nativeControls = {};
             var nativeControlFrame;
@@ -552,6 +608,7 @@ internal sealed partial class ControlBrowser : InterfaceControl {
     private const uint DreamResourceIconRefType = 0x0C000000;
     private const uint DreamResourceRefType = 0x27000000;
 
+    [Dependency] private IClyde _clyde = default!;
     [Dependency] private IConfigurationManager _cfg = default!;
     [Dependency] private IResourceManager _resourceManager = default!;
     [Dependency] private IClientNetManager _netManager = default!;
@@ -562,6 +619,44 @@ internal sealed partial class ControlBrowser : InterfaceControl {
     private PanelContainer _panel = default!;
     private WebViewControl _webView = default!;
     private Vector2i _geometryOrigin;
+
+    /// <summary>
+    /// Whether a winget result can be spliced into a JS literal as-is.
+    ///
+    /// Not a parser (System.Text.Json is blocked by the content sandbox), and it doesn't
+    /// need one: structured values here only ever come from our own IDMFProperty.AsJson()
+    /// implementations, so classifying the first token is enough to reject the raw DMF
+    /// forms ("400,120", "640x480", "none") that are not JSON.
+    /// </summary>
+    private static bool LooksLikeJson(string value) {
+        if (string.IsNullOrEmpty(value))
+            return false;
+
+        switch (value[0]) {
+            case '{':
+            case '[':
+            case '"':
+                return true;
+        }
+
+        if (value is "true" or "false" or "null")
+            return true;
+
+        // A bare number is JSON; "400,120" or "3x4" is not.
+        var seenDot = false;
+        for (var i = value[0] == '-' ? 1 : 0; i < value.Length; i++) {
+            var c = value[i];
+            if (c == '.' && !seenDot) {
+                seenDot = true;
+                continue;
+            }
+
+            if (c is < '0' or > '9')
+                return false;
+        }
+
+        return true;
+    }
 
     /// <summary>
     /// Surfaces a script error reported by <see cref="BrowserErrorShim"/>.
@@ -593,10 +688,15 @@ internal sealed partial class ControlBrowser : InterfaceControl {
             shims += BrowserErrorShim;
         if (!skipStorageShim && !html.Contains("window.__opendreamStorageShim", StringComparison.Ordinal))
             shims += BrowserStorageShim;
-        if (!html.Contains("window.__opendreamGeometryShim", StringComparison.Ordinal)) {
+        if (!_cfg.GetCVar(OpenDreamCVars.DisableBrowserGeometryShim) &&
+            !html.Contains("window.__opendreamGeometryShim", StringComparison.Ordinal)) {
+            var screenSize = GetScreenSize();
+
             shims += BrowserGeometryShimTemplate
                 .Replace("__OPENDREAM_GEOMETRY_X__", _geometryOrigin.X.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal)
-                .Replace("__OPENDREAM_GEOMETRY_Y__", _geometryOrigin.Y.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal);
+                .Replace("__OPENDREAM_GEOMETRY_Y__", _geometryOrigin.Y.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal)
+                .Replace("__OPENDREAM_SCREEN_W__", screenSize.X.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal)
+                .Replace("__OPENDREAM_SCREEN_H__", screenSize.Y.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal);
         }
 
         var insertIndex = html.IndexOf("<head>", StringComparison.OrdinalIgnoreCase);
@@ -661,20 +761,36 @@ internal sealed partial class ControlBrowser : InterfaceControl {
         _panel.PanelOverride = new StyleBoxFlat(Color.White); // Always white background
     }
 
-    public override void Output(string value, string? jsFunction) {
-        if (jsFunction == null) return;
+    private static int _injectionSequence;
 
+    /// <summary>
+    /// Central funnel for every script we inject into this browser.
+    ///
+    /// A syntax error in an injected script cannot be caught by anything inside that script
+    /// (the try/catch wrapper never compiles), and the browser masks it as "Script error."
+    /// at :0. Sequence-logging each injection lets a masked error in the log be correlated
+    /// with the exact script that preceded it.
+    /// </summary>
+    private void InjectScript(string script, string context) {
         if (_webView.Disposed)
             return;
 
-        // Insert the values directly into JS and execute it (what could go wrong??)
+        var sequence = Interlocked.Increment(ref _injectionSequence);
+        _sawmill.Debug($"inject #{sequence} ({context}) [{ControlDescriptor.Id.Value}]: {script[..Math.Min(script.Length, 400)]}");
+
         try {
-            _webView.ExecuteJavaScript(BrowserBridgeScript.FormatOutputCall(jsFunction, value));
+            _webView.ExecuteJavaScript(script);
         } catch (Exception e) when (e.GetType().Name == "ObjectDisposedException") {
-            // The window can close while output messages are still queued.
+            // The window can close while injected scripts are still queued.
         } catch (InvalidOperationException e) {
-            _sawmill.Debug($"Ignoring browser output to an unavailable web view: {e.Message}");
+            _sawmill.Debug($"Ignoring injected script ({context}) to an unavailable web view: {e.Message}");
         }
+    }
+
+    public override void Output(string value, string? jsFunction) {
+        if (jsFunction == null) return;
+
+        InjectScript(BrowserBridgeScript.FormatOutputCall(jsFunction, value), "output");
     }
 
     public void SetFileSource(ResPath? filepath) {
@@ -693,16 +809,23 @@ internal sealed partial class ControlBrowser : InterfaceControl {
 
     public void SetGeometryOrigin(Vector2i position) {
         _geometryOrigin = position;
+        var screenSize = GetScreenSize();
 
-        if (_webView.Disposed)
-            return;
+        InjectScript("window.__opendreamGeometryShim && window.__opendreamGeometryShim.set(" +
+                     $"{position.X.ToString(CultureInfo.InvariantCulture)}, {position.Y.ToString(CultureInfo.InvariantCulture)}, " +
+                     $"{screenSize.X.ToString(CultureInfo.InvariantCulture)}, {screenSize.Y.ToString(CultureInfo.InvariantCulture)});", "geometry");
+    }
 
-        try {
-            _webView.ExecuteJavaScript($"window.__opendreamGeometryShim && window.__opendreamGeometryShim.set({position.X}, {position.Y});");
-        } catch (Exception e) when (e.GetType().Name == "ObjectDisposedException") {
-        } catch (InvalidOperationException e) {
-            _sawmill.Debug($"Ignoring geometry update to an unavailable web view: {e.Message}");
+    /// <summary>
+    /// The size of the display, for faking window.screen inside offscreen-rendered pages.
+    /// </summary>
+    private Vector2i GetScreenSize() {
+        foreach (var monitor in _clyde.EnumerateMonitors()) {
+            return monitor.Size;
         }
+
+        // No monitor info (headless?) - anything positive beats a zero-sized "screen".
+        return new Vector2i(1920, 1080);
     }
 
     private void BeforeBrowseHandler(IBeforeBrowseContext context) {
@@ -959,11 +1082,16 @@ internal sealed partial class ControlBrowser : InterfaceControl {
                 jsonBuilder.Append("\": ");
                 var result = InterfaceManager.WinGet(elementId, wingetting, forceJson: !outputSizeOnly);
 
+                // The result is spliced into a JS object literal, so anything that is not
+                // actually JSON must be quoted - an unquoted "400,120" is a syntax error
+                // that kills the whole injected script, uncatchably.
+                var treatAsJson = !outputSizeOnly && LooksLikeJson(result);
+
                 jsonBuilder.Append(string.IsNullOrEmpty(result)
                     ? "\"\""
-                    : outputSizeOnly
-                        ? $"\"{HttpUtility.JavaScriptStringEncode(result)}\""
-                        : result);
+                    : treatAsJson
+                        ? result
+                        : $"\"{HttpUtility.JavaScriptStringEncode(result)}\"");
             }
 
             jsonBuilder.Append(" }");
@@ -971,16 +1099,7 @@ internal sealed partial class ControlBrowser : InterfaceControl {
 
         // Execute the callback
         var json = jsonBuilder.ToString();
-        if (_webView.Disposed)
-            return;
-
-        try {
-            _webView.ExecuteJavaScript($"{callback}({json})");
-        } catch (Exception e) when (e.GetType().Name == "ObjectDisposedException") {
-            // The window can close while winget callbacks are still queued.
-        } catch (InvalidOperationException e) {
-            _sawmill.Debug($"Ignoring embedded winget callback to an unavailable web view: {e.Message}");
-        }
+        InjectScript(BrowserBridgeScript.WrapInjectedCall(callback, json), "winget-callback");
     }
 
     private void OnShowEvent() {
