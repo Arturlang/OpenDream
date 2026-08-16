@@ -1,9 +1,11 @@
 using OpenDreamClient.Interface.Controls;
 using OpenDreamShared.Interface.Descriptors;
 using OpenDreamShared.Interface.DMF;
+using Robust.Client.Input;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using System.Numerics;
 
@@ -17,6 +19,10 @@ internal sealed class BrowsePopup {
 
     private readonly ChromelessBrowseWindow _window;
     private bool _closed;
+
+    private IInputManager? _inputManager;
+    private bool _nativeDragging;
+    private Vector2i _nativeDragOffset;
 
     public BrowsePopup(string name, Vector2i size) {
         WindowDescriptor popupWindowDescriptor = new WindowDescriptor(name,
@@ -40,6 +46,38 @@ internal sealed class BrowsePopup {
         _window.OnResized += OnWindowResized;
 
         Browser = (ControlBrowser)WindowElement.ChildControls[0];
+        Browser.NativeDragStarted += StartNativeDrag;
+    }
+
+    /// <summary>
+    /// Begins moving the window from real mouse input instead of letting the page drag
+    /// itself. The page's own drag derives positions from a faked MouseEvent.screenX whose
+    /// backing geometry races the mouse events following each move, which stutters.
+    /// </summary>
+    private void StartNativeDrag() {
+        _inputManager ??= IoCManager.Resolve<IInputManager>();
+
+        var mouse = (Vector2i)_inputManager.MouseScreenPosition.Position;
+        _nativeDragOffset = mouse - _window.GlobalPixelPosition;
+        _nativeDragging = true;
+    }
+
+    /// <summary>
+    /// Advances an active native drag. Called every frame by the interface manager.
+    /// </summary>
+    public void ProcessNativeDrag() {
+        if (!_nativeDragging || _inputManager == null)
+            return;
+
+        // Release is detected here rather than from the page: once the cursor leaves the
+        // browser control mid-drag, the page stops receiving mouse events entirely.
+        if (!_inputManager.IsKeyDown(Keyboard.Key.MouseLeft)) {
+            _nativeDragging = false;
+            return;
+        }
+
+        var mouse = (Vector2i)_inputManager.MouseScreenPosition.Position;
+        SetPosition(mouse - _nativeDragOffset);
     }
 
     public void Open() {

@@ -242,6 +242,25 @@ internal sealed partial class ControlBrowser : InterfaceControl {
             defineScreenNumber("availLeft", function() { return 0; });
             defineScreenNumber("availTop", function() { return 0; });
 
+            // Hand titlebar drags to the client instead of letting TGUI drag itself.
+            // TGUI's JS drag derives positions from MouseEvent.screenX, which we fake as
+            // injected-geometry + clientX - and the injection races the mouse events that
+            // follow each window move, so the window oscillates while dragged. The client
+            // moving the panel from real mouse input has no feedback loop at all.
+            window.addEventListener("mousedown", function(ev) {
+                if (ev.button !== 0 || !ev.target || !ev.target.closest)
+                    return;
+
+                var dragZone = ev.target.closest(".TitleBar__dragZone");
+                var altDrag = ev.altKey && ev.target.closest(".Window__rest");
+                if (!dragZone && !altDrag)
+                    return;
+
+                ev.stopImmediatePropagation();
+                ev.preventDefault();
+                (new Image()).src = "byond://oddrag";
+            }, true);
+
             var nativeControls = {};
             var nativeControlFrame;
             var originalWinset;
@@ -761,6 +780,11 @@ internal sealed partial class ControlBrowser : InterfaceControl {
         _panel.PanelOverride = new StyleBoxFlat(Color.White); // Always white background
     }
 
+    /// <summary>
+    /// Raised when the page requests a native window drag (mousedown on a TGUI titlebar).
+    /// </summary>
+    public event Action? NativeDragStarted;
+
     private static int _injectionSequence;
 
     /// <summary>
@@ -817,14 +841,19 @@ internal sealed partial class ControlBrowser : InterfaceControl {
     }
 
     /// <summary>
-    /// The size of the display, for faking window.screen inside offscreen-rendered pages.
+    /// The size reported as window.screen inside offscreen-rendered pages.
+    ///
+    /// TGUI "windows" are panels inside the game window, and TGUI both clamps and centers
+    /// them against screen.availWidth/Height - so the game window's client area is the
+    /// correct "screen". Reporting the monitor here centered popups against the desktop,
+    /// shoving them off-center whenever the client wasn't fullscreen.
     /// </summary>
     private Vector2i GetScreenSize() {
-        foreach (var monitor in _clyde.EnumerateMonitors()) {
-            return monitor.Size;
-        }
+        var mainWindow = _clyde.MainWindow.Size;
+        if (mainWindow.X > 0 && mainWindow.Y > 0)
+            return mainWindow;
 
-        // No monitor info (headless?) - anything positive beats a zero-sized "screen".
+        // No window yet (headless?) - anything positive beats a zero-sized "screen".
         return new Vector2i(1920, 1080);
     }
 
@@ -854,6 +883,9 @@ internal sealed partial class ControlBrowser : InterfaceControl {
                     case "odlog":
                         HandleBrowserLog(newUri.Query);
                         return;
+                    case "oddrag":
+                        NativeDragStarted?.Invoke();
+                        return;
                     default: {
                         var msg = new MsgTopic { Query = newUri.Query };
                         _netManager.ClientSendMessage(msg);
@@ -871,12 +903,19 @@ internal sealed partial class ControlBrowser : InterfaceControl {
         try {
             Uri newUri = new Uri(context.Url);
 
-            // The error shim reports through an <img> src, which arrives here as a resource
+            // The shims report through an <img> src, which arrives here as a resource
             // request rather than as a navigation, so BeforeBrowseHandler never sees it.
-            if (newUri is {Scheme: "byond", Host: "odlog"}) {
-                HandleBrowserLog(newUri.Query);
-                context.DoCancel();
-                return;
+            if (newUri.Scheme == "byond") {
+                switch (newUri.Host) {
+                    case "odlog":
+                        HandleBrowserLog(newUri.Query);
+                        context.DoCancel();
+                        return;
+                    case "oddrag":
+                        NativeDragStarted?.Invoke();
+                        context.DoCancel();
+                        return;
+                }
             }
 
             if (newUri is {Scheme: "http", Host: "127.0.0.1"}) {

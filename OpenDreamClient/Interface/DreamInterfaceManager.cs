@@ -524,6 +524,10 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
                     controlMap.Viewport.Eye = currentEye;
             }
         }
+
+        foreach (var popup in _browsePopups.Values) {
+            popup.ProcessNativeDrag();
+        }
     }
 
     public InterfaceElement? FindElementWithId(string id) {
