@@ -247,19 +247,55 @@ internal sealed partial class ControlBrowser : InterfaceControl {
             // injected-geometry + clientX - and the injection races the mouse events that
             // follow each window move, so the window oscillates while dragged. The client
             // moving the panel from real mouse input has no feedback loop at all.
-            window.addEventListener("mousedown", function(ev) {
-                if (ev.button !== 0 || !ev.target || !ev.target.closest)
+            //
+            // The client cannot see the button release itself (clicks consumed by UI
+            // controls never reach the input manager's key state), so the page reports it.
+            // During a native drag the window follows the cursor, keeping the cursor over
+            // this page, so mouseup arrives here reliably.
+            var odNativeDragging = false;
+
+            function odDragBeacon(what) {
+                (new Image()).src = "byond://oddrag?e=" + what;
+            }
+
+            function odEndNativeDrag() {
+                if (!odNativeDragging)
                     return;
+
+                odNativeDragging = false;
+                odDragBeacon("end");
+            }
+
+            window.addEventListener("mousedown", function(ev) {
+                if (!ev.target || !ev.target.closest)
+                    return;
+
+                // A stray mousedown while we think a drag is active means the release was
+                // missed (e.g. it happened outside the game window) - recover first.
+                odEndNativeDrag();
 
                 var dragZone = ev.target.closest(".TitleBar__dragZone");
                 var altDrag = ev.altKey && ev.target.closest(".Window__rest");
                 if (!dragZone && !altDrag)
                     return;
 
+                // Swallow every button here: TGUI's own drag handler doesn't filter by
+                // button, and its screenX-based drag is the stuttery thing being replaced.
                 ev.stopImmediatePropagation();
                 ev.preventDefault();
-                (new Image()).src = "byond://oddrag";
+
+                if (ev.button === 0) {
+                    odNativeDragging = true;
+                    odDragBeacon("start");
+                }
             }, true);
+
+            window.addEventListener("mouseup", function(ev) {
+                if (ev.button === 0)
+                    odEndNativeDrag();
+            }, true);
+
+            window.addEventListener("blur", odEndNativeDrag);
 
             var nativeControls = {};
             var nativeControlFrame;
@@ -785,6 +821,20 @@ internal sealed partial class ControlBrowser : InterfaceControl {
     /// </summary>
     public event Action? NativeDragStarted;
 
+    /// <summary>
+    /// Raised when the page reports the drag's button release.
+    /// </summary>
+    public event Action? NativeDragEnded;
+
+    private void HandleNativeDragBeacon(string query) {
+        var what = HttpUtility.ParseQueryString(query).Get("e");
+
+        if (what == "start")
+            NativeDragStarted?.Invoke();
+        else
+            NativeDragEnded?.Invoke();
+    }
+
     private static int _injectionSequence;
 
     /// <summary>
@@ -884,7 +934,7 @@ internal sealed partial class ControlBrowser : InterfaceControl {
                         HandleBrowserLog(newUri.Query);
                         return;
                     case "oddrag":
-                        NativeDragStarted?.Invoke();
+                        HandleNativeDragBeacon(newUri.Query);
                         return;
                     default: {
                         var msg = new MsgTopic { Query = newUri.Query };
@@ -912,7 +962,7 @@ internal sealed partial class ControlBrowser : InterfaceControl {
                         context.DoCancel();
                         return;
                     case "oddrag":
-                        NativeDragStarted?.Invoke();
+                        HandleNativeDragBeacon(newUri.Query);
                         context.DoCancel();
                         return;
                 }

@@ -47,12 +47,17 @@ internal sealed class BrowsePopup {
 
         Browser = (ControlBrowser)WindowElement.ChildControls[0];
         Browser.NativeDragStarted += StartNativeDrag;
+        Browser.NativeDragEnded += EndNativeDrag;
     }
 
     /// <summary>
     /// Begins moving the window from real mouse input instead of letting the page drag
     /// itself. The page's own drag derives positions from a faked MouseEvent.screenX whose
     /// backing geometry races the mouse events following each move, which stutters.
+    ///
+    /// Release comes from the page too (see the geometry shim): clicks consumed by UI
+    /// controls never reach the input manager's key state, so IsKeyDown(MouseLeft) reads
+    /// false during the entire drag and cannot be used to detect the release.
     /// </summary>
     private void StartNativeDrag() {
         _inputManager ??= IoCManager.Resolve<IInputManager>();
@@ -62,6 +67,10 @@ internal sealed class BrowsePopup {
         _nativeDragging = true;
     }
 
+    private void EndNativeDrag() {
+        _nativeDragging = false;
+    }
+
     /// <summary>
     /// Advances an active native drag. Called every frame by the interface manager.
     /// </summary>
@@ -69,9 +78,7 @@ internal sealed class BrowsePopup {
         if (!_nativeDragging || _inputManager == null)
             return;
 
-        // Release is detected here rather than from the page: once the cursor leaves the
-        // browser control mid-drag, the page stops receiving mouse events entirely.
-        if (!_inputManager.IsKeyDown(Keyboard.Key.MouseLeft)) {
+        if (_closed) {
             _nativeDragging = false;
             return;
         }
