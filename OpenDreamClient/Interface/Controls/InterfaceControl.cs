@@ -79,8 +79,16 @@ public abstract class InterfaceControl : InterfaceElement {
     public override bool TryGetProperty(string property, [NotNullWhen(true)] out IDMFProperty? value) {
         switch (property) {
             case "size":
-                // SetSize because Size won't update if the element isn't visible
-                value = new DMFPropertySize(UIElement.SetSize);
+                // Prefer the live arranged size: SetSize only reflects the last anchor
+                // recomputation, which goes stale whenever the layout has since changed.
+                // BYOND reports the current size, and content depends on that - e.g.
+                // tgui-panel wingets the legacy output's size and winsets it onto the
+                // chat browser; a stale value there permanently mis-sizes the chat.
+                // Size doesn't update while the element is hidden or detached, so fall
+                // back to SetSize for controls that were never laid out.
+                value = UIElement.Size != Vector2.Zero
+                    ? new DMFPropertySize((Vector2i)UIElement.Size)
+                    : new DMFPropertySize(UIElement.SetSize);
                 return true;
             case "pos":
                 value = new DMFPropertyPos(UIElement.Position);
