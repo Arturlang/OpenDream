@@ -12,6 +12,14 @@ public abstract class OpenDreamCVars {
         CVarDef.Create("opendream.download_timeout", 30, CVar.CLIENTONLY);
 
     /// <summary>
+    /// Skips the browser storage shim and leaves TGUI's own storage CDN reference intact.
+    /// Diagnostic toggle: the shim replaces TGUI's storage backend, so it is the first thing
+    /// to rule out when TGUI dies with a bare "Script error." that master does not produce.
+    /// </summary>
+    public static readonly CVarDef<bool> DisableBrowserStorageShim =
+        CVarDef.Create("opendream.disable_browser_storage_shim", false, CVar.CLIENTONLY);
+
+    /// <summary>
     /// When set to a file path, the client writes a JSON dump of every skin element's
     /// computed properties there shortly after the interface loads, then keeps going.
     /// Used to diff skin geometry against DreamSeeker without needing a human to look at it.

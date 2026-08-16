@@ -4,6 +4,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using OpenDreamShared;
 using OpenDreamShared.Interface.Descriptors;
 using OpenDreamClient.Resources;
 using OpenDreamClient.Resources.ResourceTypes;
@@ -13,6 +14,7 @@ using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.WebView;
+using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Network;
@@ -550,6 +552,7 @@ internal sealed partial class ControlBrowser : InterfaceControl {
     private const uint DreamResourceIconRefType = 0x0C000000;
     private const uint DreamResourceRefType = 0x27000000;
 
+    [Dependency] private IConfigurationManager _cfg = default!;
     [Dependency] private IResourceManager _resourceManager = default!;
     [Dependency] private IClientNetManager _netManager = default!;
     [Dependency] private IDreamResourceManager _dreamResource = default!;
@@ -575,7 +578,9 @@ internal sealed partial class ControlBrowser : InterfaceControl {
     private Stream AddBrowserShims(Stream stream) {
         using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, leaveOpen: false);
         var html = reader.ReadToEnd();
-        html = DisableRemoteTguiStorageCdn(html);
+        var skipStorageShim = _cfg.GetCVar(OpenDreamCVars.DisableBrowserStorageShim);
+        if (!skipStorageShim)
+            html = DisableRemoteTguiStorageCdn(html);
 
         if (html.Contains("window.__opendreamStorageShim", StringComparison.Ordinal) &&
             html.Contains("window.__opendreamGeometryShim", StringComparison.Ordinal) &&
@@ -586,7 +591,7 @@ internal sealed partial class ControlBrowser : InterfaceControl {
         // First, so it is installed before anything else on the page can throw.
         if (!html.Contains("window.__opendreamErrorShim", StringComparison.Ordinal))
             shims += BrowserErrorShim;
-        if (!html.Contains("window.__opendreamStorageShim", StringComparison.Ordinal))
+        if (!skipStorageShim && !html.Contains("window.__opendreamStorageShim", StringComparison.Ordinal))
             shims += BrowserStorageShim;
         if (!html.Contains("window.__opendreamGeometryShim", StringComparison.Ordinal)) {
             shims += BrowserGeometryShimTemplate
