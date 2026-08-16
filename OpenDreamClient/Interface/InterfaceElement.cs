@@ -85,7 +85,19 @@ public partial class InterfaceElement {
             // declared in the DMF, so geometry like size/pos would otherwise come back as it
             // was written rather than as it was laid out - and TGUI reads its size from a
             // wildcard winget, so a stale value there mislays the whole interface.
-            if (TryGetProperty(property, out var liveValue)) {
+            //
+            // TryGetProperty reads through the serialization manager, which throws on a null
+            // node for a non-nullable type. That must not escape: one bad property would
+            // abort the whole enumeration, and a wildcard winget along with it.
+            IDMFProperty? liveValue = null;
+            try {
+                if (!TryGetProperty(property, out liveValue))
+                    liveValue = null;
+            } catch (Exception) {
+                liveValue = null;
+            }
+
+            if (liveValue != null) {
                 yield return (property, liveValue);
                 continue;
             }
