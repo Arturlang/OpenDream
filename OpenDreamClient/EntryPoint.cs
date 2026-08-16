@@ -62,6 +62,14 @@ public sealed partial class EntryPoint : GameClient {
         _configurationManager.OverrideDefault(CVars.NetPredict, false);
         _configurationManager.OverrideDefault(CVars.ResAutoScaleEnabled, false); // Fixes weird scaling when sizing windows too small
 
+        // DM worlds assume the client knows about everything BYOND would send it. Large
+        // codebases keep tens of thousands of PVS-overridden entities (e.g. per-turf
+        // lighting objects shown through vis_contents); at the engine's default budgets
+        // (50 new/tick) that backlog takes tens of minutes to stream in, during which
+        // in-view objects are starved out of the game state and nothing renders.
+        _configurationManager.OverrideDefault(CVars.NetPVSEntityBudget, 4096);
+        _configurationManager.OverrideDefault(CVars.NetPVSEntityEnterBudget, 8192);
+
         IoCManager.Resolve<DreamUserInterfaceStateManager>().Initialize();
 
         componentFactory.GenerateNetIds();

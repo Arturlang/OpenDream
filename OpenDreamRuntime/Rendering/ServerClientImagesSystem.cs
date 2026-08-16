@@ -21,7 +21,8 @@ public sealed partial class ServerClientImagesSystem : SharedClientImagesSystem 
             turfCoords = new Vector3(turf.X, turf.Y, turf.Z);
 
         NetEntity ent = GetNetEntity(locEntity);
-        EntityUid imageObjectEntity = imageObject.Entity;
+        // Images only get an entity once a client actually needs to track them
+        EntityUid imageObjectEntity = imageObject.GetOrCreateEntity();
         NetEntity imageObjectNetEntity = GetNetEntity(imageObjectEntity);
         if (imageObjectEntity != EntityUid.Invalid)
             _pvsOverrideSystem.AddSessionOverride(imageObjectEntity, connection.Session);

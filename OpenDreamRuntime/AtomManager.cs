@@ -505,7 +505,7 @@ public sealed partial class AtomManager {
             DreamObjectArea area => area.Appearance,
             DreamObjectTurf turf => turf.Appearance,
             DreamObjectMovable movable => movable.SpriteComponent.Appearance!,
-            DreamObjectImage image => image.IsMutableAppearance ? AppearanceSystem!.AddAppearance(image.MutableAppearance!, registerAppearance: false) : image.SpriteComponent!.Appearance!,
+            DreamObjectImage image => image.IsMutableAppearance ? AppearanceSystem!.AddAppearance(image.MutableAppearance!, registerAppearance: false) : image.Appearance!,
             _ => throw new Exception($"Cannot get appearance of {atom}")
         };
     }
@@ -520,7 +520,7 @@ public sealed partial class AtomManager {
             DreamObjectMovable { SpriteComponent.Appearance: { } movableAppearance } => movableAppearance,
             DreamObjectImage image => image.IsMutableAppearance
                 ? AppearanceSystem!.AddAppearance(image.MutableAppearance!, registerAppearance: false)
-                : image.SpriteComponent?.Appearance,
+                : image.Appearance,
             _ => null
         };
 
@@ -538,8 +538,10 @@ public sealed partial class AtomManager {
         if (atom is DreamObjectImage image) {
             if(image.IsMutableAppearance)
                 image.SetMutableAppearance(appearance);
+            else if (image.SpriteComponent != null)
+                SetSpriteAppearance(new(image.Entity, image.SpriteComponent), appearance);
             else
-                SetSpriteAppearance(new(image.Entity, image.SpriteComponent!), appearance);
+                image.SetEntitylessAppearance(new ImmutableAppearance(appearance, AppearanceSystem));
             return;
         }
 
@@ -581,6 +583,14 @@ public sealed partial class AtomManager {
             targetComponent = movable.SpriteComponent;
             appearance = MustGetAppearance(atom).ToMutable();
         } else if (atom is DreamObjectImage { IsMutableAppearance: false } image) {
+            if (image.SpriteComponent == null) {
+                // No entity means no client can see this image; just apply the end state.
+                using var endAppearance = MustGetAppearance(atom).ToMutable();
+                animate(endAppearance);
+                SetAtomAppearance(atom, endAppearance);
+                return;
+            }
+
             targetEntity = image.Entity;
             targetComponent = image.SpriteComponent;
             appearance = MustGetAppearance(atom).ToMutable();
@@ -630,6 +640,8 @@ public sealed partial class AtomManager {
         if (atom is DreamObjectMovable movable) {
             entity = movable.Entity;
         } else if (atom is DreamObjectImage { IsMutableAppearance: false } image) {
+            if (image.Entity == EntityUid.Invalid)
+                return; // Entity-less images have no client-side animations to stop
             entity = image.Entity;
         } else if (atom is DreamObjectTurf turf) {
             turfId = turf.Appearance.MustGetId();

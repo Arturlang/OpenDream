@@ -7,7 +7,16 @@ namespace OpenDreamRuntime.Objects.Types;
 
 public sealed class DreamObjectImage : DreamObject {
     public EntityUid Entity = EntityUid.Invalid;
-    public readonly DMISpriteComponent? SpriteComponent;
+    public DMISpriteComponent? SpriteComponent { get; private set; }
+
+    /// <summary>
+    /// The image's appearance while it has no entity. Most images only ever serve as
+    /// overlay/underlay sources, so they never need the networked entity; one is only
+    /// spawned on demand (see <see cref="GetOrCreateEntity"/>). Spawning one per image
+    /// eagerly floods PVS with tens of thousands of nullspace entities.
+    /// </summary>
+    private ImmutableAppearance? _entitylessAppearance;
+
     private DreamObject? _loc;
     private DreamList _overlays;
     private DreamList _underlays;
@@ -41,8 +50,6 @@ public sealed class DreamObjectImage : DreamObject {
             _visContents = new DreamVisContentsList(ObjectTree.List.ObjectDefinition, PvsOverrideSystem, this);
             _filters = new DreamFilterList(ObjectTree.List.ObjectDefinition, this);
             IsMutableAppearance = false;
-            Entity = EntityManager.SpawnEntity(null, new MapCoordinates(0, 0, MapId.Nullspace)); //spawning an entity in nullspace means it never actually gets sent to any clients until it's placed on the map, or it gets a PVS override
-            SpriteComponent = EntityManager.AddComponent<DMISpriteComponent>(Entity);
         }
 
         AtomManager.SetAtomAppearance(this, AtomManager.GetAppearanceFromDefinition(ObjectDefinition));
@@ -294,6 +301,36 @@ public sealed class DreamObjectImage : DreamObject {
 
     public DreamObject? GetAttachedLoc() {
         return _loc;
+    }
+
+    /// <summary>
+    /// The current appearance, whether it lives on the entity's sprite or is still entity-less.
+    /// Null for mutable appearances (see <see cref="MutableAppearance"/>).
+    /// </summary>
+    public ImmutableAppearance? Appearance => SpriteComponent?.Appearance ?? _entitylessAppearance;
+
+    public void SetEntitylessAppearance(ImmutableAppearance appearance) {
+        _entitylessAppearance = appearance;
+    }
+
+    /// <summary>
+    /// Spawns this image's entity if it doesn't have one yet. Only needed when a client must
+    /// track the image by entity (e.g. client.images); overlay usage reads the appearance directly.
+    /// </summary>
+    public EntityUid GetOrCreateEntity() {
+        if (Entity != EntityUid.Invalid || IsMutableAppearance)
+            return Entity;
+
+        Entity = EntityManager.SpawnEntity(null, new MapCoordinates(0, 0, MapId.Nullspace));
+        SpriteComponent = EntityManager.AddComponent<DMISpriteComponent>(Entity);
+
+        if (_entitylessAppearance != null) {
+            // Fresh entities send a full state, no need to dirty.
+            DMISpriteSystem.SetSpriteAppearance(new(Entity, SpriteComponent), _entitylessAppearance);
+            _entitylessAppearance = null;
+        }
+
+        return Entity;
     }
 
     public void SetMutableAppearance(MutableAppearance appearance) {
