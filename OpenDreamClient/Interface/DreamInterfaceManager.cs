@@ -1264,7 +1264,15 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
             interfaceElement = DefaultOutput;
         }
 
-        interfaceElement?.Output(value, data);
+        if (interfaceElement == null) {
+            // Silently dropping these hides real failures: TGUI delivers its entire payload
+            // through output() to "<id>.browser:update", so one unresolved id leaves the
+            // interface with no data at all.
+            _sawmill.Error($"Could not output to \"{control}\" because no such element exists");
+            return;
+        }
+
+        interfaceElement.Output(value, data);
     }
 
     public void WinClone(string controlId, string cloneId) {
