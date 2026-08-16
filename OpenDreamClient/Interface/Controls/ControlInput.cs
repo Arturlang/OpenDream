@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Numerics;
 using OpenDreamShared.Interface.Descriptors;
 using OpenDreamShared.Interface.DMF;
 using Robust.Client.UserInterface;
@@ -16,9 +17,15 @@ internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlW
     private Color? _appliedTextColor;
 
     private IEntitySystemManager? _entitySystems;
+    private IUserInterfaceManager? _uiManager;
+    private Popup? _completionPopup;
+    private ItemList? _completionList;
     private List<string>? _completionMatches;
-    private int _completionIndex;
+    private int _completionIndex = -1;
     private bool _applyingCompletion;
+
+    private const int CompletionMaxVisibleRows = 8;
+    private const float CompletionRowHeight = 24;
 
     private ControlDescriptorInput InputDescriptor => (ControlDescriptorInput)ControlDescriptor;
 
@@ -32,54 +39,145 @@ internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlW
     }
 
     private void TextBox_OnTextChanged(LineEdit.LineEditEventArgs args) {
-        // Any edit that isn't ours invalidates an in-progress completion cycle.
-        if (!_applyingCompletion)
-            _completionMatches = null;
+        // Any edit that isn't ours invalidates an in-progress completion.
+        if (_applyingCompletion)
+            return;
+
+        _completionMatches = null;
+        _completionIndex = -1;
+        _completionPopup?.Close();
     }
 
     /// <summary>
-    /// BYOND-style verb completion: Tab completes the typed prefix to an executable verb's
-    /// command name, further Tabs cycle through the other matches.
+    /// BYOND-style verb completion. Tab completes the typed prefix to an executable verb's
+    /// command name: a single match completes immediately, multiple matches extend to their
+    /// longest common prefix and open a list to pick from (click, or keep pressing Tab to
+    /// cycle). Any manual edit dismisses the list.
     /// </summary>
     private void TextBox_OnTabComplete(LineEdit.LineEditEventArgs args) {
         // An input with a fixed command (say bars etc.) doesn't take verb names.
         if (!string.IsNullOrEmpty(InputDescriptor.Command.Value))
             return;
 
-        if (_completionMatches == null) {
-            var prefix = _textBox.Text;
-            if (string.IsNullOrWhiteSpace(prefix))
-                return;
-
-            _entitySystems ??= IoCManager.Resolve<IEntitySystemManager>();
-            if (!_entitySystems.TryGetEntitySystem<ClientVerbSystem>(out var verbSystem))
-                return;
-
-            var matches = verbSystem.GetExecutableVerbs()
-                .Select(verb => verb.VerbInfo.GetCommandName())
-                .Where(name => name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                .Distinct()
-                .Order(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            if (matches.Count == 0)
-                return;
-
-            _completionMatches = matches;
-            _completionIndex = 0;
-        } else {
+        // Cycling an already-open list.
+        if (_completionMatches != null && _completionPopup is {Visible: true}) {
             _completionIndex = (_completionIndex + 1) % _completionMatches.Count;
+            HighlightCompletion(_completionIndex);
+            ApplyCompletion(_completionMatches[_completionIndex]);
+            return;
         }
 
-        var completion = _completionMatches[_completionIndex];
+        var prefix = _textBox.Text;
+        if (string.IsNullOrWhiteSpace(prefix))
+            return;
 
+        _entitySystems ??= IoCManager.Resolve<IEntitySystemManager>();
+        if (!_entitySystems.TryGetEntitySystem<ClientVerbSystem>(out var verbSystem))
+            return;
+
+        var matches = verbSystem.GetExecutableVerbs()
+            .Select(verb => verb.VerbInfo.GetCommandName())
+            .Where(name => name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            .Distinct()
+            .Order(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        switch (matches.Count) {
+            case 0:
+                return;
+            case 1:
+                ApplyCompletion(matches[0]);
+                return;
+        }
+
+        // Multiple matches: fill in as much as is unambiguous, then offer the list.
+        var common = LongestCommonPrefix(matches);
+        if (common.Length > prefix.Length)
+            ApplyCompletion(common);
+
+        _completionMatches = matches;
+        _completionIndex = -1;
+        ShowCompletionPopup(matches);
+    }
+
+    private void ApplyCompletion(string completion) {
         _applyingCompletion = true;
         _textBox.Text = completion;
         _textBox.CursorPosition = completion.Length;
         _applyingCompletion = false;
     }
 
+    private void ShowCompletionPopup(List<string> matches) {
+        _uiManager ??= IoCManager.Resolve<IUserInterfaceManager>();
+
+        if (_completionPopup == null) {
+            _completionList = new ItemList();
+            _completionList.OnItemSelected += eventArgs => {
+                if (_applyingCompletion || _completionMatches == null)
+                    return;
+
+                _completionIndex = eventArgs.ItemIndex;
+                ApplyCompletion(_completionMatches[eventArgs.ItemIndex]);
+                _completionPopup?.Close();
+                _textBox.GrabKeyboardFocus();
+            };
+
+            _completionPopup = new Popup();
+            _completionPopup.AddChild(_completionList);
+            _uiManager.ModalRoot.AddChild(_completionPopup);
+        }
+
+        _completionList!.Clear();
+        foreach (var match in matches) {
+            _completionList.AddItem(match);
+        }
+
+        var uiScale = _uiManager.ModalRoot.UIScale;
+        var inputTopLeft = _textBox.GlobalPixelPosition / uiScale;
+        var inputSize = _textBox.PixelSize / uiScale;
+
+        var height = Math.Min(matches.Count, CompletionMaxVisibleRows) * CompletionRowHeight + 4;
+        var width = Math.Max(inputSize.X, 250);
+
+        // Above the input; below it if there is no room.
+        var y = inputTopLeft.Y >= height
+            ? inputTopLeft.Y - height
+            : inputTopLeft.Y + inputSize.Y;
+
+        _completionPopup.Open(UIBox2.FromDimensions(new Vector2(inputTopLeft.X, y), new Vector2(width, height)));
+        _textBox.GrabKeyboardFocus();
+    }
+
+    private void HighlightCompletion(int index) {
+        if (_completionList == null)
+            return;
+
+        _applyingCompletion = true;
+        _completionList.ClearSelected();
+        _completionList[index].Selected = true;
+        _applyingCompletion = false;
+    }
+
+    private static string LongestCommonPrefix(List<string> values) {
+        var prefix = values[0];
+
+        foreach (var value in values) {
+            var length = Math.Min(prefix.Length, value.Length);
+            var i = 0;
+            while (i < length && char.ToLowerInvariant(prefix[i]) == char.ToLowerInvariant(value[i]))
+                i++;
+
+            prefix = prefix[..i];
+        }
+
+        return prefix;
+    }
+
     private void TextBox_OnSubmit(LineEdit.LineEditEventArgs lineEditEventArgs) {
+        _completionMatches = null;
+        _completionIndex = -1;
+        _completionPopup?.Close();
+
         if (InputDescriptor.NoCommand.Value)
             return;
 
