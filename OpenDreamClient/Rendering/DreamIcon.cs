@@ -132,9 +132,17 @@ internal sealed class DreamIcon(RenderTargetPool renderTargetPool, IDreamInterfa
     }
 
     public void SetAppearance(uint? appearanceId, AtomDirection? parentDir = null, string? parentIconState = null) {
-        // End any animations that are currently happening
-        // Note that this isn't faithful to the original behavior
-        EndAppearanceAnimation(null);
+        // End any animations that are currently happening, except ones flagged
+        // ANIMATION_CONTINUE: content like projectiles adjusts pixel offsets directly
+        // every tick while a continue-flagged animate() glides them, and the glide has
+        // to keep tweening across those appearance updates or the motion strobes.
+        // Note that ending the rest isn't faithful to the original behavior.
+        if (_appearanceAnimations != null && _appearanceAnimations.Count > 0) {
+            if (_appearanceAnimations.Any(anim => (anim.Flags & AnimationFlags.AnimationContinue) != 0))
+                _appearanceAnimations.RemoveAll(anim => (anim.Flags & AnimationFlags.AnimationContinue) == 0);
+            else
+                EndAppearanceAnimation(null);
+        }
 
         if (appearanceId == null) {
             Appearance = null;

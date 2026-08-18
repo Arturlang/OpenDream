@@ -1,10 +1,13 @@
 using Robust.Client.Graphics;
+using Robust.Shared.Graphics;
 using Robust.Shared.Utility;
 
 namespace OpenDreamClient.Rendering;
 
 public sealed class RenderTargetPool(IClyde clyde) {
     private readonly Dictionary<Vector2i, List<IRenderTexture>> _renderTargets = new();
+    private readonly Dictionary<Vector2i, List<IRenderTexture>> _filteredRenderTargets = new();
+    private readonly HashSet<IRenderTexture> _filteredSet = new();
     private readonly Stack<IRenderTexture> _renderTargetsToReturn = new();
 
     public IRenderTexture Rent(Vector2i size) {
@@ -21,14 +24,34 @@ public sealed class RenderTargetPool(IClyde clyde) {
         return result;
     }
 
+    /// <summary>
+    /// Rents a render target whose texture samples with bilinear filtering, for draws
+    /// that scale or rotate the result. DMI atlas textures must stay nearest-sampled
+    /// (filtering would bleed neighboring states), so smoothing goes through these.
+    /// </summary>
+    public IRenderTexture RentFiltered(Vector2i size) {
+        IRenderTexture result;
+
+        if (_filteredRenderTargets.TryGetValue(size, out var listResult) && listResult.Count > 0) {
+            result = listResult.Pop();
+        } else {
+            result = clyde.CreateRenderTarget(size, new(RenderTargetColorFormat.Rgba8Srgb),
+                new TextureSampleParameters { Filter = true });
+            _filteredSet.Add(result);
+        }
+
+        return result;
+    }
+
     public void ReturnAtEndOfFrame(IRenderTexture rental) {
         _renderTargetsToReturn.Push(rental);
     }
 
     public void Return(IRenderTexture rental) {
-        if (!_renderTargets.TryGetValue(rental.Size, out var storeList)) {
+        var store = _filteredSet.Contains(rental) ? _filteredRenderTargets : _renderTargets;
+        if (!store.TryGetValue(rental.Size, out var storeList)) {
             storeList = new List<IRenderTexture>(4);
-            _renderTargets.Add(rental.Size, storeList);
+            store.Add(rental.Size, storeList);
         }
 
         storeList.Add(rental);

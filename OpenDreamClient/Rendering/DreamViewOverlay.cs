@@ -713,6 +713,23 @@ internal sealed partial class DreamViewOverlay : Overlay {
         if (iconMetaData.MainIcon != null)
             pixelPosition += iconMetaData.MainIcon.TextureRenderOffset;
 
+        // BYOND draws atoms that have a scaling/rotating transform with bilinear
+        // filtering, which keeps scaled gradients (e.g. lighting overlays) smooth.
+        // DMI atlas textures must stay nearest-sampled, so blit the frame into a
+        // bilinear render target at native size and draw that through the transform.
+        if (IsScalingOrRotating(iconMetaData.TransformToApply)) {
+            var smoothed = _renderTargetPool.RentFiltered(frame.Size);
+
+            handle.RenderInRenderTarget(smoothed, () => {
+                handle.UseShader(null);
+                handle.SetTransform(CreateRenderTargetFlipMatrix(smoothed.Size, Vector2.Zero));
+                handle.DrawTextureRect(frame, new Box2(Vector2.Zero, frame.Size));
+            }, Color.Black.WithAlpha(0));
+
+            _renderTargetPool.ReturnAtEndOfFrame(smoothed);
+            frame = smoothed.Texture;
+        }
+
         handle.UseShader(GetBlendAndColorShader(iconMetaData, ignoreColor: true));
 
         handle.SetTransform(CalculateDrawingMatrix(iconMetaData.TransformToApply, pixelPosition, frame.Size, renderTargetSize));
@@ -726,6 +743,17 @@ internal sealed partial class DreamViewOverlay : Overlay {
             handle.UseShader(GetBlendAndColorShader(iconMetaData, ignoreColor: true));
             iconMetaData.Particles.Draw(handle, CalculateDrawingMatrix(iconMetaData.TransformToApply, pixelPosition, iconMetaData.Particles.RenderSize, renderTargetSize));
         }
+    }
+
+    /// <summary>
+    /// True if the matrix's linear part does anything besides translate, i.e. drawing
+    /// with it will resample the texture off its pixel grid.
+    /// </summary>
+    private static bool IsScalingOrRotating(in Matrix3x2 transform) {
+        const float epsilon = 0.001f;
+
+        return MathF.Abs(transform.M11 - 1) > epsilon || MathF.Abs(transform.M22 - 1) > epsilon ||
+               MathF.Abs(transform.M12) > epsilon || MathF.Abs(transform.M21) > epsilon;
     }
 
     /// <summary>
