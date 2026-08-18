@@ -665,15 +665,20 @@ internal sealed partial class DreamViewOverlay : Overlay {
         else
             colorMatrix = iconMetaData.ColorMatrixToApply;
 
+        // Plane masters and render-source relays draw render-target textures, whose
+        // content is already premultiplied; the blend shaders must not multiply by
+        // alpha again or every composite hop dims the content.
+        var premultipliedSource = iconMetaData.IsPlaneMaster || iconMetaData.HasRenderSource;
+
         var blendAndColor = _blendModeInstances[blendMode];
-        if (!iconMetaData.IsPlaneMaster && colorMatrix.Equals(ColorMatrix.Identity)) // We can get away with no duplication
+        if (!premultipliedSource && colorMatrix.Equals(ColorMatrix.Identity)) // We can get away with no duplication
             return blendAndColor;
 
         // RT's batching is a little broken and so we must duplicate the shader if we modify its parameters
         blendAndColor = blendAndColor.Duplicate();
         blendAndColor.SetParameter("colorMatrix", colorMatrix.GetMatrix4());
         blendAndColor.SetParameter("offsetVector", colorMatrix.GetOffsetVector());
-        blendAndColor.SetParameter("isPlaneMaster", iconMetaData.IsPlaneMaster);
+        blendAndColor.SetParameter("isPlaneMaster", premultipliedSource);
         return blendAndColor;
     }
 
