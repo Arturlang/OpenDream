@@ -16,6 +16,13 @@ public abstract class InterfaceControl : InterfaceElement {
     public DMFPropertyPos? Anchor2 => ControlDescriptor.Anchor2;
 
     /// <summary>
+    /// True when both anchors span the whole parent (0,0 to 100,100), meaning the
+    /// anchor layout fully dictates this control's position and size.
+    /// </summary>
+    protected bool IsFullyAnchored =>
+        Anchor1 is { X: 0, Y: 0 } && Anchor2 is { X: 100, Y: 100 };
+
+    /// <summary>
     /// The position that anchor1 and anchor2 anchor themselves to.
     /// Updates when this control's size/pos is winset,
     /// or when this control's size is 0 and a sibling control's size/pos is winset
@@ -101,6 +108,16 @@ public abstract class InterfaceControl : InterfaceElement {
     public override void SetProperty(string property, string value, bool manualWinset = false) {
         switch (property) {
             case "size":
+                // A fully-anchored control's size is dictated by its anchors; accepting a
+                // manual size would bake the difference into the anchor offsets (the
+                // descriptor size feeds UpdateAnchors). Content relies on this being a
+                // no-op: tgui-panel wingets the legacy output's size and winsets it onto
+                // the chat browser while the window is still resizing during boot, and a
+                // stale value here permanently squished the chat panel into the left of
+                // its pane.
+                if (manualWinset && IsFullyAnchored)
+                    return;
+
                 var size = new DMFPropertySize(value);
                 ControlDescriptor.Size = size;
 
