@@ -173,8 +173,12 @@ public sealed partial class DreamManager {
         // transform histogram is full means entities never entered the lookup trees.
         var lookupSystem = _entityManager.System<Robust.Shared.GameObjects.EntityLookupSystem>();
         var probe = new HashSet<EntityUid>();
-        lookupSystem.GetEntitiesIntersecting(new Robust.Shared.Map.MapId(2), new Robust.Shared.Maths.Box2(100, 130, 125, 150), probe,
-            Robust.Shared.GameObjects.LookupFlags.Approximate | Robust.Shared.GameObjects.LookupFlags.Uncontained);
+        try {
+            lookupSystem.GetEntitiesIntersecting(new Robust.Shared.Map.MapId(2), new Robust.Shared.Maths.Box2(100, 130, 125, 150), probe,
+                Robust.Shared.GameObjects.LookupFlags.Approximate | Robust.Shared.GameObjects.LookupFlags.Uncontained);
+        } catch (Exception) {
+            // Probe box is Bubberstation-specific; worlds without a map 2 throw here.
+        }
 
         Logger.GetSawmill("opendream.census").Info(
             $"server sprite census: total={total} nullParent={nullParent} maps=({histogramText}) lookupProbeMap2={probe.Count} null[movables={nullMovable} deleting={nullMovableDeleting} orphans={nullOrphan}] " +

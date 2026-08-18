@@ -71,6 +71,12 @@
     colorMatrix: 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1
     offsetVector: 0,0,0,0
 
+# Not a filter; used by the renderer when copying icons for bilinear scaling
+- type: shader
+  id: edge_bleed
+  kind: source
+  path: "/Shaders/edgebleed.swsl"
+
 #unimplemented shaders point to empty.swsl and do nothing
 
 - type: shader

@@ -1,0 +1,28 @@
+// Copies a texture while bleeding edge colors into fully-transparent texels.
+// Bilinear sampling interpolates RGB toward whatever RGB transparent texels
+// store (usually black), which darkens soft alpha edges into a visible dark
+// outline; borrowing the alpha-weighted neighbor color instead keeps the
+// interpolated edge the same hue as the icon.
+
+light_mode unshaded;
+blend_mode none;
+
+void fragment() {
+    highp vec4 color = texture(TEXTURE, UV);
+
+    if (color.a < 0.004) {
+        highp vec4 accum = vec4(0.0);
+        for (highp float x = -1.0; x <= 1.0; x += 1.0) {
+            for (highp float y = -1.0; y <= 1.0; y += 1.0) {
+                highp vec4 neighbor = texture(TEXTURE, UV + vec2(x, y) * TEXTURE_PIXEL_SIZE);
+                accum += vec4(neighbor.rgb * neighbor.a, neighbor.a);
+            }
+        }
+
+        if (accum.a > 0.0) {
+            color.rgb = accum.rgb / accum.a;
+        }
+    }
+
+    COLOR = color;
+}

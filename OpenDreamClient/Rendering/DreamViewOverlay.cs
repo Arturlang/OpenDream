@@ -24,6 +24,7 @@ namespace OpenDreamClient.Rendering;
 /// </summary>
 internal sealed partial class DreamViewOverlay : Overlay {
     public static ShaderInstance ColorInstance = default!;
+    private ShaderInstance _edgeBleedInstance = default!;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowWorld;
 
@@ -94,6 +95,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
         public const string
             BlockColor = "blockcolor",
             Color = "color",
+            EdgeBleed = "edge_bleed",
             BlendOverlay = "blend_overlay",
             BlendAdd = "blend_add",
             BlendSubtract = "blend_subtract",
@@ -119,6 +121,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
         _sawmill.Debug("Loading shaders...");
         BlockColorInstance = _protoManager.Index<ShaderPrototype>(OdShaderId.BlockColor).InstanceUnique();
         ColorInstance = _protoManager.Index<ShaderPrototype>(OdShaderId.Color).InstanceUnique();
+        _edgeBleedInstance = _protoManager.Index<ShaderPrototype>(OdShaderId.EdgeBleed).InstanceUnique();
         _blendModeInstances = new(6) {
             {BlendMode.Default, _protoManager.Index<ShaderPrototype>(OdShaderId.BlendOverlay).InstanceUnique()}, //BLEND_DEFAULT (Same as BLEND_OVERLAY when there's no parent)
             {BlendMode.Overlay, _protoManager.Index<ShaderPrototype>(OdShaderId.BlendOverlay).InstanceUnique()}, //BLEND_OVERLAY
@@ -721,7 +724,11 @@ internal sealed partial class DreamViewOverlay : Overlay {
             var smoothed = _renderTargetPool.RentFiltered(frame.Size);
 
             handle.RenderInRenderTarget(smoothed, () => {
-                handle.UseShader(null);
+                // A blend_mode none copy: alpha-blending here would multiply RGB by
+                // alpha a second time and darken the result. The shader also bleeds
+                // edge colors into transparent texels so the bilinear sampling below
+                // doesn't interpolate soft edges toward black and outline the icon.
+                handle.UseShader(_edgeBleedInstance);
                 handle.SetTransform(CreateRenderTargetFlipMatrix(smoothed.Size, Vector2.Zero));
                 handle.DrawTextureRect(frame, new Box2(Vector2.Zero, frame.Size));
             }, Color.Black.WithAlpha(0));
@@ -1155,12 +1162,19 @@ internal sealed partial class DreamViewOverlay : Overlay {
         transform.M21 /= scaleFactors.Y;
         transform.M22 /= scaleFactors.Y;
 
+        // BYOND's matrix translation (c, f) is a post-transform pixel offset; it must
+        // not pass through the scale below, or scaled icons drift (e.g. a light overlay
+        // scaled 2.5x with Translate(-32,-32) lands 48px off where DreamSeeker puts it).
+        Vector2 translation = new(transform.M31, transform.M32);
+        transform.M31 = 0;
+        transform.M32 = 0;
+
         return
             Matrix3x2.CreateTranslation(-frameSize/2)  //translate to origin
-            * transform                                       //rotate and translate
+            * transform                                       //rotate
             * Matrix3x2.CreateTranslation(frameSize/2)       //translate back to original position
             * Matrix3x2.CreateScale(scaleFactors)               //scale
-            * CreateRenderTargetFlipMatrix(renderTargetSize, pixelPosition-((scaleFactors-Vector2.One)*frameSize/2)); //flip and apply scale-corrected translation
+            * CreateRenderTargetFlipMatrix(renderTargetSize, pixelPosition + translation - ((scaleFactors-Vector2.One)*frameSize/2)); //flip and apply scale-corrected translation
     }
 }
 
