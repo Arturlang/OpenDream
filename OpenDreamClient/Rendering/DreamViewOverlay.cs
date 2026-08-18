@@ -982,7 +982,12 @@ internal sealed partial class DreamViewOverlay : Overlay {
                     continue;
 
                 var worldPos = _transformSystem.GetWorldPosition(transform);
-                var sortPos = GetLogicalWorldPosition(entity, transform);
+                // Sorting uses the visual (glide-interpolated) position: side-map rows
+                // are derived from where the sprite is drawn, so a gliding mob stays in
+                // its departure row (and above that row's floor objects) until it has
+                // visually arrived. The logical position would snap it to the
+                // destination row the moment the move commits.
+                var sortPos = worldPos;
 
                 // Check for visibility if the eye doesn't have SEE_OBJS or SEE_MOBS
                 // TODO: Differentiate between objs and mobs

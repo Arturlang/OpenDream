@@ -121,14 +121,13 @@ internal sealed class RendererMetaData : IComparable<RendererMetaData> {
                 return val;
             }
         } else {
-            // Non-topdown maps sort by physical position before layer. Higher/northern
-            // positions are drawn first; lower/southern positions are drawn later/in front.
-            val = other.SortPosition.Y.CompareTo(SortPosition.Y);
-            if (val != 0) {
-                return val;
-            }
-
-            val = SortPosition.X.CompareTo(other.SortPosition.X);
+            // Side-map draws in tile rows from north to south; southern rows are in
+            // front. Rows come from the sprite's visual position, floored to whole
+            // tiles, so a glide keeps the mover in its departure row until it has
+            // visually arrived. Within a row, layer decides - and X never does: BYOND
+            // doesn't depth-sort horizontally, and doing so drew a departed tile's
+            // floor content over westward-gliding mobs.
+            val = MathF.Floor(other.SortPosition.Y - 0.5f).CompareTo(MathF.Floor(SortPosition.Y - 0.5f));
             if (val != 0) {
                 return val;
             }
