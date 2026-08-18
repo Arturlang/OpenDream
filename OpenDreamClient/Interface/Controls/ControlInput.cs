@@ -6,6 +6,7 @@ using OpenDreamShared.Interface.DMF;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using static Robust.Client.UserInterface.StylesheetHelpers;
@@ -21,6 +22,7 @@ internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlW
     private Popup? _completionPopup;
     private ItemList? _completionList;
     private List<string>? _completionMatches;
+    private string _completionPrefix = "";
     private int _completionIndex = -1;
     private bool _applyingCompletion;
 
@@ -30,7 +32,7 @@ internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlW
     private ControlDescriptorInput InputDescriptor => (ControlDescriptorInput)ControlDescriptor;
 
     protected override Control CreateUIElement() {
-        _textBox = new LineEdit();
+        _textBox = new CompletionLineEdit { KeyBindInterceptor = InterceptKeyBind, TextInterceptor = InterceptTextEntry };
         _textBox.OnTextEntered += TextBox_OnSubmit;
         _textBox.OnTextChanged += TextBox_OnTextChanged;
         _textBox.OnTabComplete += TextBox_OnTabComplete;
@@ -46,6 +48,108 @@ internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlW
         _completionMatches = null;
         _completionIndex = -1;
         _completionPopup?.Close();
+    }
+
+    /// <summary>
+    /// Handles list navigation keys while the completion popup is open: arrows move the
+    /// selection, Enter confirms. Returns true when the key was consumed.
+    /// </summary>
+    private bool InterceptKeyBind(GUIBoundKeyEventArgs args) {
+        if (_completionPopup is not {Visible: true} || _completionMatches == null)
+            return false;
+
+        if (args.Function == EngineKeyFunctions.TextHistoryPrev) {
+            MoveCompletionSelection(-1);
+            return true;
+        }
+
+        if (args.Function == EngineKeyFunctions.TextHistoryNext) {
+            MoveCompletionSelection(1);
+            return true;
+        }
+
+        if (args.Function == EngineKeyFunctions.TextSubmit) {
+            ConfirmCompletion();
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Handles typed characters while the completion popup is open: space confirms the
+    /// selection (leaving the verb ready to take arguments), and a letter jumps to the
+    /// option continuing the typed prefix with that letter - or, when the selection
+    /// already matches, cycles through the options for that letter.
+    /// </summary>
+    private bool InterceptTextEntry(GUITextEnteredEventArgs args) {
+        if (_completionPopup is not {Visible: true} || _completionMatches == null)
+            return false;
+
+        if (args.Text == " ") {
+            if (_completionIndex >= 0)
+                ConfirmCompletion(appendSpace: true);
+
+            return true;
+        }
+
+        if (args.Text.Length == 1 && char.IsLetterOrDigit(args.Text[0])) {
+            JumpCompletionToLetter(char.ToLowerInvariant(args.Text[0]));
+            return true;
+        }
+
+        return false;
+    }
+
+    private void JumpCompletionToLetter(char letter) {
+        if (_completionMatches == null || _completionMatches.Count == 0)
+            return;
+
+        // The options usually all share the typed prefix, so jump by the first letter
+        // after it; fall back to the literal first letter of the option. Compared
+        // per-character: building prefix+letter strings trips the content sandbox
+        // (the compiler lowers char concatenation through ReadOnlySpan).
+        var prefixLength = _completionPrefix.Length;
+        var candidates = new List<int>();
+        for (int i = 0; i < _completionMatches.Count; i++) {
+            var option = _completionMatches[i];
+            if (option.Length > prefixLength && char.ToLowerInvariant(option[prefixLength]) == letter)
+                candidates.Add(i);
+        }
+
+        if (candidates.Count == 0) {
+            for (int i = 0; i < _completionMatches.Count; i++) {
+                if (char.ToLowerInvariant(_completionMatches[i][0]) == letter)
+                    candidates.Add(i);
+            }
+        }
+
+        if (candidates.Count == 0)
+            return;
+
+        // Same letter again cycles through its options
+        var position = candidates.IndexOf(_completionIndex);
+        _completionIndex = candidates[position == -1 ? 0 : (position + 1) % candidates.Count];
+        HighlightCompletion(_completionIndex);
+    }
+
+    private void MoveCompletionSelection(int delta) {
+        if (_completionMatches == null || _completionMatches.Count == 0)
+            return;
+
+        _completionIndex = ((_completionIndex < 0 ? 0 : _completionIndex) + delta + _completionMatches.Count) % _completionMatches.Count;
+        HighlightCompletion(_completionIndex);
+    }
+
+    private void ConfirmCompletion(bool appendSpace = false) {
+        if (_completionMatches == null || _completionIndex < 0)
+            return;
+
+        ApplyCompletion(_completionMatches[_completionIndex] + (appendSpace ? " " : ""));
+        _completionMatches = null;
+        _completionIndex = -1;
+        _completionPopup?.Close();
+        _textBox.GrabKeyboardFocus();
     }
 
     /// <summary>
@@ -96,7 +200,8 @@ internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlW
             ApplyCompletion(common);
 
         _completionMatches = matches;
-        _completionIndex = -1;
+        _completionPrefix = common.Length > prefix.Length ? common : prefix;
+        _completionIndex = 0; // The first entry starts selected
         ShowCompletionPopup(matches);
     }
 
@@ -117,9 +222,7 @@ internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlW
                     return;
 
                 _completionIndex = eventArgs.ItemIndex;
-                ApplyCompletion(_completionMatches[eventArgs.ItemIndex]);
-                _completionPopup?.Close();
-                _textBox.GrabKeyboardFocus();
+                ConfirmCompletion();
             };
 
             _completionPopup = new Popup();
@@ -131,6 +234,8 @@ internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlW
         foreach (var match in matches) {
             _completionList.AddItem(match);
         }
+
+        HighlightCompletion(0);
 
         var uiScale = _uiManager.ModalRoot.UIScale;
         var inputTopLeft = _textBox.GlobalPixelPosition / uiScale;
@@ -252,6 +357,31 @@ internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlW
             default:
                 base.SetProperty(property, value, manualWinset);
                 break;
+        }
+    }
+
+    /// <summary>
+    /// A LineEdit that lets its owner intercept key functions (completion list navigation)
+    /// before the text field acts on them.
+    /// </summary>
+    private sealed class CompletionLineEdit : LineEdit {
+        public Func<GUIBoundKeyEventArgs, bool>? KeyBindInterceptor;
+        public Func<GUITextEnteredEventArgs, bool>? TextInterceptor;
+
+        protected override void KeyBindDown(GUIBoundKeyEventArgs args) {
+            if (KeyBindInterceptor?.Invoke(args) == true) {
+                args.Handle();
+                return;
+            }
+
+            base.KeyBindDown(args);
+        }
+
+        protected override void TextEntered(GUITextEnteredEventArgs args) {
+            if (TextInterceptor?.Invoke(args) == true)
+                return;
+
+            base.TextEntered(args);
         }
     }
 
