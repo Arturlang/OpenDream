@@ -163,8 +163,10 @@ internal sealed class BrowsePopup {
     private void SetSize(Vector2i size) {
         size = new Vector2i(Math.Max(size.X, 150), Math.Max(size.Y, 50));
         _window.SetSize = size;
-        WindowElement.SetProperty("size", $"{size.X}x{size.Y}", manualWinset: true);
-        Browser.SetProperty("size", $"{size.X}x{size.Y}", manualWinset: true);
+        // Engine plumbing, not a content winset: fully-anchored controls ignore manual
+        // size winsets, but these panes must track the popup window's real size.
+        WindowElement.SetProperty("size", $"{size.X}x{size.Y}");
+        Browser.SetProperty("size", $"{size.X}x{size.Y}");
         UpdateBrowserGeometry();
     }
 
@@ -183,8 +185,8 @@ internal sealed class BrowsePopup {
     private void OnWindowResized() {
         var size = _window.Size;
         var pixelSize = new Vector2i((int)size.X, (int)size.Y);
-        WindowElement.SetProperty("size", $"{pixelSize.X}x{pixelSize.Y}", manualWinset: true);
-        Browser.SetProperty("size", $"{pixelSize.X}x{pixelSize.Y}", manualWinset: true);
+        WindowElement.SetProperty("size", $"{pixelSize.X}x{pixelSize.Y}");
+        Browser.SetProperty("size", $"{pixelSize.X}x{pixelSize.Y}");
         UpdateBrowserGeometry();
     }
 
