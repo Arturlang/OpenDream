@@ -72,7 +72,11 @@ Known remaining delta - blend colorspace: BYOND blends translucency in sRGB spac
 the digit), while Robust blends in linear space, so every partial-alpha composite
 lands on slightly different colors (linear mixes read lighter in the midtones).
 Changing this means non-sRGB framebuffer blending or gamma compensation throughout
-the pipeline - a separate engine effort.
+the pipeline. A first implementation lives on the `srgb-blending-wip` branch: raw
+(non-sRGB) DMI textures and world render targets with the shader conversion pairs
+stripped. Opaque content round-trips byte-exact, but a lone 50%-alpha sprite still
+measures the linear mix - the surviving conversion (suspect: color-modulated draws)
+needs per-hop render-target readback to locate before the branch can land.
 
 ## Interface
 
