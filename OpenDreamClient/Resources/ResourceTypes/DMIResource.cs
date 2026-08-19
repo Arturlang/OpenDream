@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using OpenDreamShared.Dream;
 using OpenDreamShared.Resources;
 using Robust.Client.Graphics;
+using Robust.Shared.Graphics;
 using Robust.Shared.Asynchronous;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -48,7 +49,10 @@ public sealed class DMIResource : DreamResource {
     }
 
     private ProcessedDMIData FinalizeDMIData(Image<Rgba32> image, DMIParser.ParsedDMIDescription description) {
-        var texture = _clyde.LoadTextureFromImage(image, name: $"DMI Resource #{Id}");
+        // Non-sRGB: the world pipeline does all math and blending on raw sRGB bytes,
+        // matching BYOND's byte-space arithmetic (see docs/byond-parity-notes.md).
+        var texture = _clyde.LoadTextureFromImage(image, name: $"DMI Resource #{Id}",
+            loadParams: new TextureLoadParameters { Srgb = false });
         var iconSize = new Vector2i(description.Width, description.Height);
         var states = new Dictionary<string, State>();
         foreach (DMIParser.ParsedDMIState parsedState in description.States.Values) {

@@ -77,6 +77,12 @@
   kind: source
   path: "/Shaders/edgebleed.swsl"
 
+# Not a filter; decodes the raw-sRGB world pipeline for the sRGB viewport
+- type: shader
+  id: srgb_decode
+  kind: source
+  path: "/Shaders/srgbdecode.swsl"
+
 #unimplemented shaders point to empty.swsl and do nothing
 
 - type: shader
