@@ -26,6 +26,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
     public static ShaderInstance ColorInstance = default!;
     private ShaderInstance _edgeBleedInstance = default!;
     private ShaderInstance _srgbDecodeInstance = default!;
+    private ShaderInstance _blendOverlayPremultInstance = default!;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowWorld;
 
@@ -99,6 +100,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
             EdgeBleed = "edge_bleed",
             SrgbDecode = "srgb_decode",
             BlendOverlay = "blend_overlay",
+            BlendOverlayPremult = "blend_overlay_premult",
             BlendAdd = "blend_add",
             BlendSubtract = "blend_subtract",
             BlendMultiply = "blend_multiply",
@@ -141,6 +143,11 @@ internal sealed partial class DreamViewOverlay : Overlay {
             shader.SetParameter("isPlaneMaster", false);
             shader.SetParameter("premultAlpha", 1f);
         }
+
+        _blendOverlayPremultInstance = _protoManager.Index<ShaderPrototype>(OdShaderId.BlendOverlayPremult).InstanceUnique();
+        _blendOverlayPremultInstance.SetParameter("colorMatrix", ColorMatrix.Identity.GetMatrix4());
+        _blendOverlayPremultInstance.SetParameter("offsetVector", ColorMatrix.Identity.GetOffsetVector());
+        _blendOverlayPremultInstance.SetParameter("premultAlpha", 1f);
 
         _mapTextRenderer = new(_resourceCache, _tagManager);
     }
@@ -684,14 +691,28 @@ internal sealed partial class DreamViewOverlay : Overlay {
             colorMatrix = iconMetaData.ColorMatrixToApply;
 
         // Plane masters, render-source relays and keep-together groups draw
-        // render-target textures, whose content is already premultiplied; the blend
-        // shaders must not multiply by alpha again or every composite hop dims the
-        // content. A keep-together group's own alpha is applied in-shader as a uniform
-        // scale of all four channels, which keeps the content premultiplied (an
-        // alpha-only modulate would not).
+        // render-target textures, whose content is already premultiplied (drawing a
+        // straight source into a transparent target leaves Cs*a behind); compositing
+        // those with the default SrcAlpha blend would apply alpha a second time and
+        // darken every translucent RT hop, so Overlay/Default composites route
+        // through the premultiplied variant, which blends (One, 1-SrcAlpha) and
+        // applies a group's own alpha as a uniform scale of all four channels,
+        // keeping the content premultiplied (an alpha-only modulate would not).
         var premultipliedSource = iconMetaData.IsPlaneMaster || iconMetaData.HasRenderSource ||
                                   iconMetaData.TextureOverridePremultiplied;
-        var premultAlpha = iconMetaData.TextureOverridePremultiplied ? iconMetaData.AlphaToApply : 1f;
+        var premultAlpha = premultipliedSource ? iconMetaData.AlphaToApply : 1f;
+
+        if (premultipliedSource && blendMode is BlendMode.Default or BlendMode.Overlay) {
+            if (colorMatrix.Equals(ColorMatrix.Identity) && premultAlpha == 1f)
+                return _blendOverlayPremultInstance;
+
+            // RT's batching is a little broken and so we must duplicate the shader if we modify its parameters
+            var premult = _blendOverlayPremultInstance.Duplicate();
+            premult.SetParameter("colorMatrix", colorMatrix.GetMatrix4());
+            premult.SetParameter("offsetVector", colorMatrix.GetOffsetVector());
+            premult.SetParameter("premultAlpha", premultAlpha);
+            return premult;
+        }
 
         var blendAndColor = _blendModeInstances[blendMode];
         if (!premultipliedSource && colorMatrix.Equals(ColorMatrix.Identity)) // We can get away with no duplication
@@ -772,7 +793,9 @@ internal sealed partial class DreamViewOverlay : Overlay {
         handle.SetTransform(CalculateDrawingMatrix(iconMetaData.TransformToApply, pixelPosition, frame.Size, renderTargetSize));
 
         Color colorToApply = iconMetaData.ColorToApply;
-        if (!iconMetaData.TextureOverridePremultiplied) // Premultiplied overrides get their alpha in-shader
+        // Premultiplied sources get their alpha in-shader (the premultAlpha uniform
+        // scales all four channels); a modulate would only scale the alpha channel.
+        if (!(iconMetaData.IsPlaneMaster || iconMetaData.HasRenderSource || iconMetaData.TextureOverridePremultiplied))
             colorToApply.A *= iconMetaData.AlphaToApply;
 
         // The engine linearizes modulate colors (Color.FromSrgb in DrawingHandleBase);
@@ -954,7 +977,9 @@ internal sealed partial class DreamViewOverlay : Overlay {
                         plane.Master.TextureOverride = plane.RenderTarget.Texture;
                         DrawIcon(handle, baseRenderTarget.Size, plane.Master, Vector2.Zero);
                     } else {
-                        handle.UseShader(null);
+                        // Plane content is premultiplied; the default shader's SrcAlpha
+                        // blend would apply the plane's alpha a second time.
+                        handle.UseShader(_blendOverlayPremultInstance);
                         handle.SetTransform(CreateRenderTargetFlipMatrix(baseRenderTarget.Size, Vector2.Zero));
                         handle.DrawTextureRect(plane.RenderTarget.Texture, Box2.FromTwoPoints(Vector2.Zero, baseRenderTarget.Size));
                     }
@@ -1148,12 +1173,17 @@ internal sealed partial class DreamViewOverlay : Overlay {
         //draw it onto an additional render target that we can return immediately for correction of transform
         IRenderTexture tempTexture = _renderTargetPool.Rent(size);
 
+        // Clear to the premultiplied identity, NOT Color.Transparent - that is white
+        // with zero alpha, and this target is composited as a premultiplied source,
+        // where the (One, 1-SrcAlpha) blend adds a texel's color regardless of its
+        // alpha. White-alpha-0 padding would then wash out everything behind the
+        // group's full render-target quad.
         handle.RenderInRenderTarget(tempTexture, () => {
             foreach (RendererMetaData ktItem in ktItems) {
                 //draw the icon in the centre of the KT render target, based on the main icon position
                 DrawIcon(handle, tempTexture.Size, ktItem, -iconMetaData.Position+((tempTexture.Size/IconSize) - Vector2.One) * new Vector2(0.5f));
             }
-        }, Color.Transparent);
+        }, Color.Black.WithAlpha(0));
 
         //but keep the handle to the final KT group's render target so we don't override it later in the render cycle
         IRenderTexture ktTexture = _renderTargetPool.Rent(tempTexture.Size);
@@ -1163,7 +1193,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
             handle.UseShader(_edgeBleedInstance);
             handle.SetTransform(CreateRenderTargetFlipMatrix(tempTexture.Size, Vector2.Zero));
             handle.DrawTextureRect(tempTexture.Texture, new Box2(Vector2.Zero, tempTexture.Size));
-        }, Color.Transparent);
+        }, Color.Black.WithAlpha(0));
 
         _renderTargetPool.ReturnAtEndOfFrame(tempTexture);
 

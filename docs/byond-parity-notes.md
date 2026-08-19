@@ -122,3 +122,78 @@ Code that compiles fine can fail the client's assembly type-check at *runtime* (
 whole client dies at module load). Notable trap: `string + char` concatenation - the
 compiler lowers it through `new ReadOnlySpan<char>(ref char)`, which the whitelist
 rejects; use `c.ToString()` or per-character comparison.
+
+
+### Plane composites: alpha squared through render-target hops
+User report: ghosts still don't match BYOND after the byte-space work. Root cause
+found and verified with the `ghostplane` parity scene (scratchpad/lightparity):
+a translucent atom on its OWN plane (real ghosts: GHOST_PLANE + plane master, as
+all SS13 atoms are on planes) is drawn into the plane's transparent render target
+with the default (SrcAlpha, 1-SrcAlpha) blend - leaving PREMULTIPLIED bytes
+(Cs*a, a) - and the plane's composite onto the base target then applied SrcAlpha
+again: alpha squared. BYOND applies alpha once no matter how many plane hops.
+Measured: BYOND all cases (134,138,146); OpenDream own-plane case (83,87,95) =
+exact 204*a^2 + bg*(1-a) signature. The earlier scenes missed this because their
+opaque turf sat in the same plane RT as the test sprite.
+
+The fix (verified digit-exact on ghostplane; all regression scenes re-run):
+- RobustToolbox fork ShaderParser: new `blend_mode premultiplied;` keyword
+  ((One, 1-SrcAlpha) - the enum value already existed for the viewport path).
+- New `Resources/Shaders/blendoverlay_premult.swsl` (+ `blend_overlay_premult`
+  prototype): Overlay/Default compositing for premultiplied sources (plane
+  masters, render-source relays, KT groups). Group alpha scales all four
+  channels in-shader (`COLOR *= premultAlpha`); blendoverlay.swsl is now
+  straight-sources-only and applies no alpha itself.
+- DreamViewOverlay.GetBlendAndColorShader routes premultiplied sources with
+  Default/Overlay blend to the premult shader; `premultAlpha` now carries
+  AlphaToApply for ALL premultiplied sources (plane masters and render sources
+  included, not just KT) because a modulate would only scale the alpha channel
+  (base-default.frag does COLOR * MODULATE component-wise) which breaks
+  premultiplied content under the (One, 1-SrcAlpha) blend. DrawIconNow skips the
+  modulate-alpha for those sources correspondingly.
+- DrawPlanes' masterless-plane composite uses the premult shader instead of the
+  default one (same double-alpha bug).
+- blendadd/blendsubtract/blendmultiply already follow this convention
+  (`COLOR *= premultAlpha` under (One,One)/(DstColor,1-SrcAlpha) gives the right
+  master-alpha fade semantics - for multiply it's lerp(Cd, Cs*Cd, g)).
+
+A premultiplied composite makes a render target's CLEAR COLOR visible. Under
+(One, 1-SrcAlpha) a texel contributes its color regardless of alpha, so padding
+that is transparent-but-not-black is added straight onto the destination.
+`Color.Transparent` in RobustToolbox is `(255,255,255,0)` - WHITE with zero
+alpha - and ProcessKeepTogether cleared its two targets with it. The ktalpha
+rerun caught this: the KT group's whole 288x288 render-target quad washed out
+everything behind it, by exactly white * the parent's color * the group alpha
+(bg 64 + 255*0.8*0.5 = 166 for the alpha-128 group, and 64 + 255*0.8 = 268 ->
+saturated 255 for the alpha-255 one). KT now clears to `Color.Black.WithAlpha(0)`
+like every other target here (DreamPlane uses `new Color()`, DreamIcon and the
+bilinear-smoothing path already used Black.WithAlpha(0)). Rule for this renderer:
+a target that will be composited as a premultiplied source must be cleared to the
+premultiplied identity (0,0,0,0), never to `Color.Transparent`.
+
+Regression results on the fixed build, all against BYOND captures:
+- ghostplane: all three cases (134,138,146) - BYOND-identical.
+- alphaone: square (134,138,146) - exact.
+- ktalpha: overlay bands (114,74,63)/(107,76,82) and body strips
+  (134,138,146)/(134,138,146)/(204,204,204) - all exact (pre-fix they were
+  (97,63,65) and (117,119,124)/(155,157,160), i.e. wrong).
+- lightrelay: glow peak (58,66,82) now matches BYOND exactly (the pre-fix build
+  plateaued at (44,51,63), too dim - this is the `*` render-target plane-master
+  alpha that used to be silently dropped). Radius scales exactly with the
+  viewport (303 BYOND px vs 150 OD px at 2.02x), falloff monotonic, cones
+  visible, no dark rings. BYOND's plateau is slightly narrower than OpenDream's,
+  leaving a mid-radius band up to 6/255 brighter in OpenDream; the inner and
+  outer ends of the curve agree exactly.
+
+Separate pre-existing issue found while measuring ktalpha (NOT caused by this
+work - the pre-fix capture has the same geometry): in SIDE_MAP, BYOND sorts
+overlays by their pixel_y offset, so the `pixel_y = 8` overlays render BEHIND the
+atom's own icon; OpenDream draws them on top. Confirmed numerically - every
+OpenDream color in the overlap region is exactly what the same blend math gives
+with the draw order reversed, which is itself a check that the alpha math is now
+right. Bubberstation sets `map_format = SIDE_MAP` (code/world.dm:21), so this
+affects the real game and is worth its own fix.
+
+Remaining: user retests ghosts/MODsuit/PDA lights in game. Scene runner +
+measurement scripts: see capture.ps1 and measure_runs.py in
+scratchpad/lightparity; launch pattern is documented in docs/fast-builds.md.

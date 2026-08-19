@@ -28,10 +28,7 @@ void fragment() {
                 oldColor[2] * colorMatrix[3][2] + 
                 oldColor[3] * colorMatrix[3][3];
     COLOR = COLOR + offsetVector;
-    // Byte-space convention: color stays straight - the Normal blend's SrcAlpha
-    // factor applies alpha exactly once (BYOND's byte lerp). A keep-together
-    // group's own alpha rides the alpha channel.
-    if (isPlaneMaster) {
-        COLOR.a *= premultAlpha;
-    }
+    // STRAIGHT sources only (premultiplied render-target sources go through
+    // blendoverlay_premult.swsl): color stays straight - the default blend's
+    // SrcAlpha factor applies alpha exactly once (BYOND's byte lerp).
 }

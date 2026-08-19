@@ -43,6 +43,12 @@
   kind: source
   path: "/Shaders/blendoverlay.swsl"
 
+# Not a filter; BLEND_OVERLAY/BLEND_DEFAULT for premultiplied (render-target) sources
+- type: shader
+  id: blend_overlay_premult
+  kind: source
+  path: "/Shaders/blendoverlay_premult.swsl"
+
 - type: shader
   id: blend_add
   kind: source
