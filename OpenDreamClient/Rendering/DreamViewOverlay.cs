@@ -136,6 +136,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
             shader.SetParameter("colorMatrix", ColorMatrix.Identity.GetMatrix4());
             shader.SetParameter("offsetVector", ColorMatrix.Identity.GetOffsetVector());
             shader.SetParameter("isPlaneMaster", false);
+            shader.SetParameter("premultAlpha", 1f);
         }
 
         _mapTextRenderer = new(_resourceCache, _tagManager);
@@ -534,8 +535,13 @@ internal sealed partial class DreamViewOverlay : Overlay {
 
             tieBreaker++;
 
-            // KEEP_APART flag or on a different plane than the parent atom (implicitly treated as KEEP_APART)
-            var keepApart = underlay.Appearance.Plane != icon.Appearance.Plane ||
+            // KEEP_APART flag or on a different plane than the parent atom (implicitly treated as KEEP_APART).
+            // Float planes resolve relative to the parent, so an overlay on FLOAT_PLANE
+            // (the default - nearly every overlay) belongs to the parent's plane.
+            var underlayPlane = underlay.Appearance.Plane < -10000
+                ? icon.Appearance.Plane + (underlay.Appearance.Plane + 32767)
+                : underlay.Appearance.Plane;
+            var keepApart = underlayPlane != icon.Appearance.Plane ||
                             (underlay.Appearance.AppearanceFlags & AppearanceFlags.KeepApart) != 0;
 
             if (!keepTogether || keepApart) { //KEEP_TOGETHER wasn't set on our parent, or KEEP_APART
@@ -556,8 +562,11 @@ internal sealed partial class DreamViewOverlay : Overlay {
 
             tieBreaker++;
 
-            // KEEP_APART flag or on a different plane than the parent atom (implicitly treated as KEEP_APART)
-            var keepApart = overlay.Appearance.Plane != icon.Appearance.Plane ||
+            // See the underlay loop: float planes resolve to the parent's plane.
+            var overlayPlane = overlay.Appearance.Plane < -10000
+                ? icon.Appearance.Plane + (overlay.Appearance.Plane + 32767)
+                : overlay.Appearance.Plane;
+            var keepApart = overlayPlane != icon.Appearance.Plane ||
                             (overlay.Appearance.AppearanceFlags & AppearanceFlags.KeepApart) != 0;
 
             if (!keepTogether || keepApart) { //KEEP_TOGETHER wasn't set on our parent, or KEEP_APART
@@ -665,10 +674,15 @@ internal sealed partial class DreamViewOverlay : Overlay {
         else
             colorMatrix = iconMetaData.ColorMatrixToApply;
 
-        // Plane masters and render-source relays draw render-target textures, whose
-        // content is already premultiplied; the blend shaders must not multiply by
-        // alpha again or every composite hop dims the content.
-        var premultipliedSource = iconMetaData.IsPlaneMaster || iconMetaData.HasRenderSource;
+        // Plane masters, render-source relays and keep-together groups draw
+        // render-target textures, whose content is already premultiplied; the blend
+        // shaders must not multiply by alpha again or every composite hop dims the
+        // content. A keep-together group's own alpha is applied in-shader as a uniform
+        // scale of all four channels, which keeps the content premultiplied (an
+        // alpha-only modulate would not).
+        var premultipliedSource = iconMetaData.IsPlaneMaster || iconMetaData.HasRenderSource ||
+                                  iconMetaData.TextureOverridePremultiplied;
+        var premultAlpha = iconMetaData.TextureOverridePremultiplied ? iconMetaData.AlphaToApply : 1f;
 
         var blendAndColor = _blendModeInstances[blendMode];
         if (!premultipliedSource && colorMatrix.Equals(ColorMatrix.Identity)) // We can get away with no duplication
@@ -679,6 +693,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
         blendAndColor.SetParameter("colorMatrix", colorMatrix.GetMatrix4());
         blendAndColor.SetParameter("offsetVector", colorMatrix.GetOffsetVector());
         blendAndColor.SetParameter("isPlaneMaster", premultipliedSource);
+        blendAndColor.SetParameter("premultAlpha", premultAlpha);
         return blendAndColor;
     }
 
@@ -693,6 +708,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
             // For now, just generate a buffer of 128 pixels around the main icon...
             Vector2i ktSize = (256, 256) + iconMetaData.MainIcon?.DMI?.IconSize ?? (0,0);
             iconMetaData.TextureOverride = ProcessKeepTogether(handle, iconMetaData, ktSize);
+            iconMetaData.TextureOverridePremultiplied = true;
             positionOffset -= ((ktSize/IconSize) - Vector2.One) * new Vector2(0.5f); //correct for KT group texture offset
         }
 
@@ -747,7 +763,8 @@ internal sealed partial class DreamViewOverlay : Overlay {
         handle.SetTransform(CalculateDrawingMatrix(iconMetaData.TransformToApply, pixelPosition, frame.Size, renderTargetSize));
 
         Color colorToApply = iconMetaData.ColorToApply;
-        colorToApply.A *= iconMetaData.AlphaToApply;
+        if (!iconMetaData.TextureOverridePremultiplied) // Premultiplied overrides get their alpha in-shader
+            colorToApply.A *= iconMetaData.AlphaToApply;
 
         handle.DrawTextureRect(frame, Box2.FromDimensions(Vector2.Zero, frame.Size), colorToApply);
 
@@ -1129,7 +1146,9 @@ internal sealed partial class DreamViewOverlay : Overlay {
         //but keep the handle to the final KT group's render target so we don't override it later in the render cycle
         IRenderTexture ktTexture = _renderTargetPool.Rent(tempTexture.Size);
         handle.RenderInRenderTarget(ktTexture, () => {
-            handle.UseShader(null);
+            // A blend_mode none copy: alpha blending would multiply the already-
+            // premultiplied group content by its alpha a second time.
+            handle.UseShader(_edgeBleedInstance);
             handle.SetTransform(CreateRenderTargetFlipMatrix(tempTexture.Size, Vector2.Zero));
             handle.DrawTextureRect(tempTexture.Texture, new Box2(Vector2.Zero, tempTexture.Size));
         }, Color.Transparent);

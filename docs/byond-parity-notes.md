@@ -55,6 +55,19 @@ Note: BYOND's special layer ranges (`TOPDOWN_LAYER` 10000, `BACKGROUND_LAYER`, e
 which exempt flat content from the side-map depth sort, are still unimplemented; tg
 mostly confines such content to the floor plane, which hides this.
 
+### KEEP_TOGETHER groups
+Float planes resolve relative to the parent, so an overlay on FLOAT_PLANE (the
+default - nearly every overlay) belongs to its parent's plane. The keep-apart check
+compared raw appearance planes, which exiled effectively all overlays from their
+KEEP_TOGETHER groups - KT mobs (ghosts, humans with translucency effects) rendered
+piecewise like non-KT mobs. The group's internal render-target copy also needed a
+no-blend shader, the finished group texture is premultiplied content, and the group's
+own alpha must scale all four channels in-shader (an alpha-only modulate breaks
+premultiplication).
+Known remaining delta: final alpha-blend intensities still differ slightly from
+DreamSeeker (BYOND's KT ghost body measures an exact sRGB-space 50% mix; ours lands
+elsewhere), pointing at blend colorspace rather than compositing structure.
+
 ## Interface
 
 ### winget reports live control geometry

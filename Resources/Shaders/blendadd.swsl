@@ -3,7 +3,8 @@ blend_mode add;
 
 uniform lowp mat4 colorMatrix;
 uniform lowp vec4 offsetVector; // The final row of the 4x5 matrix it kinda is
-uniform bool isPlaneMaster; // True when the source is an already-premultiplied render target
+uniform bool isPlaneMaster;
+uniform lowp float premultAlpha; // Group alpha for premultiplied sources (keep-together) // True when the source is an already-premultiplied render target
 
 void fragment() {
     highp vec4 oldColor = zToSrgb(zTexture(UV)); // TODO: It'd be easier and more precise if we avoided this color-space conversion.
@@ -29,7 +30,11 @@ void fragment() {
     COLOR = zFromSrgb(COLOR + offsetVector);
     // The blend func is (One, One): premultiply straight sources here; plane/relay
     // render targets already hold premultiplied content.
-    COLOR.rgb *= isPlaneMaster ? 1.0 : COLOR.a;
+    if (isPlaneMaster) {
+        COLOR *= premultAlpha;
+    } else {
+        COLOR.rgb *= COLOR.a;
+    }
 }
 
     
