@@ -36,9 +36,12 @@ content wherever the target's alpha was under 1. Now Add/Subtract use a One dest
 factor with no source alpha factor; `blendadd`/`blendsubtract` premultiply straight
 sources in-shader and pass render-target sources through (the `isPlaneMaster` uniform
 doubles as "source is premultiplied", set by `GetBlendAndColorShader` for plane masters
-and render-source relays). `blendmultiply` un-premultiplies render-target sources
-before multiplying, or soft edges over-darken the destination (the dark ring around
-overlay lights in lit areas).
+and render-source relays). `blendmultiply` premultiplies straight sources
+like the others - the (DstColor, 1-srcAlpha) blend only lerps correctly with
+premultiplied RGB - and color matrices are applied in straight-alpha space
+(`colormatrix.swsl` un-premultiplies flagged sources and re-premultiplies after);
+baking a matrix from premultiplied content drew a dark ring around overlay lights in
+lit areas.
 
 ### SIDE_MAP draw order
 Verified with a walker over floor-layer objects: BYOND keeps a gliding mob above lower
@@ -64,9 +67,12 @@ piecewise like non-KT mobs. The group's internal render-target copy also needed 
 no-blend shader, the finished group texture is premultiplied content, and the group's
 own alpha must scale all four channels in-shader (an alpha-only modulate breaks
 premultiplication).
-Known remaining delta: final alpha-blend intensities still differ slightly from
-DreamSeeker (BYOND's KT ghost body measures an exact sRGB-space 50% mix; ours lands
-elsewhere), pointing at blend colorspace rather than compositing structure.
+Known remaining delta - blend colorspace: BYOND blends translucency in sRGB space
+(a KT ghost body over the floor measures the exact byte-space 50% mix, verified to
+the digit), while Robust blends in linear space, so every partial-alpha composite
+lands on slightly different colors (linear mixes read lighter in the midtones).
+Changing this means non-sRGB framebuffer blending or gamma compensation throughout
+the pipeline - a separate engine effort.
 
 ## Interface
 
