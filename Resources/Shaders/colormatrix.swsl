@@ -7,8 +7,15 @@ light_mode unshaded;
 
 uniform lowp mat4 colorMatrix;
 uniform lowp vec4 offsetVector; // The final row of the 4x5 matrix it kinda is
+uniform bool isPlaneMaster; // True when the source is an already-premultiplied render target
 void fragment() {
     highp vec4 oldColor = zToSrgb(zTexture(UV)); // TODO: It'd be easier and more precise if we avoided this color-space conversion.
+    // BYOND color matrices operate on straight color; un-premultiply render-target
+    // sources first and re-premultiply after, or the matrix corrupts soft edges
+    // (the overlay-light cutout drew a dark ring around lights in lit areas).
+    if (isPlaneMaster && oldColor.a > 0.0001) {
+        oldColor.rgb /= oldColor.a;
+    }
     COLOR[0] =  oldColor[0] * colorMatrix[0][0] + 
                 oldColor[1] * colorMatrix[0][1] + 
                 oldColor[2] * colorMatrix[0][2] + 
@@ -29,4 +36,7 @@ void fragment() {
                 oldColor[2] * colorMatrix[3][2] + 
                 oldColor[3] * colorMatrix[3][3];
     COLOR = zFromSrgb(COLOR + offsetVector);
+    if (isPlaneMaster) {
+        COLOR.rgb *= COLOR.a;
+    }
 }

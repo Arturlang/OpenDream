@@ -83,8 +83,15 @@ internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlW
     /// already matches, cycles through the options for that letter.
     /// </summary>
     private bool InterceptTextEntry(GUITextEnteredEventArgs args) {
-        if (_completionPopup is not {Visible: true} || _completionMatches == null)
+        if (_completionPopup is not {Visible: true} || _completionMatches == null) {
+            // BYOND completes a partially-typed verb when space is pressed; only the
+            // first word qualifies, and the space falls through when nothing matches.
+            if (args.Text == " " && string.IsNullOrEmpty(InputDescriptor.Command.Value) &&
+                !string.IsNullOrWhiteSpace(_textBox.Text) && !_textBox.Text.Contains(' '))
+                return TryStartCompletion(fromSpace: true);
+
             return false;
+        }
 
         if (args.Text == " ") {
             if (_completionIndex >= 0)
@@ -171,13 +178,22 @@ internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlW
             return;
         }
 
+        TryStartCompletion(fromSpace: false);
+    }
+
+    /// <summary>
+    /// Completes the typed verb prefix: a single match completes immediately, multiple
+    /// matches extend to their longest common prefix and open the list. Returns false
+    /// when there is nothing to complete (no prefix or no matches).
+    /// </summary>
+    private bool TryStartCompletion(bool fromSpace) {
         var prefix = _textBox.Text;
         if (string.IsNullOrWhiteSpace(prefix))
-            return;
+            return false;
 
         _entitySystems ??= IoCManager.Resolve<IEntitySystemManager>();
         if (!_entitySystems.TryGetEntitySystem<ClientVerbSystem>(out var verbSystem))
-            return;
+            return false;
 
         var matches = verbSystem.GetExecutableVerbs()
             .Select(verb => verb.VerbInfo.GetCommandName())
@@ -188,10 +204,11 @@ internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlW
 
         switch (matches.Count) {
             case 0:
-                return;
+                return false;
             case 1:
-                ApplyCompletion(matches[0]);
-                return;
+                // Completing via space leaves the verb ready for arguments
+                ApplyCompletion(matches[0] + (fromSpace ? " " : ""));
+                return true;
         }
 
         // Multiple matches: fill in as much as is unambiguous, then offer the list.
@@ -203,6 +220,7 @@ internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlW
         _completionPrefix = common.Length > prefix.Length ? common : prefix;
         _completionIndex = 0; // The first entry starts selected
         ShowCompletionPopup(matches);
+        return true;
     }
 
     private void ApplyCompletion(string completion) {

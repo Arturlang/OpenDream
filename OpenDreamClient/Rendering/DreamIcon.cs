@@ -577,7 +577,9 @@ internal sealed class DreamIcon(RenderTargetPool renderTargetPool, IDreamInterfa
             ShaderInstance colorShader = DreamViewOverlay.ColorInstance.Duplicate();
             colorShader.SetParameter("colorMatrix", colorMatrix.GetMatrix4());
             colorShader.SetParameter("offsetVector", colorMatrix.GetOffsetVector());
-            colorShader.SetParameter("isPlaneMaster",iconMetaData.IsPlaneMaster);
+            // Doubles as "source is premultiplied": plane masters and render-source
+            // relays bake their color matrix from render-target content.
+            colorShader.SetParameter("isPlaneMaster", iconMetaData.IsPlaneMaster || iconMetaData.HasRenderSource);
             handle.UseShader(colorShader);
 
             handle.SetTransform(DreamViewOverlay.CreateRenderTargetFlipMatrix(pong.Size, (pong.Size/2 - frame.Size/2)));
