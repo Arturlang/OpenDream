@@ -14,11 +14,11 @@ public sealed class RenderTargetPool(IClyde clyde) {
         IRenderTexture result;
 
         if (!_renderTargets.TryGetValue(size, out var listResult)) {
-            result = clyde.CreateRenderTarget(size, new(RenderTargetColorFormat.Rgba8Srgb));
+            result = clyde.CreateRenderTarget(size, new(RenderTargetColorFormat.Rgba8));
         } else {
             result = listResult.Count > 0
                 ? listResult.Pop()
-                : clyde.CreateRenderTarget(size, new(RenderTargetColorFormat.Rgba8Srgb));
+                : clyde.CreateRenderTarget(size, new(RenderTargetColorFormat.Rgba8));
         }
 
         return result;
@@ -35,7 +35,7 @@ public sealed class RenderTargetPool(IClyde clyde) {
         if (_filteredRenderTargets.TryGetValue(size, out var listResult) && listResult.Count > 0) {
             result = listResult.Pop();
         } else {
-            result = clyde.CreateRenderTarget(size, new(RenderTargetColorFormat.Rgba8Srgb),
+            result = clyde.CreateRenderTarget(size, new(RenderTargetColorFormat.Rgba8),
                 new TextureSampleParameters { Filter = true });
             _filteredSet.Add(result);
         }

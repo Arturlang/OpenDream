@@ -1,0 +1,10 @@
+// Decodes raw-sRGB world pipeline output to linear, so drawing into the engine's
+// sRGB viewport (which hardware-encodes on write) reproduces the exact bytes.
+// The world pipeline blends on raw sRGB bytes for BYOND parity - see
+// docs/byond-parity-notes.md.
+
+light_mode unshaded;
+
+void fragment() {
+    COLOR = zFromSrgb(zTexture(UV));
+}

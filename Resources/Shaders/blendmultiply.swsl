@@ -7,7 +7,8 @@ uniform bool isPlaneMaster;
 uniform lowp float premultAlpha; // Group alpha for premultiplied sources (keep-together) // True when the source is an already-premultiplied render target
 
 void fragment() {
-    highp vec4 oldColor = zToSrgb(zTexture(UV)); // TODO: It'd be easier and more precise if we avoided this color-space conversion.
+    // The world pipeline stores raw sRGB bytes: no conversion on sample or write.
+    highp vec4 oldColor = zTexture(UV);
     COLOR[0] =  oldColor[0] * colorMatrix[0][0] + 
                 oldColor[1] * colorMatrix[0][1] + 
                 oldColor[2] * colorMatrix[0][2] + 
@@ -27,7 +28,7 @@ void fragment() {
                 oldColor[1] * colorMatrix[3][1] + 
                 oldColor[2] * colorMatrix[3][2] + 
                 oldColor[3] * colorMatrix[3][3];
-    COLOR = zFromSrgb(COLOR + offsetVector);
+    COLOR = COLOR + offsetVector;
     // The (DstColor, 1-srcAlpha) blend lerps correctly only with premultiplied RGB:
     // premultiply straight sources; render-target sources already are.
     if (isPlaneMaster) {

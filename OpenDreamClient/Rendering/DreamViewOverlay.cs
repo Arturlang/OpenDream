@@ -25,6 +25,7 @@ namespace OpenDreamClient.Rendering;
 internal sealed partial class DreamViewOverlay : Overlay {
     public static ShaderInstance ColorInstance = default!;
     private ShaderInstance _edgeBleedInstance = default!;
+    private ShaderInstance _srgbDecodeInstance = default!;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowWorld;
 
@@ -96,6 +97,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
             BlockColor = "blockcolor",
             Color = "color",
             EdgeBleed = "edge_bleed",
+            SrgbDecode = "srgb_decode",
             BlendOverlay = "blend_overlay",
             BlendAdd = "blend_add",
             BlendSubtract = "blend_subtract",
@@ -120,6 +122,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
 
         _sawmill.Debug("Loading shaders...");
         BlockColorInstance = _protoManager.Index<ShaderPrototype>(OdShaderId.BlockColor).InstanceUnique();
+        _srgbDecodeInstance = _protoManager.Index<ShaderPrototype>(OdShaderId.SrgbDecode).InstanceUnique();
         ColorInstance = _protoManager.Index<ShaderPrototype>(OdShaderId.Color).InstanceUnique();
         _edgeBleedInstance = _protoManager.Index<ShaderPrototype>(OdShaderId.EdgeBleed).InstanceUnique();
         _blendModeInstances = new(6) {
@@ -195,9 +198,11 @@ internal sealed partial class DreamViewOverlay : Overlay {
             ProcessSprites(worldHandle, viewportSize, worldAABB);
             DrawPlanes(worldHandle, worldAABB);
 
+            worldHandle.UseShader(_srgbDecodeInstance);
             worldHandle.DrawTexture(
                 MouseMapRenderEnabled ? _mouseMapRenderTarget!.Texture : _baseRenderTarget!.Texture,
                 args.WorldAABB.BottomLeft);
+            worldHandle.UseShader(null);
             return;
         }
 
@@ -222,9 +227,13 @@ internal sealed partial class DreamViewOverlay : Overlay {
         DrawPlanes(worldHandle, worldAABB);
 
         //At this point all the sprites have been rendered to the base target, now we just draw it to the viewport!
+        //The base target holds raw sRGB bytes; decode so the viewport's sRGB encode
+        //reproduces them exactly on screen.
+        worldHandle.UseShader(_srgbDecodeInstance);
         worldHandle.DrawTexture(
             MouseMapRenderEnabled ? _mouseMapRenderTarget!.Texture : _baseRenderTarget!.Texture,
             args.WorldAABB.BottomLeft);
+        worldHandle.UseShader(null);
     }
 
     private int _censusFrames;
@@ -766,7 +775,10 @@ internal sealed partial class DreamViewOverlay : Overlay {
         if (!iconMetaData.TextureOverridePremultiplied) // Premultiplied overrides get their alpha in-shader
             colorToApply.A *= iconMetaData.AlphaToApply;
 
-        handle.DrawTextureRect(frame, Box2.FromDimensions(Vector2.Zero, frame.Size), colorToApply);
+        // The engine linearizes modulate colors (Color.FromSrgb in DrawingHandleBase);
+        // pre-encode so the round trip delivers the raw bytes - the world pipeline
+        // does BYOND-style byte-space math.
+        handle.DrawTextureRect(frame, Box2.FromDimensions(Vector2.Zero, frame.Size), Color.ToSrgb(colorToApply));
 
         if (iconMetaData.Particles is not null) {
             handle.UseShader(GetBlendAndColorShader(iconMetaData, ignoreColor: true));
@@ -796,10 +808,10 @@ internal sealed partial class DreamViewOverlay : Overlay {
     private void RefreshRenderTargets(DrawingHandleWorld handle, Vector2i size, Dictionary<int, DreamPlane> planes, ref IRenderTexture? baseRenderTarget) {
         if (baseRenderTarget == null || baseRenderTarget.Size != size) {
             baseRenderTarget?.Dispose();
-            baseRenderTarget = _clyde.CreateRenderTarget(size, new(RenderTargetColorFormat.Rgba8Srgb), name: "Base Render Target");
+            baseRenderTarget = _clyde.CreateRenderTarget(size, new(RenderTargetColorFormat.Rgba8), name: "Base Render Target");
 
             foreach (var (planeId, plane) in planes) {
-                plane.SetMainRenderTarget(_clyde.CreateRenderTarget(size, new(RenderTargetColorFormat.Rgba8Srgb), name: $"Plane {planeId}"));
+                plane.SetMainRenderTarget(_clyde.CreateRenderTarget(size, new(RenderTargetColorFormat.Rgba8), name: $"Plane {planeId}"));
             }
         }
     }
@@ -808,11 +820,11 @@ internal sealed partial class DreamViewOverlay : Overlay {
         if (baseRenderTarget == null || baseRenderTarget.Size != size) {
             baseRenderTarget?.Dispose();
             mouseMapRenderTarget?.Dispose();
-            baseRenderTarget = _clyde.CreateRenderTarget(size, new(RenderTargetColorFormat.Rgba8Srgb), name: "Base Render Target");
-            mouseMapRenderTarget = _clyde.CreateRenderTarget(size, new(RenderTargetColorFormat.Rgba8Srgb), name: "MouseMap");
+            baseRenderTarget = _clyde.CreateRenderTarget(size, new(RenderTargetColorFormat.Rgba8), name: "Base Render Target");
+            mouseMapRenderTarget = _clyde.CreateRenderTarget(size, new(RenderTargetColorFormat.Rgba8), name: "MouseMap");
 
             foreach (var (planeId, plane) in planes) {
-                plane.SetMainRenderTarget(_clyde.CreateRenderTarget(size, new(RenderTargetColorFormat.Rgba8Srgb), name: $"Plane {planeId}"));
+                plane.SetMainRenderTarget(_clyde.CreateRenderTarget(size, new(RenderTargetColorFormat.Rgba8), name: $"Plane {planeId}"));
             }
         } else {
             // Clear the mouse map lookup dictionary
@@ -855,7 +867,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
         if (planes.TryGetValue(planeIndex, out var plane))
             return plane;
 
-        var renderTarget = _clyde.CreateRenderTarget(viewportSize, new(RenderTargetColorFormat.Rgba8Srgb), name: $"Plane {planeIndex}");
+        var renderTarget = _clyde.CreateRenderTarget(viewportSize, new(RenderTargetColorFormat.Rgba8), name: $"Plane {planeIndex}");
 
         plane = new(renderTarget);
         planes.Add(planeIndex, plane);
