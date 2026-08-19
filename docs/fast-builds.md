@@ -35,6 +35,14 @@ and only `.dm`/`.dmi` changes need a DMCompiler run.
   (readonly `[Dependency]` fields and friends), so run `-Full` before committing or
   after changing packages/csproj files.
 
+## The VS Code extension builds on its own
+
+The OpenDream extension's launch configurations build the C# projects themselves
+(`dotnet build` for the client, `dotnet run` for the server) - a `preLaunchTask`
+should only free file locks and compile the DM side, or everything gets built twice.
+Keep `dotnet build-server shutdown` out of that path too, so the extension's builds
+stay warm.
+
 ## Other time sinks
 
 - The full Bubberstation world takes ~65s to init; the TESTING + LOWMEMORYMODE +
