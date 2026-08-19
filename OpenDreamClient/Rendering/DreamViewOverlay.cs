@@ -198,9 +198,11 @@ internal sealed partial class DreamViewOverlay : Overlay {
             ProcessSprites(worldHandle, viewportSize, worldAABB);
             DrawPlanes(worldHandle, worldAABB);
 
+            worldHandle.UseShader(_srgbDecodeInstance);
             worldHandle.DrawTexture(
                 MouseMapRenderEnabled ? _mouseMapRenderTarget!.Texture : _baseRenderTarget!.Texture,
                 args.WorldAABB.BottomLeft);
+            worldHandle.UseShader(null);
             return;
         }
 
@@ -225,9 +227,13 @@ internal sealed partial class DreamViewOverlay : Overlay {
         DrawPlanes(worldHandle, worldAABB);
 
         //At this point all the sprites have been rendered to the base target, now we just draw it to the viewport!
+        //The base target holds raw sRGB bytes; decode so the viewport's sRGB encode
+        //reproduces them exactly on screen.
+        worldHandle.UseShader(_srgbDecodeInstance);
         worldHandle.DrawTexture(
             MouseMapRenderEnabled ? _mouseMapRenderTarget!.Texture : _baseRenderTarget!.Texture,
             args.WorldAABB.BottomLeft);
+        worldHandle.UseShader(null);
     }
 
     private int _censusFrames;
@@ -769,7 +775,10 @@ internal sealed partial class DreamViewOverlay : Overlay {
         if (!iconMetaData.TextureOverridePremultiplied) // Premultiplied overrides get their alpha in-shader
             colorToApply.A *= iconMetaData.AlphaToApply;
 
-        handle.DrawTextureRect(frame, Box2.FromDimensions(Vector2.Zero, frame.Size), colorToApply);
+        // The engine linearizes modulate colors (Color.FromSrgb in DrawingHandleBase);
+        // pre-encode so the round trip delivers the raw bytes - the world pipeline
+        // does BYOND-style byte-space math.
+        handle.DrawTextureRect(frame, Box2.FromDimensions(Vector2.Zero, frame.Size), Color.ToSrgb(colorToApply));
 
         if (iconMetaData.Particles is not null) {
             handle.UseShader(GetBlendAndColorShader(iconMetaData, ignoreColor: true));

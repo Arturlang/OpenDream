@@ -75,7 +75,7 @@ internal sealed class DreamPlane(IRenderTexture mainRenderTarget) : IDisposable 
 
                 handle.UseShader(overlay.GetBlendAndColorShader(Master, useOverlayMode: true));
                 handle.SetTransform(DreamViewOverlay.CreateRenderTargetFlipMatrix(_temporaryRenderTarget.Size, Master.MainIcon?.TextureRenderOffset ?? Vector2.Zero));
-                handle.DrawTextureRect(texture, new Box2(Vector2.Zero, texture.Size), Master.ColorToApply);
+                handle.DrawTextureRect(texture, new Box2(Vector2.Zero, texture.Size), Color.ToSrgb(Master.ColorToApply));
             }, new Color());
         }
     }
@@ -113,7 +113,8 @@ internal sealed class DreamPlane(IRenderTexture mainRenderTarget) : IDisposable 
             Color targetColor = new Color(colorR, colorG, colorB); //TODO - this could result in mis-clicks due to hash-collision since we ditch a whole byte.
             overlay.MouseMapLookup[targetColor] = sprite;
             handle.SetTransform(DreamViewOverlay.CalculateDrawingMatrix(sprite.TransformToApply, pos, textureSize, renderTargetSize));
-            handle.DrawTextureRect(texture, new Box2(Vector2.Zero, textureSize), targetColor);
+            // Pre-encode: the readback compares raw bytes against MouseMapLookup keys
+            handle.DrawTextureRect(texture, new Box2(Vector2.Zero, textureSize), Color.ToSrgb(targetColor));
         }
     }
 }
