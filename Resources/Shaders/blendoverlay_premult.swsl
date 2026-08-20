@@ -7,8 +7,17 @@ blend_mode premultiplied;
 // transparent target with the default SrcAlpha blend leaves Cs*a behind).
 // Compositing that with a SrcAlpha factor would apply alpha a second time and
 // darken every translucent RT hop, so this variant blends (One, 1-SrcAlpha)
-// and applies a group's own alpha as a uniform scale of all four channels,
-// which keeps the content premultiplied.
+// and applies a group's own alpha as a uniform scale.
+//
+// The colour matrix has to run on STRAIGHT colour, so the source is
+// un-premultiplied first and re-premultiplied afterwards. BYOND's matrices are
+// defined over straight RGBA, and their constant row routinely sets RGB while
+// leaving alpha at zero - SS13 builds the specular mask exactly that way
+// (relay_color constant (1,1,1,0): "map [blue] onto alpha so we can use the
+// mask plate in an alpha mask filter"). Adding that constant straight onto
+// premultiplied content breaks the rgb <= a invariant, and the (One, ...) blend
+// then paints solid colour where alpha is zero - which opened the specular mask
+// everywhere and blew out lighting across the whole station.
 
 uniform lowp mat4 colorMatrix;
 uniform lowp vec4 offsetVector; // The final row of the 4x5 matrix it kinda is
@@ -16,7 +25,14 @@ uniform lowp float premultAlpha; // The group's own alpha (plane master / KT)
 
 void fragment() {
     // The world pipeline stores raw sRGB bytes: no conversion on sample or write.
-    highp vec4 oldColor = zTexture(UV);
+    highp vec4 src = zTexture(UV);
+
+    // Un-premultiply. Guarded: fully transparent texels carry no colour.
+    highp vec4 oldColor = vec4(0.0, 0.0, 0.0, src.a);
+    if (src.a > 0.0001) {
+        oldColor.rgb = src.rgb / src.a;
+    }
+
     COLOR[0] =  oldColor[0] * colorMatrix[0][0] +
                 oldColor[1] * colorMatrix[0][1] +
                 oldColor[2] * colorMatrix[0][2] +
@@ -37,5 +53,8 @@ void fragment() {
                 oldColor[2] * colorMatrix[3][2] +
                 oldColor[3] * colorMatrix[3][3];
     COLOR = COLOR + offsetVector;
-    COLOR *= premultAlpha;
+
+    // Group alpha, then back to premultiplied for the (One, 1-SrcAlpha) blend.
+    COLOR.a *= premultAlpha;
+    COLOR.rgb *= COLOR.a;
 }
