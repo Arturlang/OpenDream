@@ -47,8 +47,41 @@ public sealed class ScreenLocation {
     public ScreenLocation? Range;
     public bool AnchorToScreenBounds;
 
+    /// <summary>
+    /// Tile span of a "a to b" screen_loc when both ends are plain numeric
+    /// coordinates. Only correct for those: when either end uses an anchor
+    /// keyword (WEST, NORTH, ...) the span lives in the anchor rather than in
+    /// X/Y, so use <see cref="GetRepeat"/>, which resolves both ends against
+    /// the view first.
+    /// </summary>
     public int RepeatX => Range?.X - X + 1 ?? 1;
     public int RepeatY => Range?.Y - Y + 1 ?? 1;
+
+    private bool IsAnchored =>
+        HorizontalAnchor != HorizontalAnchor.West || VerticalAnchor != VerticalAnchor.South;
+
+    /// <summary>
+    /// How many times the icon repeats across a "a to b" screen_loc, resolved
+    /// against the current view. Anchor keywords carry their span in the anchor
+    /// (e.g. "WEST,SOUTH to EAST,NORTH" is X=Y=0 on both ends but covers the
+    /// whole viewport), so the raw <see cref="RepeatX"/> difference reports 1x1
+    /// for them and leaves stretched screen objects drawing a single tile.
+    /// </summary>
+    public Vector2i GetRepeat(ViewRange view, float tileSize, Vector2i iconSize, ScreenLocationBounds? screenBounds = null) {
+        if (Range == null)
+            return new Vector2i(1, 1);
+        if (!IsAnchored && !Range.IsAnchored)
+            return new Vector2i(Math.Max(RepeatX, 1), Math.Max(RepeatY, 1));
+
+        Vector2 start = GetViewPosition(Vector2.Zero, view, tileSize, iconSize, screenBounds);
+        Vector2 end = Range.GetViewPosition(Vector2.Zero, view, tileSize, iconSize, screenBounds);
+        Vector2 iconSizeTiles = iconSize / tileSize;
+
+        return new Vector2i(
+            Math.Max((int)MathF.Floor((end.X - start.X) / iconSizeTiles.X) + 1, 1),
+            Math.Max((int)MathF.Floor((end.Y - start.Y) / iconSizeTiles.Y) + 1, 1)
+        );
+    }
 
     private static ISawmill Sawmill => Logger.GetSawmill("opendream.screen_loc_parser");
 
@@ -124,12 +157,13 @@ public sealed class ScreenLocation {
     public ScreenLocationBounds GetScreenBounds(ViewRange view, float tileSize, Vector2i iconSize) {
         Vector2 position = GetViewPosition(Vector2.Zero, view, tileSize, iconSize);
         Vector2 iconSizeTiles = iconSize / tileSize;
+        Vector2i repeat = GetRepeat(view, tileSize, iconSize);
 
         return new ScreenLocationBounds(
             position.X,
             position.Y,
-            position.X + iconSizeTiles.X * RepeatX,
-            position.Y + iconSizeTiles.Y * RepeatY
+            position.X + iconSizeTiles.X * repeat.X,
+            position.Y + iconSizeTiles.Y * repeat.Y
         );
     }
 
