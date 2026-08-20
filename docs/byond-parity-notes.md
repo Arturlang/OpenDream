@@ -197,3 +197,47 @@ affects the real game and is worth its own fix.
 Remaining: user retests ghosts/MODsuit/PDA lights in game. Scene runner +
 measurement scripts: see capture.ps1 and measure_runs.py in
 scratchpad/lightparity; launch pattern is documented in docs/fast-builds.md.
+
+### Colour matrices must run on straight colour in premultiplied composites
+Symptom: on Bubberstation every lit floor blew out to white, while space read
+slightly too dark. Lit-room percentiles against BYOND on the same map, same
+observer landmark: BYOND p75 (98,82,67) / p90 (104,86,70); OpenDream p75
+(217,170,125) / p90 (255,239,180).
+
+The decisive observation is that OpenDream's own unlit game plate reads
+(104,103,105) - the floor's albedo - and BYOND's final lit floor is (104,86,70),
+exactly albedo x the lighting value (1, 0.844, 0.672) the server computed. A
+BLEND_MULTIPLY can only darken, so a final image ABOVE the albedo proves an
+additive term. The only additive relay onto the game plane is the specular
+plate.
+
+Root cause: BYOND colour matrices are defined over straight RGBA and their
+constant row often sets RGB while leaving alpha at zero.
+blendoverlay_premult.swsl added that constant onto already-premultiplied
+render-target content, breaking rgb <= a, and the (One, 1-SrcAlpha) blend then
+painted solid colour where alpha was zero. SS13 builds the specular mask that
+way - the emissive plate relays with constant (1,1,1,0), mapping blue onto alpha
+for an alpha_mask_filter - so the mask read as fully open (alpha 255 over 40% of
+the screen, >25 over 72%) and the specular plate was added everywhere. Fix:
+un-premultiply, apply the matrix, re-premultiply. Identity round-trips, so the
+alpha-once behaviour for ghosts and plane masters is untouched.
+
+Method worth reusing: every mechanism passed in isolation - multiply plate,
+per-turf darkness, the two set_light_cutoff matrices, render_target + multiply
+relay, the inverse emissive mask, the lighting objects' corner-weight icon, even
+colour-channel-into-alpha. The bug only appeared when a matrix with a constant
+row met a premultiplied source. Two tools found it:
+- `opendream.debug_plane` / `opendream.debug_plane_alpha` render one plane's
+  render target (or its alpha) to the viewport. Use blend_mode none: blending
+  the plane over the finished world makes an empty plane look full, which sent
+  this investigation down a false path once already.
+- an AUTO_OBSERVE build of the game dumps the server's lighting values, which
+  showed both engines computing byte-identical lighting for all 81 sampled
+  turfs and so ruled out the server entirely.
+
+Scenes and harness live in scratchpad/lightparity: `./parity.sh <scene>` for a
+scene, `./game.sh [--compile]` for the full station. Both boot BYOND and
+OpenDream, wait until each is really rendering, capture and compare. They kill
+only the PIDs they spawn - never by process name, or unrelated DreamSeeker
+instances die too - and use ports 26777/26800 so they cannot capture a manually
+booted station by mistake.
