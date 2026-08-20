@@ -1,0 +1,24 @@
+// Diagnostic only (opendream.debug_plane): copies a plane's render target to the
+// screen so its raw content can be inspected.
+//
+// blend_mode none matters: with normal alpha blending the plane would be
+// composited OVER the finished world, and every transparent texel would show
+// the game through it, which makes an almost-empty plane look full.
+//
+// showAlpha renders the alpha channel as greyscale instead, since a screenshot
+// is always opaque and alpha is what gates alpha_mask_filter.
+
+light_mode unshaded;
+blend_mode none;
+
+uniform bool showAlpha;
+
+void fragment() {
+    highp vec4 c = zTexture(UV);
+
+    if (showAlpha) {
+        COLOR = vec4(c.a, c.a, c.a, 1.0);
+    } else {
+        COLOR = vec4(c.rgb, 1.0);
+    }
+}

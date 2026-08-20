@@ -27,6 +27,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
     private ShaderInstance _edgeBleedInstance = default!;
     private ShaderInstance _srgbDecodeInstance = default!;
     private ShaderInstance _blendOverlayPremultInstance = default!;
+    private ShaderInstance _debugBlitInstance = default!;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowWorld;
 
@@ -60,6 +61,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
     [Dependency] private ProfManager _prof = default!;
     [Dependency] private IResourceCache _resourceCache = default!;
     [Dependency] private MarkupTagManager _tagManager = default!;
+    [Dependency] private Robust.Shared.Configuration.IConfigurationManager _configManager = default!;
 
     private readonly ISawmill _sawmill = Logger.GetSawmill("opendream.view");
 
@@ -101,6 +103,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
             SrgbDecode = "srgb_decode",
             BlendOverlay = "blend_overlay",
             BlendOverlayPremult = "blend_overlay_premult",
+            DebugBlit = "debug_blit",
             BlendAdd = "blend_add",
             BlendSubtract = "blend_subtract",
             BlendMultiply = "blend_multiply",
@@ -148,6 +151,9 @@ internal sealed partial class DreamViewOverlay : Overlay {
         _blendOverlayPremultInstance.SetParameter("colorMatrix", ColorMatrix.Identity.GetMatrix4());
         _blendOverlayPremultInstance.SetParameter("offsetVector", ColorMatrix.Identity.GetOffsetVector());
         _blendOverlayPremultInstance.SetParameter("premultAlpha", 1f);
+
+        _debugBlitInstance = _protoManager.Index<ShaderPrototype>(OdShaderId.DebugBlit).InstanceUnique();
+        _debugBlitInstance.SetParameter("showAlpha", false);
 
         _mapTextRenderer = new(_resourceCache, _tagManager);
     }
@@ -984,6 +990,17 @@ internal sealed partial class DreamViewOverlay : Overlay {
                         handle.DrawTextureRect(plane.RenderTarget.Texture, Box2.FromTwoPoints(Vector2.Zero, baseRenderTarget.Size));
                     }
                 }
+
+                // opendream.debug_plane: replace the composited world with a single
+                // plane's render target, so a capture shows that plane's raw content.
+                var debugPlane = _configManager.GetCVar(OpenDreamShared.OpenDreamCVars.DebugPlane);
+                if (debugPlane != int.MinValue && planes.TryGetValue(debugPlane, out var dbg)) {
+                    _debugBlitInstance.SetParameter("showAlpha",
+                        _configManager.GetCVar(OpenDreamShared.OpenDreamCVars.DebugPlaneAlpha));
+                    handle.UseShader(_debugBlitInstance);
+                    handle.SetTransform(CreateRenderTargetFlipMatrix(baseRenderTarget.Size, Vector2.Zero));
+                    handle.DrawTextureRect(dbg.RenderTarget.Texture, Box2.FromTwoPoints(Vector2.Zero, baseRenderTarget.Size));
+                }
             }, new Color());
         }
 
@@ -1107,8 +1124,9 @@ internal sealed partial class DreamViewOverlay : Overlay {
             foreach ((EntityUid uid, DMISpriteComponent sprite, ScreenLocation screenLocation, Vector2i dmiIconSize) in screenObjects) {
                 Vector2 position = screenLocation.GetViewPosition(viewOffset, _interfaceManager.View, IconSize, dmiIconSize, screenBounds);
                 Vector2 iconSize = sprite.Icon.DMI == null ? Vector2.Zero : sprite.Icon.DMI.IconSize / (float)IconSize;
-                for (int x = 0; x < screenLocation.RepeatX; x++) {
-                    for (int y = 0; y < screenLocation.RepeatY; y++) {
+                Vector2i repeat = screenLocation.GetRepeat(_interfaceManager.View, IconSize, dmiIconSize, screenBounds);
+                for (int x = 0; x < repeat.X; x++) {
+                    for (int y = 0; y < repeat.Y; y++) {
                         int tValue = 0;
                         ProcessIconComponents(sprite.Icon, position + iconSize * new Vector2(x, y), uid, true, ref tValue, _spriteContainer, seeVis);
                     }

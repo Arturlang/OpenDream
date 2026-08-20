@@ -44,6 +44,23 @@ public abstract class OpenDreamCVars {
     public static readonly CVarDef<float> SkinDumpDelay =
         CVarDef.Create("opendream.skin_dump_delay", 10f, CVar.CLIENTONLY);
 
+    /// <summary>
+    /// Renders one plane's render target straight to the viewport instead of the
+    /// composited world, so a screenshot shows exactly what that plane contains.
+    /// Set to the plane number (SS13's lighting plate is 22, turf lighting 10).
+    /// int.MinValue (the default) renders normally.
+    /// </summary>
+    public static readonly CVarDef<int> DebugPlane =
+        CVarDef.Create("opendream.debug_plane", int.MinValue, CVar.CLIENTONLY);
+
+    /// <summary>
+    /// With <see cref="DebugPlane"/>, render that plane's ALPHA channel as
+    /// greyscale instead of its colour. Screenshots are always opaque, and alpha
+    /// is what alpha_mask_filter actually gates on.
+    /// </summary>
+    public static readonly CVarDef<bool> DebugPlaneAlpha =
+        CVarDef.Create("opendream.debug_plane_alpha", false, CVar.CLIENTONLY);
+
     public static readonly CVarDef<bool> AlwaysShowExceptions =
         CVarDef.Create("opendream.always_show_exceptions", false, CVar.SERVERONLY);
 

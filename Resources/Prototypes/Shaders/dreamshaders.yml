@@ -83,6 +83,12 @@
   kind: source
   path: "/Shaders/edgebleed.swsl"
 
+# Not a filter; diagnostic plane inspector (opendream.debug_plane)
+- type: shader
+  id: debug_blit
+  kind: source
+  path: "/Shaders/debugblit.swsl"
+
 # Not a filter; decodes the raw-sRGB world pipeline for the sRGB viewport
 - type: shader
   id: srgb_decode
