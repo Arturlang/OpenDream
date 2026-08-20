@@ -1107,9 +1107,8 @@ internal sealed partial class DreamViewOverlay : Overlay {
             foreach ((EntityUid uid, DMISpriteComponent sprite, ScreenLocation screenLocation, Vector2i dmiIconSize) in screenObjects) {
                 Vector2 position = screenLocation.GetViewPosition(viewOffset, _interfaceManager.View, IconSize, dmiIconSize, screenBounds);
                 Vector2 iconSize = sprite.Icon.DMI == null ? Vector2.Zero : sprite.Icon.DMI.IconSize / (float)IconSize;
-                Vector2i repeat = screenLocation.GetRepeat(_interfaceManager.View, IconSize, dmiIconSize, screenBounds);
-                for (int x = 0; x < repeat.X; x++) {
-                    for (int y = 0; y < repeat.Y; y++) {
+                for (int x = 0; x < screenLocation.RepeatX; x++) {
+                    for (int y = 0; y < screenLocation.RepeatY; y++) {
                         int tValue = 0;
                         ProcessIconComponents(sprite.Icon, position + iconSize * new Vector2(x, y), uid, true, ref tValue, _spriteContainer, seeVis);
                     }
