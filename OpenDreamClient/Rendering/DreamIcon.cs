@@ -94,16 +94,26 @@ internal sealed class DreamIcon(RenderTargetPool renderTargetPool, IDreamInterfa
             if (Appearance == null || DMI == null)
                 return null;
 
-            var dmi = flick?.Icon ?? DMI;
-            var iconState = flick?.IconState ?? _iconState;
-            var animationFrame = flick?.GetAnimationFrame(gameTiming) ?? AnimationFrame;
-            if (animationFrame == -1) // A flick returns -1 for a finished animation
-                animationFrame = AnimationFrame;
-            if (CachedTexture != null && !_textureDirty && flick == null)
+            // A finished flick hands the atom back to its OWN appearance completely.
+            // Falling back to the base frame index while keeping the flick's icon and
+            // state left the atom stuck on the flicked sprite - an airlock that was
+            // denied kept showing "deny" instead of returning to its normal state.
+            var flickPlaying = flick is {Finished: false};
+            var dmi = flickPlaying ? flick!.Icon : DMI;
+            var iconState = flickPlaying ? flick!.IconState : _iconState;
+            var animationFrame = flickPlaying ? flick!.CurrentFrame : AnimationFrame;
+
+            if (CachedTexture != null && !_textureDirty && !flickPlaying)
                 return CachedTexture.Texture;
 
             _textureDirty = false;
-            frame = dmi.GetState(iconState)?.GetFrames(_direction)[animationFrame];
+
+            var frames = dmi.GetState(iconState)?.GetFrames(_direction);
+            // The flick's state and the atom's own can have different frame counts, so
+            // never trust an index taken from one against the other.
+            frame = frames != null && animationFrame >= 0 && animationFrame < frames.Length
+                ? frames[animationFrame]
+                : frames is {Length: > 0} ? frames[0] : null;
         } else {
             frame = textureOverride;
         }

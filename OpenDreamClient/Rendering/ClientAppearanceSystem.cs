@@ -35,24 +35,43 @@ internal sealed partial class ClientAppearanceSystem : SharedAppearanceSystem {
                 _nextFrame = startTick + Frames[0].Delay.Ticks;
         }
 
-        public int GetAnimationFrame(IGameTiming gameTiming) {
-            var frames = Frames;
-            if (_animationFrame >= frames.Length)
-                return -1;
+        /// <summary>
+        ///     True once the flicked animation has played out. The atom must then go
+        ///     back to its own icon entirely - icon, state and frame.
+        /// </summary>
+        public bool Finished { get; private set; }
 
-            while (gameTiming.CurTime.Ticks >= _nextFrame) {
+        /// <summary>
+        ///     The frame to draw. A pure read: advancing is <see cref="Advance"/>'s job,
+        ///     because both the expiry check and the renderer ask for the frame every
+        ///     tick, and advancing in the getter made flicks play at double speed.
+        /// </summary>
+        public int CurrentFrame => _animationFrame;
+
+        public void Advance(IGameTiming gameTiming) {
+            var frames = Frames;
+            if (frames.Length == 0) {
+                Finished = true;
+                return;
+            }
+
+            while (!Finished && gameTiming.CurTime.Ticks >= _nextFrame) {
                 _animationFrame++;
-                if (_animationFrame >= frames.Length)
-                    return -1;
+                if (_animationFrame >= frames.Length) {
+                    _animationFrame = frames.Length - 1;
+                    Finished = true;
+                    return;
+                }
 
                 var delayTicks = frames[_animationFrame].Delay.Ticks;
-                if (delayTicks <= 0)
-                    return _animationFrame;
+                if (delayTicks <= 0) {
+                    // A zero delay would spin this loop forever; treat it as the end.
+                    Finished = true;
+                    return;
+                }
 
                 _nextFrame += delayTicks;
             }
-
-            return _animationFrame;
         }
     }
 
@@ -102,12 +121,14 @@ internal sealed partial class ClientAppearanceSystem : SharedAppearanceSystem {
 
     public override void Update(float frameTime) {
         foreach (var (flickKey, flick) in _turfFlicks) {
-            if (flick.GetAnimationFrame(_gameTiming) == -1)
+            flick.Advance(_gameTiming);
+            if (flick.Finished)
                 _turfFlicks.Remove(flickKey);
         }
 
         foreach (var (flickKey, flick) in _movableFlicks) {
-            if (flick.GetAnimationFrame(_gameTiming) == -1)
+            flick.Advance(_gameTiming);
+            if (flick.Finished)
                 _movableFlicks.Remove(flickKey);
         }
 
