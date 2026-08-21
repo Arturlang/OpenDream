@@ -246,10 +246,16 @@ public static class ViewAlgorithm {
         var diagonal = tiles[diagonalX, diagonalY];
         var cardinal1 = tiles[x, diagonalY];
         var cardinal2 = tiles[diagonalX, y];
-        if (diagonal == null)
+
+        // The cardinals were asserted non-null with `!`, but a tile in range can
+        // genuinely be null - space, or a tile whose turf has not arrived yet - and
+        // then this threw. The throw escaped to DreamViewOverlay.Draw's catch, which
+        // abandons the WHOLE frame, so one null tile dropped an entire frame of the
+        // world. A missing tile simply is not part of a corner.
+        if (diagonal == null || cardinal1 == null || cardinal2 == null)
             return false;
 
-        return diagonal.Vis != 0 && cardinal1!.Vis != 0 && cardinal2!.Vis != 0 &&
+        return diagonal.Vis != 0 && cardinal1.Vis != 0 && cardinal2.Vis != 0 &&
                cardinal1.Opaque && cardinal2.Opaque && !diagonal.Opaque;
     }
 }

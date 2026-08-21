@@ -32,6 +32,19 @@ internal sealed class RendererMetaData : IComparable<RendererMetaData> {
     /// BACKGROUND_LAYER content: renders behind everything on its plane and, like
     /// TOPDOWN content, takes no part in the SIDE_MAP row sort.
     public bool IsBackgroundLayer;
+
+    /// How many times this sprite tiles, for a stretched "a to b" screen_loc.
+    /// The tiles are one sprite with a repeat count rather than N separate sprites:
+    /// a full-viewport backdrop is hundreds of tiles, and giving each its own
+    /// metadata and sort entry made SS13's lighting backdrop cost more per frame
+    /// than the entire visible station.
+    public int RepeatX = 1;
+    public int RepeatY = 1;
+
+    /// Pixels by which a keep-together group's texture is shifted to centre it in its
+    /// oversized buffer. The mouse map has to apply the same shift, or a KT mob's
+    /// clickable area sits several tiles from where the mob is drawn.
+    public Vector2 KeepTogetherPixelOffset;
     public string? Maptext;
     public Vector2i? MaptextSize;
     public ParticleSystem? Particles;
@@ -71,6 +84,9 @@ internal sealed class RendererMetaData : IComparable<RendererMetaData> {
         TextureOverride = null;
         TextureOverridePremultiplied = false;
         IsBackgroundLayer = false;
+        RepeatX = 1;
+        RepeatY = 1;
+        KeepTogetherPixelOffset = Vector2.Zero;
         Maptext = null;
         MaptextSize = null;
         Particles = null;
