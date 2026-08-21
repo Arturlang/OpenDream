@@ -103,6 +103,9 @@ internal sealed class BrowsePopup {
         UpdateBrowserGeometry();
     }
 
+    /// <summary>Focuses the page, for a popup that was already visible.</summary>
+    public void Focus() => FocusBrowser();
+
     public void Close() {
         _window.Close();
     }
@@ -176,6 +179,23 @@ internal sealed class BrowsePopup {
             _window.OpenCentered();
 
         UpdateBrowserGeometry();
+
+        if (visible)
+            FocusBrowser();
+    }
+
+    /// <summary>
+    /// Hands keyboard focus to the page when the popup is shown. BYOND focuses a
+    /// window it opens, and TGUI's modals (the say window among them) expect to be
+    /// typed into immediately. Robust focus is also what tells CEF the page is
+    /// focused, so without this there is no caret and no :focus styling either.
+    /// </summary>
+    private void FocusBrowser() {
+        if (_closed || !_window.IsOpen || !_window.Visible)
+            return;
+
+        if (Browser.UIElement.CanKeyboardFocus)
+            Browser.UIElement.GrabKeyboardFocus();
     }
 
     private void UpdateBrowserGeometry() {

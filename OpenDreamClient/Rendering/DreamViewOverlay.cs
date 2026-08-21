@@ -220,7 +220,11 @@ internal sealed partial class DreamViewOverlay : Overlay {
             return;
 
         _mobSightQuery.TryGetComponent(eye, out var mobSight);
-        var seeVis = mobSight?.SeeInvisibility ?? 127;
+        // BYOND's default see_invisible is 0. Falling back to 127 meant "see
+        // everything invisible" whenever the eye had no sight component - which is
+        // what happens while inside a closet or other container - and gave the player
+        // free t-ray vision through floors plus a view of abstract landmarks.
+        var seeVis = mobSight?.SeeInvisibility ?? 0;
         var sight = mobSight?.Sight ?? 0;
 
         var worldHandle = args.WorldHandle;
