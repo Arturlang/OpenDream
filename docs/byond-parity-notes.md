@@ -54,9 +54,12 @@ layers in every direction. The rules that reproduce this:
   OpenDream's X tie-break drew the departed tile's floor content over westward-gliding
   mobs, and its use of the glide-logical (destination) position broke northward glides.
 Fix: `RendererMetaData.CompareTo` + the sort position fed in `DreamViewOverlay`.
-Note: BYOND's special layer ranges (`TOPDOWN_LAYER` 10000, `BACKGROUND_LAYER`, etc.),
-which exempt flat content from the side-map depth sort, are still unimplemented; tg
-mostly confines such content to the floor plane, which hides this.
+BYOND's special layer ranges exempt flat content from the side-map depth sort.
+`BACKGROUND_LAYER` (>= 20000) is now handled: the layer is shifted down by 40000 so the
+content renders behind everything on its plane, and it is excluded from the row sort
+entirely (see "BACKGROUND_LAYER must not be row-sorted" below). `TOPDOWN_LAYER` (10000)
+is still unimplemented; tg mostly confines such content to the floor plane, which hides
+this.
 
 ### KEEP_TOGETHER groups
 Float planes resolve relative to the parent, so an overlay on FLOAT_PLANE (the
@@ -241,3 +244,46 @@ OpenDream, wait until each is really rendering, capture and compare. They kill
 only the PIDs they spawn - never by process name, or unrelated DreamSeeker
 instances die too - and use ports 26777/26800 so they cannot capture a manually
 booted station by mistake.
+
+### BACKGROUND_LAYER must not be row-sorted
+Symptom: moving north or south, the top half of every turf blacked out for a
+moment at each tile transition.
+
+`BACKGROUND_LAYER` content gets `Layer -= 40000` and `IsScreen = false` so it
+renders behind everything on its plane. Clearing `IsScreen` also dropped it into
+the SIDE_MAP branch of `RendererMetaData.CompareTo`, where depth comes from the
+tile row `floor(SortPosition.Y - 0.5)`.
+
+That is wrong for this content in particular, because it is screen content
+pinned to the view: its position is fractional while the camera glides, so each
+tile's row flips as the view scrolls. SS13's lighting backdrop is a stretched
+black screen object at `BACKGROUND_LAYER+21` on the lighting plane; whenever one
+of its tiles resolved a row south of a turf, southern-rows-in-front drew that
+black over the turf's lighting object. Background content now sorts by layer
+alone, like TOPDOWN content, and the check is symmetric so a background sprite
+never row-compares against a normal one.
+
+Two related notes:
+- A stretched `screen_loc` now repeats one extra tile per axis. The view origin
+  is fractional mid-glide, so tiling exactly the anchored span leaves up to a
+  tile uncovered at the far edge. Overdraw is clipped by the viewport.
+- This only became visible once stretched `screen_loc` ranges tiled correctly at
+  all. Before that the backdrop drew as a single 32x32 tile, so it could not
+  cover a turf whatever row it landed in - one bug was hiding the other.
+
+### Measuring rendering bugs: what does and does not work
+- **PrintWindow cannot see per-frame artifacts.** Consecutive grabs return
+  byte-identical means for several frames and then a partial one, so "flicker"
+  measured this way is a capture artifact. It measures steady state fine.
+  Reproduce motion artifacts with an `AUTO_WALK` build and judge them by eye, or
+  instrument the renderer.
+- **Compare like with like.** Percentiles over a whole window compare different
+  amounts of map when the two clients show different tile counts (OpenDream fits
+  the map to the pane's width and crops vertically, so it shows fewer rows than
+  BYOND for the same `world.view`). Crop to the map pane first.
+- **A multiply can never brighten.** If the final image is above the unlit
+  plate's albedo, an additive term is responsible - that single observation
+  found the specular blowout after a long detour through the multiply chain.
+- **Check the data before the renderer.** An `AUTO_OBSERVE` build dumping the
+  server's per-turf lighting matrices showed both engines byte-identical across
+  81 turfs, which ruled out the server in one run.
