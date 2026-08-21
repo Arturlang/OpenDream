@@ -2,6 +2,8 @@ using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Text;
 using OpenDreamClient.Interface.Html;
+using OpenDreamClient.Resources;
+using OpenDreamClient.Resources.ResourceTypes;
 using OpenDreamShared.Dream;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
@@ -14,19 +16,38 @@ namespace OpenDreamClient.Rendering;
 /// Helper for rendering maptext to a render target.
 /// Adapted from RobustToolbox's RichTextEntry.
 /// </summary>
-public sealed class MapTextRenderer(IResourceCache resourceCache, MarkupTagManager tagManager) {
+public sealed class MapTextRenderer(
+    IResourceCache resourceCache,
+    MarkupTagManager tagManager,
+    IDreamResourceManager dreamResourceManager) {
     private const float Scale = 1f;
 
+    private static readonly ResPath DefaultFontPath = new("/Fonts/NotoSans-Regular.ttf");
+
     private readonly VectorFont _defaultFont =
-        new(resourceCache.GetResource<FontResource>("/Fonts/NotoSans-Regular.ttf"), 8);
+        new(resourceCache.GetResource<FontResource>(DefaultFontPath), 8);
+
+    /// <summary>
+    /// font-family name to the loaded font, or null while a lookup is outstanding or
+    /// after one failed. SS13 ships its map fonts as DM resources
+    /// (interface/fonts/Grand9K_Pixel.ttf and friends) and refers to them by family
+    /// name, so the name has to be resolved back to a resource before it can be drawn.
+    /// </summary>
+    private readonly Dictionary<string, FontResource?> _fontFamilies = new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly HashSet<string> _fontFamiliesRequested = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly Color _defaultColor = Color.White;
+
+    private static ISawmill Sawmill => Logger.GetSawmill("opendream.maptext");
 
     private readonly record struct TextOutline(Color Color, int Size);
 
     private sealed class MapTextContext {
         public readonly MarkupDrawingContext Drawing = new();
         public readonly Stack<TextOutline?> Outline = new();
+        /// Inherited font-family, so a nested span that only sets font-size keeps the face.
+        public readonly Stack<string?> Family = new();
     }
 
     private enum TextAlignment {
@@ -91,7 +112,10 @@ public sealed class MapTextRenderer(IResourceCache resourceCache, MarkupTagManag
                     globalBreakCounter += 1;
                 }
             }
-        }, Color.Transparent);
+        // Clear to the premultiplied identity, not Color.Transparent - that is WHITE
+        // with zero alpha, and this target is composited as a premultiplied source,
+        // where a texel contributes its colour regardless of alpha.
+        }, Color.Black.WithAlpha(0));
     }
 
     private static float GetAlignedX(float width, IReadOnlyList<float> lineWidths, int line, TextAlignment alignment) {
@@ -163,6 +187,7 @@ public sealed class MapTextRenderer(IResourceCache resourceCache, MarkupTagManag
     private MapTextContext CreateContext() {
         var context = new MapTextContext();
         context.Drawing.Color.Push(_defaultColor);
+        context.Family.Push(null);
         context.Drawing.Font.Push(_defaultFont);
         context.Outline.Push(null);
         return context;
@@ -180,6 +205,7 @@ public sealed class MapTextRenderer(IResourceCache resourceCache, MarkupTagManag
             }
 
             context.Drawing.Font.Pop();
+            context.Family.Pop();
             context.Drawing.Color.Pop();
             context.Outline.Pop();
             return "";
@@ -203,6 +229,12 @@ public sealed class MapTextRenderer(IResourceCache resourceCache, MarkupTagManag
         var font = context.Drawing.Font.Peek();
         var outline = context.Outline.Peek();
 
+        // Size and family are resolved together: either one alone still has to produce
+        // a whole font, and both inherit from the enclosing span when unset.
+        var family = context.Family.Peek();
+        var size = font is VectorFont inherited ? inherited.Size : _defaultFont.Size;
+        var styled = false;
+
         if (node.Attributes.TryGetValue("style", out var styleParameter) &&
             styleParameter.StringValue is { } style) {
             foreach (var declaration in style.Split(';', StringSplitOptions.RemoveEmptyEntries)) {
@@ -215,9 +247,12 @@ public sealed class MapTextRenderer(IResourceCache resourceCache, MarkupTagManag
                         color = ParseColor(parts[1]) ?? color;
                         break;
                     case "font-size":
-                        font = ParseFontSize(parts[1]) is { } fontSize
-                            ? new VectorFont(resourceCache.GetResource<FontResource>("/Fonts/NotoSans-Regular.ttf"), fontSize)
-                            : font;
+                        size = ParseFontSize(parts[1]) ?? size;
+                        styled = true;
+                        break;
+                    case "font-family":
+                        family = ParseFontFamily(parts[1]) ?? family;
+                        styled = true;
                         break;
                     case "-dm-text-outline":
                         outline = ParseTextOutline(parts[1]) ?? outline;
@@ -226,9 +261,85 @@ public sealed class MapTextRenderer(IResourceCache resourceCache, MarkupTagManag
             }
         }
 
+        if (styled)
+            font = GetFont(family, size);
+
+        context.Family.Push(family);
         context.Drawing.Font.Push(font);
         context.Drawing.Color.Push(color);
         context.Outline.Push(outline);
+    }
+
+    /// <summary>
+    /// Builds a font for a family/size pair, falling back to the default face while a
+    /// family is still being fetched (or if it has no matching resource).
+    /// </summary>
+    private Font GetFont(string? family, int size) {
+        size = Math.Max(1, size);
+
+        if (family == null)
+            return new VectorFont(resourceCache.GetResource<FontResource>(DefaultFontPath), size);
+
+        if (_fontFamilies.TryGetValue(family, out var resource))
+            return new VectorFont(resource ?? resourceCache.GetResource<FontResource>(DefaultFontPath), size);
+
+        RequestFontFamily(family);
+        return new VectorFont(resourceCache.GetResource<FontResource>(DefaultFontPath), size);
+    }
+
+    /// <summary>
+    /// Resolves a family name to a DM font resource. BYOND registers embedded fonts by
+    /// the family name they declare, which we cannot read back here, so the name is
+    /// mapped to candidate resource paths instead - "Spess Font" ships as SpessFont.ttf
+    /// and "Grand9K Pixel" as Grand9K_Pixel.ttf, hence both the stripped and the
+    /// underscored spellings.
+    /// </summary>
+    private void RequestFontFamily(string family) {
+        if (!_fontFamiliesRequested.Add(family))
+            return; // Already looking, or already failed
+
+        var names = new List<string>();
+        void AddName(string name) {
+            if (!names.Contains(name))
+                names.Add(name);
+        }
+
+        AddName(family);
+        AddName(family.Replace(" ", "_"));
+        AddName(family.Replace(" ", ""));
+
+        var candidates = new List<string>();
+        foreach (var dir in new[] { "interface/fonts/", "fonts/", "" }) {
+            foreach (var name in names) {
+                foreach (var ext in new[] { ".ttf", ".otf" })
+                    candidates.Add(dir + name + ext);
+            }
+        }
+
+        TryCandidate(family, candidates, 0);
+    }
+
+    private void TryCandidate(string family, List<string> candidates, int index) {
+        if (index >= candidates.Count) {
+            _fontFamilies[family] = null; // Nothing matched; stay on the default face
+            Sawmill.Debug($"No font resource found for maptext font-family \"{family}\"");
+            return;
+        }
+
+        var path = candidates[index];
+        dreamResourceManager.LookupResourceAsync(path,
+            resourceId => dreamResourceManager.LoadResourceAsync<DreamResource>(resourceId, resource => {
+                try {
+                    // Robust loads fonts through its own cache, so the bytes have to
+                    // land somewhere it can see.
+                    var cachePath = dreamResourceManager.CreateCacheFile($"fonts/{family}.ttf", resource.CopyData());
+                    _fontFamilies[family] = resourceCache.GetResource<FontResource>(cachePath);
+                } catch (Exception e) {
+                    _fontFamilies[family] = null;
+                    Sawmill.Warning($"Failed to load maptext font \"{family}\" from {path}: {e.Message}");
+                }
+            }),
+            () => TryCandidate(family, candidates, index + 1));
     }
 
     private static Color? ParseColor(string value) {
@@ -238,6 +349,19 @@ public sealed class MapTextRenderer(IResourceCache resourceCache, MarkupTagManag
 
         // RobustToolbox v288 changed TryFromHex to the bool/out-param form.
         return Color.TryFromHex(value, out var hexColor) ? hexColor : null;
+    }
+
+    /// <summary>
+    /// font-family takes a comma-separated list of names, each optionally quoted.
+    /// Only the first is used - there is no fallback chain to walk.
+    /// </summary>
+    private static string? ParseFontFamily(string value) {
+        var first = value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (first.Length == 0)
+            return null;
+
+        var name = first[0].Trim().Trim('\'', '"').Trim();
+        return string.IsNullOrEmpty(name) ? null : name;
     }
 
     private static int? ParseFontSize(string value) {
