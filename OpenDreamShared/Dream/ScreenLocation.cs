@@ -77,9 +77,14 @@ public sealed class ScreenLocation {
         Vector2 end = Range.GetViewPosition(Vector2.Zero, view, tileSize, iconSize, screenBounds);
         Vector2 iconSizeTiles = iconSize / tileSize;
 
+        // One extra tile on each axis. The view origin is fractional while the
+        // camera is mid-glide, so tiling exactly the anchored span leaves up to a
+        // tile uncovered at the far edge, which appears and disappears as the view
+        // scrolls - a flickering strip along the edge. Overdraw is clipped by the
+        // viewport, so covering one tile past the end is free.
         return new Vector2i(
-            Math.Max((int)MathF.Floor((end.X - start.X) / iconSizeTiles.X) + 1, 1),
-            Math.Max((int)MathF.Floor((end.Y - start.Y) / iconSizeTiles.Y) + 1, 1)
+            Math.Max((int)MathF.Floor((end.X - start.X) / iconSizeTiles.X) + 2, 1),
+            Math.Max((int)MathF.Floor((end.Y - start.Y) / iconSizeTiles.Y) + 2, 1)
         );
     }
 

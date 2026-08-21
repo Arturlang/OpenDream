@@ -29,6 +29,9 @@ internal sealed class RendererMetaData : IComparable<RendererMetaData> {
     public MouseOpacity MouseOpacity;
     public Texture? TextureOverride;
     public bool TextureOverridePremultiplied;
+    /// BACKGROUND_LAYER content: renders behind everything on its plane and, like
+    /// TOPDOWN content, takes no part in the SIDE_MAP row sort.
+    public bool IsBackgroundLayer;
     public string? Maptext;
     public Vector2i? MaptextSize;
     public ParticleSystem? Particles;
@@ -67,6 +70,7 @@ internal sealed class RendererMetaData : IComparable<RendererMetaData> {
         MouseOpacity = MouseOpacity.Transparent;
         TextureOverride = null;
         TextureOverridePremultiplied = false;
+        IsBackgroundLayer = false;
         Maptext = null;
         MaptextSize = null;
         Particles = null;
@@ -129,14 +133,27 @@ internal sealed class RendererMetaData : IComparable<RendererMetaData> {
             // visually arrived. Within a row, layer decides - and X never does: BYOND
             // doesn't depth-sort horizontally, and doing so drew a departed tile's
             // floor content over westward-gliding mobs.
-            val = MathF.Floor(other.SortPosition.Y - 0.5f).CompareTo(MathF.Floor(SortPosition.Y - 0.5f));
-            if (val != 0) {
-                return val;
-            }
+            // BACKGROUND_LAYER content is exempt from the row sort. It is screen
+            // content pinned to the view, so its position is fractional while the
+            // camera glides and its row flips as the view scrolls. Sorting it into
+            // rows let SS13's black lighting backdrop land a row south of a turf,
+            // where southern-rows-in-front drew it OVER that turf's lighting - the
+            // top half of every turf blacking out at each tile transition.
+            if (IsBackgroundLayer || other.IsBackgroundLayer) {
+                val = Layer.CompareTo(other.Layer);
+                if (val != 0) {
+                    return val;
+                }
+            } else {
+                val = MathF.Floor(other.SortPosition.Y - 0.5f).CompareTo(MathF.Floor(SortPosition.Y - 0.5f));
+                if (val != 0) {
+                    return val;
+                }
 
-            val = Layer.CompareTo(other.Layer);
-            if (val != 0) {
-                return val;
+                val = Layer.CompareTo(other.Layer);
+                if (val != 0) {
+                    return val;
+                }
             }
         }
 

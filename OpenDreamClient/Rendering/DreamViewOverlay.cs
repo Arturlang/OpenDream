@@ -519,6 +519,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
         if (current.Layer >= 20000) {
             current.Layer -= 40000;
             current.IsScreen = false; //BACKGROUND_LAYER renders behind everything on that plane
+            current.IsBackgroundLayer = true;
         }
 
         keepTogether |= ((current.AppearanceFlags & AppearanceFlags.KeepTogether) != 0); //KEEP_TOGETHER
@@ -1125,6 +1126,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
                 Vector2 position = screenLocation.GetViewPosition(viewOffset, _interfaceManager.View, IconSize, dmiIconSize, screenBounds);
                 Vector2 iconSize = sprite.Icon.DMI == null ? Vector2.Zero : sprite.Icon.DMI.IconSize / (float)IconSize;
                 Vector2i repeat = screenLocation.GetRepeat(_interfaceManager.View, IconSize, dmiIconSize, screenBounds);
+
                 for (int x = 0; x < repeat.X; x++) {
                     for (int y = 0; y < repeat.Y; y++) {
                         int tValue = 0;
