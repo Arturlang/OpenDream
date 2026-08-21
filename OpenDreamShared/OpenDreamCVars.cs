@@ -45,6 +45,30 @@ public abstract class OpenDreamCVars {
         CVarDef.Create("opendream.skin_dump_delay", 10f, CVar.CLIENTONLY);
 
     /// <summary>
+    /// Enables the periodic entity/sprite census logging on both client and server.
+    /// Each census walks EVERY entity to build its histogram - a quarter of a million
+    /// of them on a full station - so it is a real periodic stall, not just log noise.
+    /// Off by default; turn it on when diagnosing "objects exist but nothing renders".
+    /// </summary>
+    public static readonly CVarDef<bool> DebugCensus =
+        CVarDef.Create("opendream.debug_census", false, CVar.ARCHIVE);
+
+    /// <summary>
+    /// Logs world-render frame time and sprite counts periodically. Off by default:
+    /// it is for answering "is the client or the server behind?" with numbers.
+    /// </summary>
+    public static readonly CVarDef<bool> DebugRenderPerf =
+        CVarDef.Create("opendream.debug_renderperf", false, CVar.CLIENTONLY);
+
+    /// <summary>
+    /// Logs what the mouse map actually registers each second: which planes were
+    /// skipped and why, and how many sprites made it in. Clicks resolve against that
+    /// map, so "the atom is drawn but not clickable" is only answerable from here.
+    /// </summary>
+    public static readonly CVarDef<bool> DebugMouseMap =
+        CVarDef.Create("opendream.debug_mousemap", false, CVar.CLIENTONLY);
+
+    /// <summary>
     /// Renders one plane's render target straight to the viewport instead of the
     /// composited world, so a screenshot shows exactly what that plane contains.
     /// Set to the plane number (SS13's lighting plate is 22, turf lighting 10).

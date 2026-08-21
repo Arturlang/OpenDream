@@ -117,6 +117,11 @@ public sealed partial class DreamManager {
     /// if it is wrong here too, placement never happened.
     /// </summary>
     private void LogEntityCensus() {
+        // Walking every entity is expensive at station scale (a quarter of a million
+        // of them), so this stays off unless explicitly asked for.
+        if (!_config.GetCVar(OpenDreamShared.OpenDreamCVars.DebugCensus))
+            return;
+
         if (++_censusTicks % 300 != 1)
             return;
 

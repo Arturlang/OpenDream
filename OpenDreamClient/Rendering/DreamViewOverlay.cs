@@ -61,6 +61,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
     [Dependency] private ProfManager _prof = default!;
     [Dependency] private IResourceCache _resourceCache = default!;
     [Dependency] private MarkupTagManager _tagManager = default!;
+    [Dependency] private OpenDreamClient.Resources.IDreamResourceManager _dreamResourceManager = default!;
     [Dependency] private Robust.Shared.Configuration.IConfigurationManager _configManager = default!;
 
     private readonly ISawmill _sawmill = Logger.GetSawmill("opendream.view");
@@ -155,8 +156,17 @@ internal sealed partial class DreamViewOverlay : Overlay {
         _debugBlitInstance = _protoManager.Index<ShaderPrototype>(OdShaderId.DebugBlit).InstanceUnique();
         _debugBlitInstance.SetParameter("showAlpha", false);
 
-        _mapTextRenderer = new(_resourceCache, _tagManager);
+        _mapTextRenderer = new(_resourceCache, _tagManager, _dreamResourceManager);
     }
+
+    // TEMP perf diagnostic for the input-lag investigation.
+    private readonly System.Diagnostics.Stopwatch _perfWatch = new();
+    private int _perfFrames;
+    private int _mouseMapLogFrame;
+    private double _perfTotalMs;
+    private double _perfWorstMs;
+    private int _perfSprites;
+    private int _perfScreenSprites;
 
     protected override void Draw(in OverlayDrawArgs args) {
         using var _ = _prof.Group("Dream View Overlay");
@@ -164,6 +174,8 @@ internal sealed partial class DreamViewOverlay : Overlay {
         EntityUid? eye = _playerManager.LocalSession?.AttachedEntity;
         if (eye == null)
             return;
+
+        _perfWatch.Restart();
 
         //Main drawing of sprites happens here
         try {
@@ -184,6 +196,23 @@ internal sealed partial class DreamViewOverlay : Overlay {
         //RendererMetaData objects get reused instead of garbage collected
         while (_rendererMetaDataToReturn.Count > 0)
             _rendererMetaDataRental.Push(_rendererMetaDataToReturn.Pop());
+
+        _perfWatch.Stop();
+        var ms = _perfWatch.Elapsed.TotalMilliseconds;
+        _perfTotalMs += ms;
+        _perfWorstMs = Math.Max(_perfWorstMs, ms);
+        if (++_perfFrames >= 120 && _configManager.GetCVar(OpenDreamShared.OpenDreamCVars.DebugRenderPerf)) {
+            _sawmill.Info(
+                $"RENDERPERF avg={_perfTotalMs / _perfFrames:F2}ms worst={_perfWorstMs:F2}ms " +
+                $"sprites={_perfSprites} screenSprites={_perfScreenSprites}");
+            _perfFrames = 0;
+            _perfTotalMs = 0;
+            _perfWorstMs = 0;
+        } else if (_perfFrames >= 120) {
+            _perfFrames = 0;
+            _perfTotalMs = 0;
+            _perfWorstMs = 0;
+        }
     }
 
     private void DrawAll(OverlayDrawArgs args, EntityUid eye, Vector2i viewportSize) {
@@ -206,6 +235,8 @@ internal sealed partial class DreamViewOverlay : Overlay {
             _sortIndex = 0;
             CollectScreenObjects(seeVis, worldAABB.BottomLeft, mapControlId);
             _spriteContainer.Sort();
+        _perfSprites = _spriteContainer.Count;
+            _perfSprites = _spriteContainer.Count;
 
             ClearPlanes();
             ProcessSprites(worldHandle, viewportSize, worldAABB);
@@ -259,6 +290,11 @@ internal sealed partial class DreamViewOverlay : Overlay {
     /// how many of those are still waiting on their appearance (nothing to draw).
     /// </summary>
     private void LogSpriteCensus(MapId mapId, Box2 worldAABB, int seeVis) {
+        // Walking every sprite entity costs real frame time at station scale, so this
+        // stays off unless explicitly asked for.
+        if (!_configManager.GetCVar(OpenDreamShared.OpenDreamCVars.DebugCensus))
+            return;
+
         if (++_censusFrames % 300 != 1)
             return;
 
@@ -361,6 +397,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
         CollectScreenObjects(127, Vector2.Zero, mapControlId);
         CenterMapControlSprites(viewportSize);
         _spriteContainer.Sort();
+        _perfSprites = _spriteContainer.Count;
 
         var worldAABB = Box2.FromDimensions(Vector2.Zero, viewportSize / (float)IconSize);
         ClearPlanes(renderState.Planes);
@@ -746,7 +783,10 @@ internal sealed partial class DreamViewOverlay : Overlay {
             Vector2i ktSize = (256, 256) + iconMetaData.MainIcon?.DMI?.IconSize ?? (0,0);
             iconMetaData.TextureOverride = ProcessKeepTogether(handle, iconMetaData, ktSize);
             iconMetaData.TextureOverridePremultiplied = true;
-            positionOffset -= ((ktSize/IconSize) - Vector2.One) * new Vector2(0.5f); //correct for KT group texture offset
+            var ktOffset = ((ktSize / IconSize) - Vector2.One) * new Vector2(0.5f);
+            positionOffset -= ktOffset; //correct for KT group texture offset
+            // The mouse map draws from the same texture and must shift identically.
+            iconMetaData.KeepTogetherPixelOffset = ktOffset * IconSize;
         }
 
         //Maptext
@@ -762,6 +802,11 @@ internal sealed partial class DreamViewOverlay : Overlay {
             _mapTextRenderer.RenderToTarget(handle, renderTarget, iconMetaData.Maptext);
             _renderTargetPool.ReturnAtEndOfFrame(renderTarget);
             iconMetaData.TextureOverride = renderTarget.Texture;
+            // Text drawn into a transparent target comes out premultiplied. Without
+            // this the composite applied alpha a second time, so a fading balloon
+            // alert followed alpha-squared instead of alpha and did not match the
+            // animation BYOND plays.
+            iconMetaData.TextureOverridePremultiplied = true;
         }
 
         var frame = iconMetaData.GetTexture(this, handle);
@@ -797,8 +842,6 @@ internal sealed partial class DreamViewOverlay : Overlay {
 
         handle.UseShader(GetBlendAndColorShader(iconMetaData, ignoreColor: true));
 
-        handle.SetTransform(CalculateDrawingMatrix(iconMetaData.TransformToApply, pixelPosition, frame.Size, renderTargetSize));
-
         Color colorToApply = iconMetaData.ColorToApply;
         // Premultiplied sources get their alpha in-shader (the premultAlpha uniform
         // scales all four channels); a modulate would only scale the alpha channel.
@@ -808,7 +851,19 @@ internal sealed partial class DreamViewOverlay : Overlay {
         // The engine linearizes modulate colors (Color.FromSrgb in DrawingHandleBase);
         // pre-encode so the round trip delivers the raw bytes - the world pipeline
         // does BYOND-style byte-space math.
-        handle.DrawTextureRect(frame, Box2.FromDimensions(Vector2.Zero, frame.Size), Color.ToSrgb(colorToApply));
+        var srgbColor = Color.ToSrgb(colorToApply);
+
+        // A stretched "a to b" screen_loc tiles from one sprite: only the draw repeats,
+        // so the metadata, sorting and shader setup are paid once instead of per tile.
+        var tileStep = frame.Size;
+        for (int tileX = 0; tileX < iconMetaData.RepeatX; tileX++) {
+            for (int tileY = 0; tileY < iconMetaData.RepeatY; tileY++) {
+                var tilePosition = pixelPosition + new Vector2(tileStep.X * tileX, tileStep.Y * tileY);
+
+                handle.SetTransform(CalculateDrawingMatrix(iconMetaData.TransformToApply, tilePosition, frame.Size, renderTargetSize));
+                handle.DrawTextureRect(frame, Box2.FromDimensions(Vector2.Zero, frame.Size), srgbColor);
+            }
+        }
 
         if (iconMetaData.Particles is not null) {
             handle.UseShader(GetBlendAndColorShader(iconMetaData, ignoreColor: true));
@@ -1008,10 +1063,25 @@ internal sealed partial class DreamViewOverlay : Overlay {
         if (drawMouseMap && mouseMapRenderTarget != null) {
             // TODO: Can this only be done once the user clicks?
             using (_prof.Group("draw planes mouse map")) {
+                var mouseStats = _configManager.GetCVar(OpenDreamShared.OpenDreamCVars.DebugMouseMap)
+                    ? new MouseMapStats()
+                    : null;
+
                 handle.RenderInRenderTarget(mouseMapRenderTarget, () => {
                     foreach (int planeIndex in planes.Keys.Order())
-                        planes[planeIndex].DrawMouseMap(handle, this, mouseMapRenderTarget.Size, worldAABB);
+                        planes[planeIndex].DrawMouseMap(handle, this, mouseMapRenderTarget.Size, worldAABB, mouseStats, planeIndex);
                 }, new Color());
+
+                if (mouseStats != null && ++_mouseMapLogFrame % 120 == 0) {
+                    _sawmill.Info(
+                        $"MOUSEMAP registered={mouseStats.Registered} " +
+                        $"skippedPlanes={mouseStats.SkippedPlanes} skippedSprites={mouseStats.SkippedSprites} " +
+                        $"spriteTransparent={mouseStats.SpriteTransparent} passMouse={mouseStats.SpritePassMouse} " +
+                        $"spriteNoTexture={mouseStats.SpriteNoTexture} | drawn last-to-first: " +
+                        string.Join(",", mouseStats.RegisteredPerPlane.OrderByDescending(kv => kv.Key)
+                            .Take(8).Select(kv => $"p{kv.Key}={kv.Value}")) +
+                        (mouseStats.Notes.Count > 0 ? " | " + string.Join("; ", mouseStats.Notes) : ""));
+                }
             }
         }
     }
@@ -1084,12 +1154,14 @@ internal sealed partial class DreamViewOverlay : Overlay {
 
         using (_prof.Group("sort sprites")) {
             _spriteContainer.Sort();
+        _perfSprites = _spriteContainer.Count;
         }
     }
 
     private void CollectScreenObjects(sbyte seeVis, Vector2 viewOffset, string? mapControlId) {
         if (ScreenOverlayEnabled) {
             using var _ = _prof.Group("screen objects");
+            _perfScreenSprites = 0;
 
             List<(EntityUid Uid, DMISpriteComponent Sprite, ScreenLocation ScreenLocation, Vector2i IconSize)> screenObjects = new();
             ScreenLocationBounds screenBounds = new(0, 0, _interfaceManager.View.Width, _interfaceManager.View.Height);
@@ -1127,10 +1199,22 @@ internal sealed partial class DreamViewOverlay : Overlay {
                 Vector2 iconSize = sprite.Icon.DMI == null ? Vector2.Zero : sprite.Icon.DMI.IconSize / (float)IconSize;
                 Vector2i repeat = screenLocation.GetRepeat(_interfaceManager.View, IconSize, dmiIconSize, screenBounds);
 
-                for (int x = 0; x < repeat.X; x++) {
-                    for (int y = 0; y < repeat.Y; y++) {
-                        int tValue = 0;
-                        ProcessIconComponents(sprite.Icon, position + iconSize * new Vector2(x, y), uid, true, ref tValue, _spriteContainer, seeVis);
+                // Emit the tiling as ONE sprite carrying a repeat count, not one sprite
+                // per tile. A full-viewport backdrop is hundreds of tiles; giving each
+                // its own metadata and sort entry made SS13's lighting backdrop cost
+                // more per frame than every visible sprite on the station combined.
+                _perfScreenSprites += repeat.X * repeat.Y;
+
+                int firstSprite = _spriteContainer.Count;
+                int tValue = 0;
+                ProcessIconComponents(sprite.Icon, position, uid, true, ref tValue, _spriteContainer, seeVis);
+
+                if (repeat.X > 1 || repeat.Y > 1) {
+                    // Overlays and underlays land in here too, and each tiles alongside
+                    // its parent, so the count applies to everything just added.
+                    for (int i = firstSprite; i < _spriteContainer.Count; i++) {
+                        _spriteContainer[i].RepeatX = repeat.X;
+                        _spriteContainer[i].RepeatY = repeat.Y;
                     }
                 }
             }
