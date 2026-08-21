@@ -47,9 +47,7 @@ to ~11-16s, which is the single biggest win in the loop.
 
 ```bash
 cd Bubberstation
-../OpenDream/bin/DMCompiler/DMCompiler.exe --suppress-unimplemented \
-  --define TESTING --define LOWMEMORYMODE --define ABSOLUTE_MINIMUM \
-  tgstation.dme
+../OpenDream/bin/DMCompiler/DMCompiler.exe --suppress-unimplemented --define TESTING --define LOWMEMORYMODE --define ABSOLUTE_MINIMUM tgstation.dme
 ```
 
 Drop `LOWMEMORYMODE`/`ABSOLUTE_MINIMUM` when you specifically need the real map.
@@ -61,18 +59,24 @@ Two processes. No account, no auth prompt.
 
 ```bash
 # server — from the Bubberstation directory
-../OpenDream/bin/Content.Server/OpenDreamServer.exe \
-  --cvar net.port=26400 --cvar opendream.topic_port=26401 \
-  --cvar opendream.json_path="$PWD/tgstation.json"
+../OpenDream/bin/Content.Server/OpenDreamServer.exe --cvar net.port=26400 --cvar opendream.topic_port=26401 --cvar opendream.json_path="$PWD/tgstation.json"
 
 # client — once the server logs "Runlevel changed from 2 to 4"
-../OpenDream/bin/Content.Client/OpenDreamClient.exe \
-  --connect --connect-address "udp://127.0.0.1:26400"
+../OpenDream/bin/Content.Client/OpenDreamClient.exe --connect --connect-address "udp://127.0.0.1:26400"
 ```
 
 The client lands in the **lobby**; nothing renders until you pick Observe or
 join. Compiling with `--define AUTO_OBSERVE` makes it drop straight into the
-world as an observer, which is what makes unattended screenshots possible.
+world as an observer, which is what makes unattended screenshots possible. It
+also dumps the server's per-turf lighting matrices to `lightdump-{od,by}.txt` -
+useful for settling whether a discrepancy is the server's data or the renderer.
+
+Add `--define AUTO_WALK` on top of that to have the observer pace north and
+south forever. Motion artifacts are otherwise very hard to reproduce, and note
+that **PrintWindow cannot capture them**: consecutive grabs return
+byte-identical frames and then a partial one, so per-frame flicker measured from
+screenshots is a capture artifact. Judge motion by eye, or instrument the
+renderer.
 
 ## Gotchas that cost real time
 
