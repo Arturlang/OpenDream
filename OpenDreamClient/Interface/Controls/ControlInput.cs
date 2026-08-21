@@ -84,8 +84,9 @@ internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlW
     /// </summary>
     private bool InterceptTextEntry(GUITextEnteredEventArgs args) {
         if (_completionPopup is not {Visible: true} || _completionMatches == null) {
-            // BYOND completes a partially-typed verb when space is pressed; only the
-            // first word qualifies, and the space falls through when nothing matches.
+            // DreamSeeker completes a partially-typed verb on SPACE. Only the first
+            // word qualifies - once the verb is settled, spaces separate arguments -
+            // and the space falls through when nothing matches.
             if (args.Text == " " && string.IsNullOrEmpty(InputDescriptor.Command.Value) &&
                 !string.IsNullOrWhiteSpace(_textBox.Text) && !_textBox.Text.Contains(' '))
                 return TryStartCompletion(fromSpace: true);
@@ -160,25 +161,11 @@ internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlW
     }
 
     /// <summary>
-    /// BYOND-style verb completion. Tab completes the typed prefix to an executable verb's
-    /// command name: a single match completes immediately, multiple matches extend to their
-    /// longest common prefix and open a list to pick from (click, or keep pressing Tab to
-    /// cycle). Any manual edit dismisses the list.
+    /// DreamSeeker completes on SPACE, not Tab, so Tab is left to the text field.
+    /// Kept as a no-op rather than removed so the LineEdit's tab-complete event has
+    /// somewhere to land without falling through to a default behaviour.
     /// </summary>
     private void TextBox_OnTabComplete(LineEdit.LineEditEventArgs args) {
-        // An input with a fixed command (say bars etc.) doesn't take verb names.
-        if (!string.IsNullOrEmpty(InputDescriptor.Command.Value))
-            return;
-
-        // Cycling an already-open list.
-        if (_completionMatches != null && _completionPopup is {Visible: true}) {
-            _completionIndex = (_completionIndex + 1) % _completionMatches.Count;
-            HighlightCompletion(_completionIndex);
-            ApplyCompletion(_completionMatches[_completionIndex]);
-            return;
-        }
-
-        TryStartCompletion(fromSpace: false);
     }
 
     /// <summary>
@@ -259,15 +246,25 @@ internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlW
         var inputTopLeft = _textBox.GlobalPixelPosition / uiScale;
         var inputSize = _textBox.PixelSize / uiScale;
 
-        var height = Math.Min(matches.Count, CompletionMaxVisibleRows) * CompletionRowHeight + 4;
+        var screen = _uiManager.ModalRoot.PixelSize / uiScale;
         var width = Math.Max(inputSize.X, 250);
 
-        // Above the input; below it if there is no room.
-        var y = inputTopLeft.Y >= height
-            ? inputTopLeft.Y - height
-            : inputTopLeft.Y + inputSize.Y;
+        // Prefer above the input, which is where DreamSeeker puts it, but take
+        // whichever side has more room and never exceed it: the input bar sits at the
+        // bottom of most skins, so a list sized purely by match count ran off-screen
+        // and the rows past the edge were unreachable.
+        var spaceAbove = inputTopLeft.Y;
+        var spaceBelow = screen.Y - (inputTopLeft.Y + inputSize.Y);
+        var above = spaceAbove >= spaceBelow;
+        var available = Math.Max(above ? spaceAbove : spaceBelow, CompletionRowHeight + 4);
 
-        _completionPopup.Open(UIBox2.FromDimensions(new Vector2(inputTopLeft.X, y), new Vector2(width, height)));
+        var height = Math.Min(Math.Min(matches.Count, CompletionMaxVisibleRows) * CompletionRowHeight + 4, available);
+        var y = above ? inputTopLeft.Y - height : inputTopLeft.Y + inputSize.Y;
+
+        // Keep it inside the window horizontally too.
+        var x = Math.Clamp(inputTopLeft.X, 0, Math.Max(0, screen.X - width));
+
+        _completionPopup.Open(UIBox2.FromDimensions(new Vector2(x, y), new Vector2(width, height)));
         _textBox.GrabKeyboardFocus();
     }
 
@@ -278,6 +275,10 @@ internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlW
         _applyingCompletion = true;
         _completionList.ClearSelected();
         _completionList[index].Selected = true;
+        // The list is taller than the popup once there are more than a few matches,
+        // so keyboard navigation has to drag the view along or the selection walks
+        // out of sight.
+        _completionList.EnsureCurrentIsVisible();
         _applyingCompletion = false;
     }
 
