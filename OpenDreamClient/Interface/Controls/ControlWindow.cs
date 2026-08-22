@@ -20,7 +20,14 @@ public sealed partial class ControlWindow : InterfaceControl {
     public readonly List<InterfaceControl> ChildControls = new();
 
     public string Title => WindowDescriptor.Title.Value;
-    public InterfaceMacroSet Macro => InterfaceManager.MacroSets[WindowDescriptor.Macro.AsRaw()];
+
+    /// <summary>
+    /// The window's macro set, or null when it names none or names one the skin does not
+    /// define. Both are legal in BYOND - the window simply has no macros - so this must
+    /// not be an indexer lookup: throwing here kills the whole interface load.
+    /// </summary>
+    public InterfaceMacroSet? Macro =>
+        InterfaceManager.MacroSets.GetValueOrDefault(WindowDescriptor.Macro.AsRaw());
 
     public WindowDescriptor WindowDescriptor => (WindowDescriptor)ElementDescriptor;
 
@@ -28,6 +35,10 @@ public sealed partial class ControlWindow : InterfaceControl {
     private LayoutContainer _canvas = default!;
 
     private (OSWindow? osWindow, IClydeWindow? clydeWindow) _myWindow;
+
+    /// The skin size last pushed to the OS window, so a size the user dragged to is not
+    /// snapped back on every unrelated descriptor update.
+    private Vector2i? _appliedSize;
 
     private string _currentStatus = string.Empty;
 
@@ -54,7 +65,7 @@ public sealed partial class ControlWindow : InterfaceControl {
             UpdateWindowAttributes(_myWindow);
 
         if (WindowDescriptor.IsDefault.Value) {
-            Macro.SetActive();
+            Macro?.SetActive();
         }
     }
 
@@ -260,6 +271,19 @@ public sealed partial class ControlWindow : InterfaceControl {
             osWindow.ClydeWindow.IsVisible = WindowDescriptor.IsVisible.Value;
         } else if (clydeWindow != null) {
             clydeWindow.IsVisible = WindowDescriptor.IsVisible.Value;
+        }
+
+        // CreateWindow() sizes the windows it makes, but the default window is Robust's
+        // main window and already exists by the time the skin loads - so nothing ever
+        // applied its `size`, and it opened at the engine default instead.
+        var size = (Vector2i)ControlDescriptor.Size.Vector;
+        if (size is {X: > 0, Y: > 0} && size != _appliedSize) {
+            _appliedSize = size;
+
+            if (osWindow != null)
+                (osWindow.SetWidth, osWindow.SetHeight) = (size.X, size.Y);
+            else if (clydeWindow != null)
+                clydeWindow.Size = size;
         }
     }
 
