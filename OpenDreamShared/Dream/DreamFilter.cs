@@ -1,4 +1,4 @@
-using Robust.Shared.Serialization;
+﻿using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 using System;
 using System.Collections.Generic;
@@ -72,11 +72,14 @@ public partial record DreamFilter {
                 requiredSpace += new Vector2(blur.Size) * 2;
                 break;
             case DreamFilterDropShadow dropShadow:
-                if (dropShadow.Size - dropShadow.X > 0)
-                    requiredSpace.X += (dropShadow.Size + dropShadow.X) * 2;
-
-                if (dropShadow.Size - dropShadow.Y > 0)
-                    requiredSpace.Y += (dropShadow.Size + dropShadow.Y) * 2;
+                // The blur is a Gaussian with standard deviation `size`, so it is still
+                // visible about three deviations out - reserving only `size` cropped the
+                // shadow to a hard stub. The displacement adds to that, and it adds
+                // whichever way it points: subtracting a negative y (the direction SS13
+                // shadows actually point) was leaving less room, not more.
+                var shadowReach = dropShadow.Size * 3f;
+                requiredSpace.X += (shadowReach + MathF.Abs(dropShadow.X)) * 2;
+                requiredSpace.Y += (shadowReach + MathF.Abs(dropShadow.Y)) * 2;
                 break;
             case DreamFilterDisplace:
                 requiredSpace *= 2;

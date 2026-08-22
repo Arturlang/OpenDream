@@ -172,6 +172,8 @@ public sealed class MapTextRenderer {
         /// 0.75, Spess Font 1.4) because the faces carry more leading than the design
         /// wants, so ignoring it spaces multi-line maptext wrongly.
         public readonly Stack<float> LineHeight = new();
+        /// Whether the run is underlined, from <u> or text-decoration.
+        public readonly Stack<bool> Underline = new();
     }
 
     private enum TextAlignment {
@@ -226,6 +228,7 @@ public sealed class MapTextRenderer {
                 if (!context.Drawing.Font.TryPeek(out var font))
                     font = DefaultFont;
                 context.Outline.TryPeek(out var outline);
+                context.Underline.TryPeek(out var underline);
                 var lineHeight = LineHeightOf(font, context);
 
                 foreach (var rune in text.EnumerateRunes()) {
@@ -260,6 +263,15 @@ public sealed class MapTextRenderer {
                     }
 
                     var advance = font.DrawChar(handle, rune, baseLine + mod, Scale, color);
+
+                    if (underline) {
+                        // Drawn per glyph so the rule runs unbroken through spaces, and
+                        // sized off the face so it stays proportional at any font-size.
+                        var thickness = MathF.Max(1f, MathF.Round(font.GetLineHeight(Scale) / 12f));
+                        var top = baseLine.Y - MathF.Max(1f, MathF.Round(font.GetDescent(Scale) / 2f));
+                        handle.DrawRect(new Box2(baseLine.X, top - thickness, baseLine.X + advance, top), color);
+                    }
+
                     baseLine.X += advance;
 
                     globalBreakCounter += 1;
@@ -347,6 +359,7 @@ public sealed class MapTextRenderer {
         context.Drawing.Font.Push(DefaultFont);
         context.Outline.Push(null);
         context.LineHeight.Push(1f);
+        context.Underline.Push(false);
         return context;
     }
 
@@ -355,9 +368,12 @@ public sealed class MapTextRenderer {
         if (node.Name == null)
             return node.Value.StringValue ?? "";
 
-        if (node.Name is "span" or "div") {
+        // <u> is the tag SS13 reaches for when a clickable maptext button is hovered,
+        // so it has to nest and inherit like any other styled element rather than being
+        // dropped as an unknown tag.
+        if (node.Name is "span" or "div" or "u") {
             if (!node.Closing) {
-                PushStyledContext(node, context);
+                PushStyledContext(node, context, forceUnderline: node.Name == "u");
                 return "";
             }
 
@@ -366,6 +382,7 @@ public sealed class MapTextRenderer {
             context.Drawing.Color.Pop();
             context.Outline.Pop();
             context.LineHeight.Pop();
+            context.Underline.Pop();
             return "";
         }
 
@@ -382,7 +399,7 @@ public sealed class MapTextRenderer {
         return tag.TextAfter(node);
     }
 
-    private void PushStyledContext(MarkupNode node, MapTextContext context) {
+    private void PushStyledContext(MarkupNode node, MapTextContext context, bool forceUnderline = false) {
         var color = context.Drawing.Color.Peek();
         var font = context.Drawing.Font.Peek();
         var outline = context.Outline.Peek();
@@ -392,6 +409,7 @@ public sealed class MapTextRenderer {
         var family = context.Family.Peek();
         var size = font is VectorFont inherited ? inherited.Size : _mapFontSize;
         var lineHeight = context.LineHeight.Peek();
+        var underline = context.Underline.Peek() || forceUnderline;
         var styled = false;
 
         foreach (var declarations in EnumerateDeclarations(node)) {
@@ -415,6 +433,10 @@ public sealed class MapTextRenderer {
                     case "line-height":
                         lineHeight = ParseLineHeight(parts[1]) ?? lineHeight;
                         break;
+                    case "text-decoration":
+                    case "text-decoration-line":
+                        underline = parts[1].Contains("underline", StringComparison.OrdinalIgnoreCase);
+                        break;
                     case "-dm-text-outline":
                         outline = ParseTextOutline(parts[1]) ?? outline;
                         break;
@@ -430,6 +452,7 @@ public sealed class MapTextRenderer {
         context.Drawing.Color.Push(color);
         context.Outline.Push(outline);
         context.LineHeight.Push(lineHeight);
+        context.Underline.Push(underline);
     }
 
     /// The height of a line drawn by a span: its font's leading, scaled by its CSS multiplier.

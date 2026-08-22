@@ -8,22 +8,37 @@ uniform highp float y;
 uniform highp vec4 shadow_color;
 
 void fragment() {
-    highp float shadow_blur_samples = pow((size * 2.0 + 1.0), 2.0);
-    highp vec4 texture_color = zTexture(UV);
     highp vec2 ps = TEXTURE_PIXEL_SIZE;
-    highp vec2 shadow_uv = UV - (ps * vec2(x, -y)); // Y is up
-    
+    highp vec4 texture_color = zTexture(UV);
+
+    // Sampling is displaced opposite the shadow, and UV here is already y-up, so the
+    // displacement goes in as given. Negating y put SS13's ambient occlusion two pixels
+    // above its casters instead of two below - a four pixel error against DreamSeeker.
+    highp vec2 shadow_uv = UV - (ps * vec2(x, y));
+
+    // BYOND blurs the shadow with a Gaussian whose standard deviation is `size`. Measured
+    // against DreamSeeker, the profile under a hard edge is 0.5*erfc(d / (size*sqrt(2))),
+    // so the tail is still visible three deviations out. A box average - what this used
+    // to be - holds full strength to the kernel edge and reads as a hard halo instead.
+    highp float sigma = max(size, 0.0001);
+    highp float radius = ceil(sigma * 3.0);
+    highp float denom = 2.0 * sigma * sigma;
+
     highp float sampled_shadow_alpha = 0.0;
-    for (highp float blur_x = -size; blur_x <= size; blur_x++) {
-        for (highp float blur_y = -size; blur_y <= size; blur_y++) {
-            highp vec2 blur_uv = shadow_uv + ps * vec2(blur_x, blur_y);
-            
-            sampled_shadow_alpha += zTexture(blur_uv).a / shadow_blur_samples;
+    highp float weight_total = 0.0;
+    for (highp float blur_x = -radius; blur_x <= radius; blur_x++) {
+        for (highp float blur_y = -radius; blur_y <= radius; blur_y++) {
+            highp float weight = exp(-(blur_x * blur_x + blur_y * blur_y) / denom);
+
+            sampled_shadow_alpha += zTexture(shadow_uv + ps * vec2(blur_x, blur_y)).a * weight;
+            weight_total += weight;
         }
     }
-    
+
+    sampled_shadow_alpha /= weight_total;
+
     highp vec4 final_shadow_color = vec4(shadow_color.rgb, shadow_color.a * sampled_shadow_alpha);
-    
+
     // Mix the shadow with the initial image based on the image's alpha
     COLOR.rgb = final_shadow_color.rgb * (1.0 - texture_color.a) + (texture_color.rgb / texture_color.a); //texture color needs to be divided by alpha to account for alpha premultiplication in the overlay shader
     COLOR.a = clamp(final_shadow_color.a + texture_color.a, 0.0, 1.0);
