@@ -49,6 +49,15 @@ var allLists = new HashSet<ulong>();
 var ownedLists = new HashSet<ulong>();
 var nestedLists = new HashSet<ulong>();
 var listOwners = new Dictionary<(string Type, string Var), ListOwnerStat>();
+
+// DM-side leads. Identical list contents mean a per-instance list that could be one
+// shared static; empty lists mean a var declared eagerly that is never filled; a var
+// holding the value its type already declares means a write that did not need to happen.
+var listContents = new Dictionary<long, DuplicateStat>();
+var emptyListOwners = new Dictionary<(string Type, string Var), ListOwnerStat>();
+var defaultValued = new Dictionary<(string Type, string Var), ListOwnerStat>();
+var definitionDefaults = new Dictionary<ulong, Dictionary<string, long>>();
+var listOwnerByAddress = new Dictionary<ulong, (string Type, string Var)>();
 var sizeHistogram = new long[7];
 var sizeHistogramBytes = new long[7];
 long listSelfBytes = 0, listBackingBytes = 0;
@@ -68,6 +77,7 @@ foreach (var obj in heap.EnumerateObjects()) {
         continue;
 
     var dmType = ReadDmType(obj) ?? "<unknown>";
+    var definition = ReadDefinition(obj);
     dreamObjects++;
 
     if (IsDreamList(obj.Type)) {
@@ -86,6 +96,19 @@ foreach (var obj in heap.EnumerateObjects()) {
         // A list holding lists is the other place they hide.
         foreach (var nested in EnumerateListValues(obj))
             nestedLists.Add(nested);
+
+        if (elements > 0) {
+            var contentHash = HashListContents(obj, elements);
+            if (contentHash != 0) {
+                ref var dup = ref System.Runtime.InteropServices.CollectionsMarshal
+                    .GetValueRefOrAddDefault(listContents, contentHash, out _);
+                dup.Count++;
+                dup.Bytes += (long)obj.Size + backing;
+                dup.Elements = elements;
+                if (dup.Sample == 0)
+                    dup.Sample = obj.Address;
+            }
+        }
     }
 
     ref var stat = ref GetTypeStat(typeStats, dmType);
@@ -148,14 +171,38 @@ foreach (var obj in heap.EnumerateObjects()) {
                 if (referenced.Type is not null && IsDreamList(referenced.Type)) {
                     ownedLists.Add(referenced.Address);
 
+                    var measured = MeasureList(referenced);
+
+                    listOwnerByAddress.TryAdd(referenced.Address, (dmType, name));
+
                     ref var owner = ref System.Runtime.InteropServices.CollectionsMarshal
                         .GetValueRefOrAddDefault(listOwners, (dmType, name), out _);
                     owner.Count++;
-                    owner.Bytes += (long)referenced.Size + MeasureList(referenced).Backing;
+                    owner.Bytes += (long)referenced.Size + measured.Backing;
+
+                    if (measured.Elements == 0) {
+                        ref var empty = ref System.Runtime.InteropServices.CollectionsMarshal
+                            .GetValueRefOrAddDefault(emptyListOwners, (dmType, name), out _);
+                        empty.Count++;
+                        empty.Bytes += (long)referenced.Size + measured.Backing;
+                    }
                 }
             }
         } catch {
             // A torn or unreadable field in a dump is not worth aborting the whole run for.
+        }
+
+        // Storing what the type already declares is a write that bought nothing. Free on
+        // BYOND, where vars are flat slots; here it allocates a whole dictionary entry.
+        if (definition.IsValid && !definition.IsNull) {
+            var defaults = DefaultsFor(definition, definitionDefaults);
+            if (defaults is not null && defaults.TryGetValue(name, out var declared) &&
+                declared == ValueKey(entry, "value")) {
+                ref var wasted = ref System.Runtime.InteropServices.CollectionsMarshal
+                    .GetValueRefOrAddDefault(defaultValued, (dmType, name), out _);
+                wasted.Count++;
+                wasted.Bytes += EntryOverhead;
+            }
         }
 
         ref var vstat = ref GetVarStat(varStats, dmType, name);
@@ -172,9 +219,154 @@ Console.WriteLine($"Scanned {scanned:N0} objects ({totalHeap / 1048576.0:N0} MiB
 Write(outPath, typeStats, varStats, totalHeap, dreamObjects, sharedBytes);
 AppendListReport(outPath, allLists, ownedLists, nestedLists, listOwners,
                  sizeHistogram, sizeHistogramBytes, listSelfBytes, listBackingBytes);
+AppendDmSideReport(outPath, listContents, emptyListOwners, defaultValued, listOwnerByAddress, heap);
 Console.WriteLine($"Wrote {outPath}");
 return 0;
 
+
+// A DreamValue collapsed to something comparable and hashable: its tag, the address it
+// points at, and its number. Enough to tell "same value" from "same shape".
+static long ValueKey(ClrValueType holder, string field) {
+    try {
+        var value = field is null ? holder : holder.ReadValueTypeField(field);
+        var tag = value.ReadField<int>("Type");
+        var reference = value.ReadObjectField("_refValue");
+        var number = value.ReadField<float>("_floatValue");
+
+        var address = reference.IsValid && !reference.IsNull ? (long)reference.Address : 0;
+        return HashCode.Combine(tag, address, number);
+    } catch {
+        return 0;
+    }
+}
+
+static Dictionary<string, long> DefaultsFor(ClrObject definition, Dictionary<ulong, Dictionary<string, long>> cache) {
+    if (cache.TryGetValue(definition.Address, out var cached))
+        return cached;
+
+    var defaults = new Dictionary<string, long>(StringComparer.Ordinal);
+    cache[definition.Address] = defaults;
+
+    try {
+        var vars = definition.ReadObjectField("Variables");
+        if (!vars.IsValid || vars.IsNull)
+            return defaults;
+
+        var entries = vars.ReadObjectField("_entries");
+        if (!entries.IsValid || entries.IsNull)
+            return defaults;
+
+        var count = vars.ReadField<int>("_count");
+        var array = entries.AsArray();
+
+        for (var i = 0; i < count && i < array.Length; i++) {
+            var entry = array.GetStructValue(i);
+            var key = entry.ReadObjectField("key");
+            if (!key.IsValid || key.IsNull)
+                continue;
+
+            var name = key.AsString(512);
+            if (name is not null)
+                defaults[name] = ValueKey(entry, "value");
+        }
+    } catch {
+        // Partial defaults are still useful.
+    }
+
+    return defaults;
+}
+
+// Order sensitive hash of a list's values, so two lists built the same way collide and
+// two that merely share a length do not.
+static long HashListContents(ClrObject list, int elements) {
+    try {
+        var values = list.ReadObjectField("_values");
+        if (!values.IsValid || values.IsNull)
+            return 0;
+
+        var array = values.ReadObjectField("_items");
+        if (!array.IsValid || array.IsNull)
+            return 0;
+
+        var items = array.AsArray();
+        var hash = new HashCode();
+        hash.Add(elements);
+
+        for (var i = 0; i < elements && i < items.Length; i++)
+            hash.Add(ValueKey(items.GetStructValue(i), null));
+
+        // An associative list's entries live in a second dictionary, and two lists with
+        // the same keys mapping to different values are NOT interchangeable. Hashing only
+        // the keys would report signal registrations as shareable when they are not.
+        var assoc = list.ReadObjectField("_associativeValues");
+        if (assoc.IsValid && !assoc.IsNull) {
+            var assocEntries = assoc.ReadObjectField("_entries");
+            if (assocEntries.IsValid && !assocEntries.IsNull) {
+                var count = assoc.ReadField<int>("_count");
+                var pairs = assocEntries.AsArray();
+
+                for (var i = 0; i < count && i < pairs.Length; i++) {
+                    var pair = pairs.GetStructValue(i);
+                    hash.Add(ValueKey(pair, "key"));
+                    hash.Add(ValueKey(pair, "value"));
+                }
+            }
+        }
+
+        return hash.ToHashCode();
+    } catch {
+        return 0;
+    }
+}
+
+static string PreviewList(ClrHeap heap, ulong address, int elements) {
+    if (address == 0)
+        return "<no sample>";
+
+    try {
+        var list = heap.GetObject(address);
+        var values = list.ReadObjectField("_values");
+        var array = values.ReadObjectField("_items").AsArray();
+        var shown = Math.Min(elements, 6);
+        var parts = new List<string>();
+
+        for (var i = 0; i < shown && i < array.Length; i++)
+            parts.Add(DescribeValue(array.GetStructValue(i)));
+
+        if (elements > shown)
+            parts.Add($"... +{elements - shown} more");
+
+        var assoc = list.ReadObjectField("_associativeValues");
+        var suffix = assoc.IsValid && !assoc.IsNull ? "  (associative)" : "";
+
+        return string.Join(", ", parts) + suffix;
+    } catch {
+        return "<unreadable>";
+    }
+}
+
+static string DescribeValue(ClrValueType value) {
+    try {
+        var reference = value.ReadObjectField("_refValue");
+        if (!reference.IsValid || reference.IsNull)
+            return value.ReadField<float>("_floatValue").ToString("0.##");
+
+        var typeName = reference.Type?.Name ?? "?";
+        if (typeName == "System.String")
+            return $"\"{reference.AsString(64)}\"";
+
+        // A type path in a list is the signature of a typecache.
+        if (typeName.EndsWith(".TreeEntry", StringComparison.Ordinal))
+            return reference.ReadStringField("Path") ?? "<type>";
+
+        if (DerivesFromDreamObject(reference.Type))
+            return ReadDmType(reference) ?? typeName;
+
+        return typeName;
+    } catch {
+        return "?";
+    }
+}
 
 static bool IsDreamList(ClrType type) {
     for (var t = type; t is not null; t = t.BaseType)
@@ -260,6 +452,14 @@ static bool DerivesFromDreamObject(ClrType type) {
             return true;
 
     return false;
+}
+
+static ClrObject ReadDefinition(ClrObject obj) {
+    try {
+        return obj.ReadObjectField("ObjectDefinition");
+    } catch {
+        return default;
+    }
 }
 
 static string ReadDmType(ClrObject obj) {
@@ -401,6 +601,56 @@ static void AppendListReport(string path, HashSet<ulong> all, HashSet<ulong> own
                       $"{(stat.Count == 0 ? 0 : stat.Bytes / stat.Count),12:N0}  {key.Type}.{key.Var}");
 
     File.AppendAllText(path, sb.ToString());
+}
+
+// Everything here is a change a DM author can make without touching the engine.
+static void AppendDmSideReport(string path, Dictionary<long, DuplicateStat> contents,
+                               Dictionary<(string Type, string Var), ListOwnerStat> emptyLists,
+                               Dictionary<(string Type, string Var), ListOwnerStat> defaults,
+                               Dictionary<ulong, (string Type, string Var)> listOwners,
+                               ClrHeap heap) {
+    var sb = new StringBuilder();
+
+    sb.AppendLine();
+    sb.AppendLine("=== duplicated list contents: candidates for one shared static ===");
+    var duplicated = contents.Values.Where(d => d.Count > 1).ToList();
+    var reclaimable = duplicated.Sum(d => d.Bytes - d.Bytes / d.Count);
+    sb.AppendLine($"  {duplicated.Sum(d => d.Count),12:N0} lists share contents with at least one other");
+    sb.AppendLine($"  {reclaimable / 1048576.0,12:N0} MiB reclaimable if each distinct content existed once");
+    sb.AppendLine();
+    foreach (var d in duplicated.OrderByDescending(d => d.Bytes - d.Bytes / d.Count).Take(25)) {
+        var owner = listOwners.TryGetValue(d.Sample, out var o) ? $"{o.Type}.{o.Var}" : "(not held by a datum var)";
+        sb.AppendLine();
+        sb.AppendLine($"  {(d.Bytes - d.Bytes / d.Count) / 1048576.0:N1} MiB  " +
+                      $"{d.Count:N0} copies x {d.Bytes / d.Count:N0} bytes, {d.Elements} element(s)");
+        sb.AppendLine($"    held by: {owner}");
+        sb.AppendLine($"    contents: {PreviewList(heap, d.Sample, d.Elements)}");
+    }
+
+    sb.AppendLine();
+    sb.AppendLine("=== empty lists by owning variable: candidates for lazy init ===");
+    sb.AppendLine($"{"MiB",10} {"lists",12} {"bytes each",12}  type.var");
+    foreach (var (key, stat) in emptyLists.OrderByDescending(kv => kv.Value.Bytes).Take(30))
+        sb.AppendLine($"{stat.Bytes / 1048576.0,10:N1} {stat.Count,12:N0} " +
+                      $"{(stat.Count == 0 ? 0 : stat.Bytes / stat.Count),12:N0}  {key.Type}.{key.Var}");
+
+    sb.AppendLine();
+    sb.AppendLine("=== variables holding the value their type already declares ===");
+    sb.AppendLine("(the write bought nothing; free on BYOND, a dictionary entry here)");
+    sb.AppendLine($"  {defaults.Values.Sum(v => v.Bytes) / 1048576.0,10:N0} MiB total across " +
+                  $"{defaults.Values.Sum(v => v.Count):N0} instances");
+    sb.AppendLine();
+    sb.AppendLine($"{"MiB",10} {"instances",12}  type.var");
+    foreach (var (key, stat) in defaults.OrderByDescending(kv => kv.Value.Bytes).Take(30))
+        sb.AppendLine($"{stat.Bytes / 1048576.0,10:N1} {stat.Count,12:N0}  {key.Type}.{key.Var}");
+
+    File.AppendAllText(path, sb.ToString());
+}
+
+struct DuplicateStat {
+    public long Count, Bytes;
+    public int Elements;
+    public ulong Sample;
 }
 
 struct ListOwnerStat {
