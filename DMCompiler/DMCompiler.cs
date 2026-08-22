@@ -200,7 +200,6 @@ public class DMCompiler {
 
         DMASTFile astFile = dmParser.File();
 
-        BeginPhase("build code tree");
         DMCodeTreeBuilder dmCodeTreeBuilder = new(this);
         dmCodeTreeBuilder.BuildCodeTree(astFile);
 
