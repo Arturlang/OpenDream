@@ -19,9 +19,9 @@ namespace OpenDreamClient.Rendering;
 /// Adapted from RobustToolbox's RichTextEntry.
 /// </summary>
 public sealed class MapTextRenderer {
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
-    [Dependency] private readonly MarkupTagManager _tagManager = default!;
-    [Dependency] private readonly IDreamResourceManager _dreamResourceManager = default!;
+    [Dependency] private IResourceCache _resourceCache = default!;
+    [Dependency] private MarkupTagManager _tagManager = default!;
+    [Dependency] private IDreamResourceManager _dreamResourceManager = default!;
     [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
 
     private const float Scale = 1f;

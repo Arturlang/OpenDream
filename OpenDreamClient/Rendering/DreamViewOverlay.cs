@@ -89,7 +89,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
     private readonly Stack<RendererMetaData> _rendererMetaDataRental = new();
     private readonly Stack<RendererMetaData> _rendererMetaDataToReturn = new();
     private int _sortIndex;
-    [Dependency] private readonly MapTextRenderer _mapTextRenderer = default!;
+    [Dependency] private MapTextRenderer _mapTextRenderer = default!;
 
     private static readonly Matrix3x2 FlipMatrix = Matrix3x2.Identity with {
         M22 = -1
