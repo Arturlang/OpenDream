@@ -19,7 +19,9 @@ public sealed partial class ControlMap(ControlDescriptor controlDescriptor, Cont
     private MouseInputSystem? _mouseInput;
     private ClientAppearanceSystem? _appearanceSystem;
 
-    private ControlDescriptorMap MapDescriptor => (ControlDescriptorMap)ElementDescriptor;
+    /// Public so the maptext renderer can read the map's stylesheet and font: BYOND
+    /// resolves maptext styling against the map control, not against the atom.
+    public ControlDescriptorMap MapDescriptor => (ControlDescriptorMap)ElementDescriptor;
 
     private ClientObjectReference? _atomUnderMouse;
 

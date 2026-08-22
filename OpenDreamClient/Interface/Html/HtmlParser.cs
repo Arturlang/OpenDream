@@ -271,6 +271,11 @@ public static class HtmlParser {
                     break;
                 case "align":
                 case "style":
+                // Maptext leans on the map control's stylesheet far more than on inline
+                // styles: SS13's MAPTEXT() macro emits nothing but <span class='maptext'>,
+                // so dropping this attribute threw away the font, colour and alignment of
+                // every runechat message.
+                case "class":
                     parameter = new(attributeTextValue);
                     break;
                 default:

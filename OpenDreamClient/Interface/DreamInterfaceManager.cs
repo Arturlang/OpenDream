@@ -8,6 +8,7 @@ using OpenDreamClient.Interface.Controls;
 using OpenDreamShared.Interface.Descriptors;
 using OpenDreamShared.Interface.DMF;
 using OpenDreamClient.Interface.Prompts;
+using OpenDreamClient.Rendering;
 using OpenDreamClient.Resources;
 using OpenDreamClient.Resources.ResourceTypes;
 using OpenDreamShared.Dream;
@@ -53,6 +54,7 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
     [Dependency] private IGameController _gameController = default!;
     [Dependency] private ITaskManager _taskManager = default!;
     [Dependency] private IDreamSoundEngine _soundEngine = default!;
+    [Dependency] private MapTextRenderer _mapTextRenderer = default!;
 
     private readonly ISawmill _sawmill = Logger.GetSawmill("opendream.interface");
 
@@ -155,6 +157,7 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
         _netManager.RegisterNetMessage<MsgWinClone>(RxWinClone);
         _netManager.RegisterNetMessage<MsgWinExists>(RxWinExists);
         _netManager.RegisterNetMessage<MsgWinGet>(RxWinGet);
+        _netManager.RegisterNetMessage<MsgMeasureText>(RxMeasureText);
         _netManager.RegisterNetMessage<MsgLink>(RxLink);
         _netManager.RegisterNetMessage<MsgFtp>(RxFtp);
         _netManager.RegisterNetMessage<MsgLoadInterface>(RxLoadInterface);
@@ -411,6 +414,32 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
 
             _netManager.ClientSendMessage(response);
         })));
+    }
+
+    private void RxMeasureText(MsgMeasureText message) {
+        var promptId = message.PromptId;
+        // The style argument is a whole declaration block rather than a class name, so it
+        // is wrapped as one before measuring; DM passes null for it far more often.
+        var text = string.IsNullOrEmpty(message.Style)
+            ? message.Text
+            : $"<span style='{message.Style}'>{message.Text}</span>";
+        var width = message.Width;
+
+        RunOnMainThread(() => {
+            // Measuring has to agree with drawing, so it reads the same map styling the
+            // view does rather than the renderer's bare defaults.
+            if (DefaultMap is {} map) {
+                _mapTextRenderer.SetMapStyle(map.MapDescriptor.Style.Value,
+                    map.MapDescriptor.FontFamily.Value, (int)map.MapDescriptor.FontSize.Value);
+            }
+
+            var size = _mapTextRenderer.Measure(text, width);
+            _netManager.ClientSendMessage(new MsgPromptResponse {
+                PromptId = promptId,
+                Type = DreamValueType.Text,
+                Value = $"{size.X}x{size.Y}"
+            });
+        });
     }
 
     private void RxLink(MsgLink message) {

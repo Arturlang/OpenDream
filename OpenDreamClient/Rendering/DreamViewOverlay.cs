@@ -89,7 +89,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
     private readonly Stack<RendererMetaData> _rendererMetaDataRental = new();
     private readonly Stack<RendererMetaData> _rendererMetaDataToReturn = new();
     private int _sortIndex;
-    private readonly MapTextRenderer _mapTextRenderer;
+    [Dependency] private readonly MapTextRenderer _mapTextRenderer = default!;
 
     private static readonly Matrix3x2 FlipMatrix = Matrix3x2.Identity with {
         M22 = -1
@@ -155,8 +155,6 @@ internal sealed partial class DreamViewOverlay : Overlay {
 
         _debugBlitInstance = _protoManager.Index<ShaderPrototype>(OdShaderId.DebugBlit).InstanceUnique();
         _debugBlitInstance.SetParameter("showAlpha", false);
-
-        _mapTextRenderer = new(_resourceCache, _tagManager, _dreamResourceManager);
     }
 
     // TEMP perf diagnostic for the input-lag investigation.
@@ -802,6 +800,14 @@ internal sealed partial class DreamViewOverlay : Overlay {
                 maptextSize.Y = 32;
 
             var renderTarget = _renderTargetPool.Rent(maptextSize);
+
+            // Maptext inherits its face, size and class styling from the map control the
+            // way BYOND resolves it. Re-stating it here rather than at interface load
+            // keeps it correct across a winset that swaps the skin's style out.
+            if (_interfaceManager.DefaultMap is {} map) {
+                _mapTextRenderer.SetMapStyle(map.MapDescriptor.Style.Value,
+                    map.MapDescriptor.FontFamily.Value, (int)map.MapDescriptor.FontSize.Value);
+            }
 
             _mapTextRenderer.RenderToTarget(handle, renderTarget, iconMetaData.Maptext);
             _renderTargetPool.ReturnAtEndOfFrame(renderTarget);

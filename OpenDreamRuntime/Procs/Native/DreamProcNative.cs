@@ -156,7 +156,7 @@ internal static class DreamProcNative {
 
         objectTree.SetNativeProc(objectTree.Client, DreamProcNativeClient.NativeProc_SoundQuery);
         objectTree.SetNativeProc(objectTree.Client, DreamProcNativeClient.NativeProc_Export);
-        objectTree.SetNativeProc(objectTree.Client, DreamProcNativeClient.NativeProc_MeasureText);
+        objectTree.SetNativeProc(objectTree.Client, DreamProcNativeClient.NativeProc_MeasureText);  // async: answered by the client
 
         objectTree.SetNativeProc(objectTree.List, DreamProcNativeList.NativeProc_Add);
         objectTree.SetNativeProc(objectTree.List, DreamProcNativeList.NativeProc_Copy);

@@ -467,6 +467,24 @@ public sealed partial class DreamConnection {
         return task;
     }
 
+    /// <summary>
+    /// Asks the client to measure maptext. The server has neither the fonts nor the skin
+    /// stylesheet, so it cannot answer this itself.
+    /// </summary>
+    public Task<DreamValue> MeasureText(string text, string? style, int width) {
+        var task = MakePromptTask(out var promptId);
+        var msg = new MsgMeasureText {
+            PromptId = promptId,
+            Text = text,
+            Style = style ?? string.Empty,
+            Width = width
+        };
+
+        Session?.Channel.SendMessage(msg);
+
+        return task;
+    }
+
     public Task<DreamValue> Alert(string title, string message, string button1, string button2, string button3) {
         var task = MakePromptTask(out var promptId);
         var msg = new MsgAlert() {
