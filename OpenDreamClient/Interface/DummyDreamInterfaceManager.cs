@@ -1,4 +1,4 @@
-using OpenDreamClient.Interface.Controls;
+﻿using OpenDreamClient.Interface.Controls;
 using OpenDreamShared.Dream;
 using OpenDreamShared.Network.Messages;
 using Robust.Shared.Network;
@@ -18,6 +18,7 @@ public sealed partial class DummyDreamInterfaceManager : IDreamInterfaceManager 
     public ControlInfo? DefaultInfo => null;
     public ControlMap? DefaultMap => null;
     public ViewRange View => new(5);
+    public Vector2 CameraPan => Vector2.Zero;
     public bool ShowPopupMenus => true;
     public int IconSize => 32;
     public MapFormat MapFormat => MapFormat.TopDown;

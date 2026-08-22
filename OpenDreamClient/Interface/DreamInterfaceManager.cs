@@ -29,6 +29,8 @@ using System.Linq;
 using System.Web;
 using OpenDreamShared;
 using Robust.Shared.Configuration;
+using Robust.Client.Player;
+using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 
 namespace OpenDreamClient.Interface;
@@ -55,6 +57,12 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
     [Dependency] private ITaskManager _taskManager = default!;
     [Dependency] private IDreamSoundEngine _soundEngine = default!;
     [Dependency] private MapTextRenderer _mapTextRenderer = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+
+    // Resolved on first use: entity systems do not exist yet when this manager is built.
+    private SharedTransformSystem? _transformSystem;
+    private SharedMapSystem? _mapSystem;
 
     private readonly ISawmill _sawmill = Logger.GetSawmill("opendream.interface");
 
@@ -544,8 +552,61 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
         prompt.Show();
     }
 
+    /// <inheritdoc/>
+    public Vector2 CameraPan { get; private set; }
+
+    /// <summary>
+    /// How far the camera sits from the eye, in tiles.
+    ///
+    /// BYOND stops following the eye once the whole map fits on screen: it centres the
+    /// map in the viewport instead. A map bigger than the view is never clamped - walk
+    /// to its edge and you see the void past it - so this only ever moves on a map
+    /// smaller than the view, and is exactly zero on a station-sized one.
+    /// </summary>
+    private void UpdateCameraPan(IEye eye) {
+        var pan = Vector2.Zero;
+
+        // Entity systems do not exist until a game is entered, and this runs from the
+        // very first frame - so resolve them tentatively rather than throwing the whole
+        // frame update away, which would leave the viewport with no eye at all.
+        if (_transformSystem == null && !_entitySystemManager.TryGetEntitySystem(out _transformSystem))
+            return;
+        if (_mapSystem == null && !_entitySystemManager.TryGetEntitySystem(out _mapSystem))
+            return;
+
+        var attached = _playerManager.LocalSession?.AttachedEntity;
+        if (attached is {} uid && _entityManager.TryGetComponent<TransformComponent>(uid, out var transform)) {
+            var coords = _transformSystem.GetMapCoordinates(uid, transform);
+            if (_mapSystem.TryFindGridAt(coords, out var gridUid, out var grid)) {
+                var bounds = grid.LocalAABB;
+                var eyeTile = _mapSystem.WorldToTile(gridUid, grid, coords.Position);
+
+                pan = new Vector2(
+                    PanAxis(bounds.Left, bounds.Right, eyeTile.X, View.Width),
+                    PanAxis(bounds.Bottom, bounds.Top, eyeTile.Y, View.Height));
+            }
+        }
+
+        CameraPan = pan;
+        eye.Offset = pan;
+    }
+
+    /// <summary>
+    /// The offset that centres a map smaller than the view, in tiles. Zero when the map
+    /// is the larger of the two, which is the only case a real station map ever hits.
+    /// </summary>
+    private static float PanAxis(float mapMin, float mapMax, int eyeTile, int viewSize) {
+        if (mapMax - mapMin > viewSize)
+            return 0f;
+
+        // Centred exactly, half a tile at a time: BYOND splits an odd number of spare
+        // rows evenly rather than rounding the map to a tile boundary.
+        return (mapMin + mapMax) / 2f - (eyeTile + 0.5f);
+    }
+
     public void FrameUpdate(FrameEventArgs frameEventArgs) {
         var currentEye = _eyeManager.CurrentEye;
+        UpdateCameraPan(currentEye);
 
         foreach (ControlWindow window in Windows.Values) {
             foreach (InterfaceControl control in window.ChildControls) {
@@ -1580,6 +1641,13 @@ public interface IDreamInterfaceManager {
     public ControlInfo? DefaultInfo { get; }
     public ControlMap? DefaultMap { get; }
     public ViewRange View { get; }
+
+    /// <summary>
+    /// How far the camera is panned from the eye, in tiles, so the tile-visibility
+    /// window can cover the same region the camera shows.
+    /// </summary>
+    public Vector2 CameraPan { get; }
+
     public bool ShowPopupMenus { get; }
     public int IconSize { get; }
     public MapFormat MapFormat { get; }

@@ -8,6 +8,14 @@ internal partial class DreamViewOverlay {
     private ViewAlgorithm.Tile?[,]? _tileInfo;
     private bool _tileInfoDirty;
 
+    /// <summary>
+    /// Where the eye sits in <see cref="_tileInfo"/>. Normally the middle, but the array
+    /// grows symmetrically when the camera pans away from the eye so that the tiles the
+    /// camera has moved onto are still collected. ViewAlgorithm requires the eye to stay
+    /// at the centre, hence growing both sides rather than sliding the window.
+    /// </summary>
+    private Vector2i _tileInfoEyeIndex;
+
     public void DirtyTileVisibility() {
         _tileInfoDirty = true;
     }
@@ -16,19 +24,26 @@ internal partial class DreamViewOverlay {
         using var _ = _prof.Group("visible turfs");
 
         var viewRange = _interfaceManager.View;
-        if (_tileInfo == null || _tileInfo.GetLength(0) != viewRange.Width + 2 ||
-            _tileInfo.GetLength(1) != viewRange.Height + 2) {
-            // _tileInfo hasn't been created yet or view range has changed, so create a new array.
-            // Leave a 1 tile buffer on each side
-            _tileInfo = new ViewAlgorithm.Tile[viewRange.Width + 2, viewRange.Height + 2];
+        var pan = _interfaceManager.CameraPan;
+        var padX = (int)MathF.Ceiling(MathF.Abs(pan.X));
+        var padY = (int)MathF.Ceiling(MathF.Abs(pan.Y));
+        var width = viewRange.Width + 2 + padX * 2;
+        var height = viewRange.Height + 2 + padY * 2;
+
+        if (_tileInfo == null || _tileInfo.GetLength(0) != width || _tileInfo.GetLength(1) != height) {
+            // _tileInfo hasn't been created yet, or the view range or camera pan changed,
+            // so create a new array. Leave a 1 tile buffer on each side.
+            _tileInfo = new ViewAlgorithm.Tile[width, height];
             _tileInfoDirty = true;
         }
+
+        _tileInfoEyeIndex = new Vector2i(viewRange.CenterX + 1 + padX, viewRange.CenterY + 1 + padY);
 
         if (!_tileInfoDirty)
             return _tileInfo;
 
         var oldTileInfo = _tileInfo;
-        var newTileInfo = new ViewAlgorithm.Tile[viewRange.Width + 2, viewRange.Height + 2];
+        var newTileInfo = new ViewAlgorithm.Tile[width, height];
         var populatedTiles = 0;
 
         var eyeWorldPos = _mapSystem.GridTileToWorld(gridUid, grid, eyeTile.GridIndices);
@@ -42,8 +57,8 @@ internal partial class DreamViewOverlay {
             if (appearance == null)
                 continue;
 
-            int xIndex = delta.X + viewRange.CenterX + 1;
-            int yIndex = delta.Y + viewRange.CenterY + 1;
+            int xIndex = delta.X + _tileInfoEyeIndex.X;
+            int yIndex = delta.Y + _tileInfoEyeIndex.Y;
             if (xIndex < 0 || yIndex < 0 || xIndex >= newTileInfo.GetLength(0) || yIndex >= newTileInfo.GetLength(1))
                 continue;
 
@@ -58,7 +73,7 @@ internal partial class DreamViewOverlay {
             populatedTiles++;
         }
 
-        var centerTile = newTileInfo[viewRange.CenterX + 1, viewRange.CenterY + 1];
+        var centerTile = newTileInfo[_tileInfoEyeIndex.X, _tileInfoEyeIndex.Y];
         if ((populatedTiles == 0 || centerTile == null) && oldTileInfo != null)
             return oldTileInfo;
 
@@ -75,7 +90,7 @@ internal partial class DreamViewOverlay {
                 continue;
 
             var worldPos = GetLogicalWorldPosition(entity, transform);
-            var tilePos = _mapSystem.WorldToTile(gridUid, grid, worldPos) - eyeTile.GridIndices + viewRange.Center + 1;
+            var tilePos = _mapSystem.WorldToTile(gridUid, grid, worldPos) - eyeTile.GridIndices + _tileInfoEyeIndex;
             if (tilePos.X < 0 || tilePos.Y < 0 || tilePos.X >= newTileInfo.GetLength(0) ||
                 tilePos.Y >= newTileInfo.GetLength(1))
                 continue;

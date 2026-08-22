@@ -1144,7 +1144,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
                 // Check for visibility if the eye doesn't have SEE_OBJS or SEE_MOBS
                 // TODO: Differentiate between objs and mobs
                 if ((sight & (SightFlags.SeeObjs|SightFlags.SeeMobs)) == 0 && _tileInfo != null) {
-                    var tilePos = _mapSystem.WorldToTile(gridUid, grid, sortPos) - eyeTile.GridIndices + _interfaceManager.View.Center + 1;
+                    var tilePos = _mapSystem.WorldToTile(gridUid, grid, sortPos) - eyeTile.GridIndices + _tileInfoEyeIndex;
                     if (tilePos.X < 0 || tilePos.Y < 0 || tilePos.X >= _tileInfo.GetLength(0) || tilePos.Y >= _tileInfo.GetLength(1))
                         continue;
 
