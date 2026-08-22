@@ -1,8 +1,9 @@
-using DMCompiler.Bytecode;
+﻿using DMCompiler.Bytecode;
 using DMCompiler.Compiler.DM;
 using DMCompiler.Compiler.DMM;
 using DMCompiler.Compiler.DMPreprocessor;
 using DMCompiler.DM;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -34,6 +35,13 @@ public class DMCompiler {
     private readonly HashSet<string> _resourceDirectories = new();
     private string? _codeDirectory;
     private DateTime _compileStartTime;
+
+    /// Wall time per compile phase, in the order they ran. Printed after every compile:
+    /// "it takes about a minute" is not actionable, "half of it is map conversion" is.
+    private readonly List<(string Name, TimeSpan Duration)> _phaseTimings = new();
+    private readonly Stopwatch _phaseWatch = new();
+    private string? _phaseName;
+    private readonly Dictionary<string, int> _phaseCounts = new();
     private int _errorCount;
     private int _warningCount;
 
@@ -72,17 +80,23 @@ public class DMCompiler {
         if (settings.NoOpts)
             ForcedWarning("Compiler optimizations (const folding, peephole opts, etc.) are disabled via the \"--no-opts\" arg. This results in slower code execution and is not representative of OpenDream performance.");
 
+        BeginPhase("preprocess + parse");
         var preprocessor = Preprocess(this, settings.Files, settings.MacroDefines);
         var successfulCompile = false;
         compiledDream = null;
         if (preprocessor is not null && Compile(preprocessor)) {
             //Output file is the first file with the extension changed to .json
             string outputFile = Path.ChangeExtension(settings.Files[0], "json");
+            BeginPhase("convert maps");
             List<DreamMapJson> maps = ConvertMaps(this, preprocessor.IncludedMaps);
 
             if (_errorCount == 0) {
+                BeginPhase("build json");
                 compiledDream = CompileToJson(maps, preprocessor.IncludedInterface, outputFile);
+
+                BeginPhase("write output");
                 var output = SaveJson(compiledDream, outputFile);
+                EndPhase();
 
                 if (_errorCount == 0) {
                     successfulCompile = true;
@@ -96,8 +110,11 @@ public class DMCompiler {
             Console.WriteLine($"Compilation failed with {_errorCount} errors and {_warningCount} warnings");
         }
 
+        EndPhase();
+
         TimeSpan duration = DateTime.Now - _compileStartTime;
-        Console.WriteLine($"Total time: {duration:mm\\:ss}");
+        PrintPhaseReport(duration);
+        Console.WriteLine($"Total time: {duration:mm\\:ss\\.ff}");
 
         return successfulCompile;
     }
@@ -181,10 +198,9 @@ public class DMCompiler {
         DMLexer dmLexer = new DMLexer("<unknown>", preprocessedTokens);
         DMParser dmParser = new DMParser(this, dmLexer);
 
-        VerbosePrint("Parsing");
         DMASTFile astFile = dmParser.File();
 
-        VerbosePrint("Building code tree");
+        BeginPhase("build code tree");
         DMCodeTreeBuilder dmCodeTreeBuilder = new(this);
         dmCodeTreeBuilder.BuildCodeTree(astFile);
 
@@ -265,6 +281,56 @@ public class DMCompiler {
         Emit(WarningCode.UnsupportedAccess, loc, message);
     }
 
+    /// <summary>
+    /// Starts timing a named phase, ending the previous one. Phases do not nest.
+    /// </summary>
+    internal void BeginPhase(string name) {
+        EndPhase();
+
+        _phaseName = name;
+        _phaseWatch.Restart();
+        VerbosePrint(name);
+    }
+
+    internal void EndPhase() {
+        if (_phaseName is null)
+            return;
+
+        _phaseWatch.Stop();
+        _phaseTimings.Add((_phaseName, _phaseWatch.Elapsed));
+        _phaseName = null;
+    }
+
+    /// <summary>Records a countable the phase report annotates its line with, e.g. how many maps.</summary>
+    internal void CountPhaseItem(string name, int count = 1) {
+        _phaseCounts[name] = _phaseCounts.GetValueOrDefault(name) + count;
+    }
+
+    private void PrintPhaseReport(TimeSpan total) {
+        if (_phaseTimings.Count == 0)
+            return;
+
+        var totalMs = Math.Max(total.TotalMilliseconds, 1);
+        var width = _phaseTimings.Max(phase => phase.Name.Length);
+
+        Console.WriteLine("Time by phase:");
+        foreach (var (name, duration) in _phaseTimings) {
+            var share = duration.TotalMilliseconds / totalMs * 100;
+            var note = _phaseCounts.TryGetValue(name, out var count) ? $"   {count} {(count == 1 ? "item" : "items")}" : "";
+
+            Console.WriteLine($"  {name.PadRight(width)}  {duration.TotalSeconds,6:0.00}s  {share,4:0}%{note}");
+        }
+
+        var unaccounted = total - new TimeSpan(_phaseTimings.Sum(phase => phase.Duration.Ticks));
+        if (unaccounted.TotalMilliseconds > 250)
+            Console.WriteLine($"  {"other".PadRight(width)}  {unaccounted.TotalSeconds,6:0.00}s  {unaccounted.TotalMilliseconds / totalMs * 100,4:0}%");
+
+        // Peak working set, because the compiler holding several GB is the other half of
+        // "why is this slow" - a machine that has to page is not compute bound.
+        var peak = Process.GetCurrentProcess().PeakWorkingSet64 / (1024.0 * 1024.0);
+        Console.WriteLine($"Peak memory: {peak:0} MiB");
+    }
+
     public void VerbosePrint(string message) {
         if (!Settings.Verbose) return;
 
@@ -278,6 +344,7 @@ public class DMCompiler {
 
         foreach (string mapPath in mapPaths) {
             VerbosePrint($"Converting map {mapPath}");
+            CountPhaseItem("convert maps");
 
             DMPreprocessor preprocessor = new DMPreprocessor(compiler, false);
             preprocessor.PreprocessFile(Path.GetDirectoryName(mapPath), Path.GetFileName(mapPath), false);

@@ -7,6 +7,12 @@
     <Platforms>AnyCPU</Platforms>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>..\bin\DMCompiler\</OutputPath>
+    <!-- A full tgstation compile allocates its way to a ~2.7 GB peak in well under
+         a minute. Workstation GC collects that on one thread and spends about a
+         third of the wall clock doing it; server GC gives each core its own heap
+         and measured 30% faster on a full Bubberstation build, for 12% more peak
+         memory. Set DOTNET_gcServer=0 to compare. -->
+    <ServerGarbageCollection>true</ServerGarbageCollection>
   </PropertyGroup>
 
   <ItemGroup>
