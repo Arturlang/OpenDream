@@ -58,6 +58,13 @@ var emptyListOwners = new Dictionary<(string Type, string Var), ListOwnerStat>()
 var defaultValued = new Dictionary<(string Type, string Var), ListOwnerStat>();
 var definitionDefaults = new Dictionary<ulong, Dictionary<string, long>>();
 var listOwnerByAddress = new Dictionary<ulong, (string Type, string Var)>();
+// Most duplicated lists are not held by a variable directly - they are the inner list of
+// an assoc list, like the source list ADD_TRAIT puts inside _status_traits. Remembering
+// each list's parent lets the report walk up to the variable that really owns it.
+var listParent = new Dictionary<ulong, ulong>();
+// Element count of every list, so the report can size "store one entry bare instead
+// of allocating a list" per mechanism - the trick _listen_lookup already uses.
+var listElements = new Dictionary<ulong, (int Elements, long Bytes)>();
 var sizeHistogram = new long[7];
 var sizeHistogramBytes = new long[7];
 long listSelfBytes = 0, listBackingBytes = 0;
@@ -87,6 +94,8 @@ foreach (var obj in heap.EnumerateObjects()) {
         listSelfBytes += (long)obj.Size;
         listBackingBytes += backing;
 
+        listElements[obj.Address] = (elements, (long)obj.Size + backing);
+
         var bucket = elements switch {
             0 => 0, <= 2 => 1, <= 4 => 2, <= 8 => 3, <= 16 => 4, <= 64 => 5, _ => 6
         };
@@ -94,8 +103,15 @@ foreach (var obj in heap.EnumerateObjects()) {
         sizeHistogramBytes[bucket] += (long)obj.Size + backing;
 
         // A list holding lists is the other place they hide.
-        foreach (var nested in EnumerateListValues(obj))
+        foreach (var nested in EnumerateListValues(obj)) {
             nestedLists.Add(nested);
+            listParent.TryAdd(nested, obj.Address);
+        }
+
+        foreach (var nested in EnumerateAssocListValues(obj)) {
+            nestedLists.Add(nested);
+            listParent.TryAdd(nested, obj.Address);
+        }
 
         if (elements > 0) {
             var contentHash = HashListContents(obj, elements);
@@ -219,7 +235,7 @@ Console.WriteLine($"Scanned {scanned:N0} objects ({totalHeap / 1048576.0:N0} MiB
 Write(outPath, typeStats, varStats, totalHeap, dreamObjects, sharedBytes);
 AppendListReport(outPath, allLists, ownedLists, nestedLists, listOwners,
                  sizeHistogram, sizeHistogramBytes, listSelfBytes, listBackingBytes);
-AppendDmSideReport(outPath, listContents, emptyListOwners, defaultValued, listOwnerByAddress, heap);
+AppendDmSideReport(outPath, listContents, emptyListOwners, defaultValued, listOwnerByAddress, heap, listParent, listElements);
 Console.WriteLine($"Wrote {outPath}");
 return 0;
 
@@ -319,6 +335,26 @@ static long HashListContents(ClrObject list, int elements) {
     }
 }
 
+// Walks up the nesting chain until it reaches a list some datum variable holds, so an
+// inner source list reports as the trait var it lives in rather than as an orphan.
+static string ResolveOwner(ulong address, Dictionary<ulong, (string Type, string Var)> owners,
+                           Dictionary<ulong, ulong> parents) {
+    var depth = 0;
+    var current = address;
+
+    while (depth++ < 8) {
+        if (owners.TryGetValue(current, out var owner))
+            return depth == 1 ? $"{owner.Type}.{owner.Var}" : $"{owner.Type}.{owner.Var} [inner list]";
+
+        if (!parents.TryGetValue(current, out var parent) || parent == current)
+            break;
+
+        current = parent;
+    }
+
+    return "(not reachable from any datum var)";
+}
+
 static string PreviewList(ClrHeap heap, ulong address, int elements) {
     if (address == 0)
         return "<no sample>";
@@ -408,6 +444,43 @@ static (int Elements, long Backing) MeasureList(ClrObject list) {
     }
 
     return (elements, backing);
+}
+
+static IEnumerable<ulong> EnumerateAssocListValues(ClrObject list) {
+    ClrArray pairs;
+    int count;
+
+    try {
+        var assoc = list.ReadObjectField("_associativeValues");
+        if (!assoc.IsValid || assoc.IsNull)
+            yield break;
+
+        var entries = assoc.ReadObjectField("_entries");
+        if (!entries.IsValid || entries.IsNull)
+            yield break;
+
+        count = assoc.ReadField<int>("_count");
+        pairs = entries.AsArray();
+    } catch {
+        yield break;
+    }
+
+    for (var i = 0; i < count && i < pairs.Length; i++) {
+        ulong address;
+        try {
+            var pair = pairs.GetStructValue(i);
+            var value = pair.ReadValueTypeField("value");
+            var referenced = value.ReadObjectField("_refValue");
+            if (!referenced.IsValid || referenced.IsNull || referenced.Type is null || !IsDreamList(referenced.Type))
+                continue;
+
+            address = referenced.Address;
+        } catch {
+            continue;
+        }
+
+        yield return address;
+    }
 }
 
 static IEnumerable<ulong> EnumerateListValues(ClrObject list) {
@@ -608,7 +681,8 @@ static void AppendDmSideReport(string path, Dictionary<long, DuplicateStat> cont
                                Dictionary<(string Type, string Var), ListOwnerStat> emptyLists,
                                Dictionary<(string Type, string Var), ListOwnerStat> defaults,
                                Dictionary<ulong, (string Type, string Var)> listOwners,
-                               ClrHeap heap) {
+                               ClrHeap heap, Dictionary<ulong, ulong> parents,
+                               Dictionary<ulong, (int Elements, long Bytes)> elements) {
     var sb = new StringBuilder();
 
     sb.AppendLine();
@@ -618,8 +692,64 @@ static void AppendDmSideReport(string path, Dictionary<long, DuplicateStat> cont
     sb.AppendLine($"  {duplicated.Sum(d => d.Count),12:N0} lists share contents with at least one other");
     sb.AppendLine($"  {reclaimable / 1048576.0,12:N0} MiB reclaimable if each distinct content existed once");
     sb.AppendLine();
+    // Which variable is behind all of this, counting every group rather than the top few.
+    var byOwner = new Dictionary<string, (long Lists, long Bytes)>(StringComparer.Ordinal);
+    foreach (var d in duplicated) {
+        var label = ResolveOwner(d.Sample, listOwners, parents);
+        var cur = byOwner.GetValueOrDefault(label);
+        byOwner[label] = (cur.Lists + d.Count, cur.Bytes + d.Bytes - d.Bytes / d.Count);
+    }
+
+    sb.AppendLine();
+    sb.AppendLine("--- duplicated lists grouped by the variable that ultimately holds them ---");
+    sb.AppendLine($"{"MiB",10} {"lists",12}  holder");
+    foreach (var (label, v) in byOwner.OrderByDescending(kv => kv.Value.Bytes).Take(30))
+        sb.AppendLine($"{v.Bytes / 1048576.0,10:N1} {v.Lists,12:N0}  {label}");
+
+    // The same var name recurs across hundreds of types, so roll up by the var itself:
+    // that is what names the DM mechanism responsible rather than one of its instances.
+    var byMechanism = new Dictionary<string, (long Lists, long Bytes)>(StringComparer.Ordinal);
+    foreach (var (label, v) in byOwner) {
+        var varName = label.Contains('.') ? label[(label.LastIndexOf('.') + 1)..] : label;
+        varName = varName.Replace(" [inner list]", "");
+
+        var cur = byMechanism.GetValueOrDefault(varName);
+        byMechanism[varName] = (cur.Lists + v.Lists, cur.Bytes + v.Bytes);
+    }
+
+    sb.AppendLine();
+    sb.AppendLine("--- rolled up by variable name: which DM mechanism is responsible ---");
+    sb.AppendLine($"{"MiB",10} {"lists",12} {"share",7}  variable");
+    var grand = byMechanism.Values.Sum(v => v.Bytes);
+    foreach (var (name, v) in byMechanism.OrderByDescending(kv => kv.Value.Bytes).Take(20))
+        sb.AppendLine($"{v.Bytes / 1048576.0,10:N1} {v.Lists,12:N0} {v.Bytes * 100.0 / grand,6:N1}%  {name}");
+
+    // For the mechanisms that dominate, how many of their lists hold a single entry?
+    // Those are the ones a bare value would replace outright.
+    sb.AppendLine();
+    sb.AppendLine("--- single entry lists per mechanism (all lists, not just duplicates) ---");
+    sb.AppendLine($"{"one entry",12} {"MiB",10} {"all lists",12} {"MiB",10}  variable");
+
+    var perMechanism = new Dictionary<string, (long One, long OneBytes, long All, long AllBytes)>(StringComparer.Ordinal);
+    foreach (var (address, info) in elements) {
+        var label = ResolveOwner(address, listOwners, parents);
+        var varName = label.Contains('.') ? label[(label.LastIndexOf('.') + 1)..] : label;
+        varName = varName.Replace(" [inner list]", "");
+
+        var cur = perMechanism.GetValueOrDefault(varName);
+        perMechanism[varName] = (cur.One + (info.Elements == 1 ? 1 : 0),
+                                 cur.OneBytes + (info.Elements == 1 ? info.Bytes : 0),
+                                 cur.All + 1, cur.AllBytes + info.Bytes);
+    }
+
+    foreach (var (name, v) in perMechanism.OrderByDescending(kv => kv.Value.OneBytes).Take(15))
+        sb.AppendLine($"{v.One,12:N0} {v.OneBytes / 1048576.0,10:N1} {v.All,12:N0} " +
+                      $"{v.AllBytes / 1048576.0,10:N1}  {name}");
+
+    sb.AppendLine();
+    sb.AppendLine("--- the largest individual groups ---");
     foreach (var d in duplicated.OrderByDescending(d => d.Bytes - d.Bytes / d.Count).Take(25)) {
-        var owner = listOwners.TryGetValue(d.Sample, out var o) ? $"{o.Type}.{o.Var}" : "(not held by a datum var)";
+        var owner = ResolveOwner(d.Sample, listOwners, parents);
         sb.AppendLine();
         sb.AppendLine($"  {(d.Bytes - d.Bytes / d.Count) / 1048576.0:N1} MiB  " +
                       $"{d.Count:N0} copies x {d.Bytes / d.Count:N0} bytes, {d.Elements} element(s)");
