@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Runtime;
 using System.Text.Json;
 using DMCompiler.Bytecode;
 using DMCompiler.Json;
@@ -78,6 +79,9 @@ public sealed partial class DreamManager {
             return;
         }
     }
+
+    private bool _compactHeapDone;
+    private readonly long _startTicks = Environment.TickCount64;
 
     public void StartWorld() {
         using (Profiler.BeginZone("StartWorld", color: (uint)Color.OrangeRed.ToArgb())) {
@@ -225,10 +229,57 @@ public sealed partial class DreamManager {
                $"session={CountMember("SessionOverrides")} sessionForce={CountMember("SessionForceSend")}";
     }
 
+    /// <summary>
+    /// Runs one compacting gen2 collection, once, if opendream.compact_heap_after says to.
+    /// Every managed thread stops for the duration, so the log line reports it.
+    /// </summary>
+    private void MaybeCompactHeap() {
+        if (_compactHeapDone)
+            return;
+
+        // Deliberately not latched off when this reads zero: command line cvars are not
+        // necessarily applied by the first tick, and latching on that race silently
+        // disabled the whole thing for the rest of the run.
+        var after = _config.GetCVar(OpenDreamShared.OpenDreamCVars.CompactHeapAfter);
+        if (after <= 0)
+            return;
+
+        // Measured in ticking time, not wall clock: an empty server idles and stops
+        // calling Update, so this clock only advances while there is a round to slow down.
+        if (Environment.TickCount64 - _startTicks < after * 1000L)
+            return;
+
+        _compactHeapDone = true;
+
+        static (long Heap, long Loh, long LohFree) Sample() {
+            var info = GC.GetGCMemoryInfo();
+            var loh = info.GenerationInfo.Length > 3 ? info.GenerationInfo[3] : default;
+            return (info.HeapSizeBytes, loh.SizeAfterBytes, loh.FragmentationAfterBytes);
+        }
+
+        var before = Sample();
+        var beforeWorkingSet = Environment.WorkingSet;
+
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+        GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);
+        watch.Stop();
+
+        var afterSample = Sample();
+
+        _sawmill.Info(
+            $"Compacting collection froze the server for {watch.Elapsed.TotalSeconds:0.00}s. " +
+            $"Heap {before.Heap / 1048576.0:N0} -> {afterSample.Heap / 1048576.0:N0} MiB, " +
+            $"LOH {before.Loh / 1048576.0:N0} -> {afterSample.Loh / 1048576.0:N0} MiB " +
+            $"(fragmented {before.LohFree / 1048576.0:N0} -> {afterSample.LohFree / 1048576.0:N0} MiB), " +
+            $"working set {beforeWorkingSet / 1048576.0:N0} -> {Environment.WorkingSet / 1048576.0:N0} MiB.");
+    }
+
     public void Update() {
         if (!Initialized || WorldInstance.Deleted)
             return;
 
+        MaybeCompactHeap();
         LogEntityCensus();
 
         using (Profiler.BeginZone("Tick", color: (uint)Color.OrangeRed.ToArgb())) {

@@ -85,6 +85,17 @@ public abstract class OpenDreamCVars {
     public static readonly CVarDef<bool> DebugPlaneAlpha =
         CVarDef.Create("opendream.debug_plane_alpha", false, CVar.CLIENTONLY);
 
+    /// <summary>
+    /// Seconds after startup at which to run one compacting gen2 collection, or 0 to never.
+    /// Round init churns the large object heap hard and leaves it fragmented; compacting
+    /// once before players arrive reclaims that. It is a blocking collection - every
+    /// managed thread stops, including the game loop - so this is deliberately a one shot
+    /// on a timer rather than something that can fire mid-round. The log line reports how
+    /// long the freeze lasted and what it bought.
+    /// </summary>
+    public static readonly CVarDef<int> CompactHeapAfter =
+        CVarDef.Create("opendream.compact_heap_after", 0, CVar.SERVERONLY);
+
     public static readonly CVarDef<bool> AlwaysShowExceptions =
         CVarDef.Create("opendream.always_show_exceptions", false, CVar.SERVERONLY);
 
