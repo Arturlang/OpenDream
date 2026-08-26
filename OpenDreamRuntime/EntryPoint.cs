@@ -7,8 +7,12 @@ using Robust.Shared.ContentPack;
 using Robust.Shared.Timing;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using Robust.Shared.GameObjects;
 
 [module: System.Runtime.CompilerServices.SkipLocalsInit]
 
@@ -23,7 +27,42 @@ namespace OpenDreamRuntime {
 
         private ServerVerbSystem? _serverVerbSystem;
 
+        /// <summary>
+        /// Says out loud whether this server was built with optimisations. A server built
+        /// in the Debug configuration runs roughly four and a half times slower than one
+        /// built in Tools - a full Bubberstation init went from 363 seconds to 81, which
+        /// is BYOND's own time - and nothing else about it looks wrong, so it is worth
+        /// one line at startup rather than an afternoon with a profiler.
+        ///
+        /// It reflects on the loaded assemblies rather than checking #if DEBUG, because
+        /// the case that actually happens is a mismatch: a plain `dotnet build` defaults
+        /// to Debug and overwrites part of an otherwise optimised bin.
+        /// </summary>
+        private static void LogBuildConfiguration() {
+            var sawmill = Logger.GetSawmill("opendream");
+            var unoptimised = new List<string>();
+
+            foreach (var assembly in new[] {typeof(EntryPoint).Assembly, typeof(IEntityManager).Assembly}) {
+                var debuggable = assembly.GetCustomAttribute<DebuggableAttribute>();
+                if (debuggable?.IsJITOptimizerDisabled == true)
+                    unoptimised.Add(assembly.GetName().Name ?? "<unknown>");
+            }
+
+            if (unoptimised.Count == 0) {
+                sawmill.Info("Build: optimised.");
+                return;
+            }
+
+            sawmill.Warning(
+                $"Build: UNOPTIMISED ({string.Join(", ", unoptimised)}). This is a Debug build and " +
+                "will run several times slower than a Tools or Release one. Rebuild with " +
+                "\"dotnet build OpenDreamServer -c Tools\" or ./build.ps1 - a plain \"dotnet build\" " +
+                "defaults to Debug.");
+        }
+
         public override void Init() {
+            LogBuildConfiguration();
+
             IComponentFactory componentFactory = IoCManager.Resolve<IComponentFactory>();
             componentFactory.DoAutoRegistrations();
 
