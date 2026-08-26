@@ -35,6 +35,18 @@ internal class DMCodeTreeBuilder(DMCompiler compiler) {
         compiler.EndPhase();
     }
 
+    /// <summary>
+    /// Whether this path is the header of a `var` block rather than a type of its own.
+    /// </summary>
+    private static bool IsDeclarationBlock(DreamPath path) {
+        foreach (var element in path.Elements) {
+            if (element is "var" or "proc" or "verb")
+                return true;
+        }
+
+        return false;
+    }
+
     private void ProcessBlockInner(DMASTBlockInner blockInner, DreamPath currentType) {
         foreach (DMASTStatement statement in blockInner.Statements) {
             ProcessStatement(statement, currentType);
@@ -52,7 +64,19 @@ internal class DMCodeTreeBuilder(DMCompiler compiler) {
             case DMASTNullStatement:
                 break;
             case DMASTObjectDefinition objectDefinition:
-                CodeTree.AddType(objectDefinition.Path);
+                // A block-form declaration - `var` on its own line followed by an indented
+                // block - parses as a path with a block after it, exactly like a type does.
+                // It is not one: `var` is a reserved word and BYOND declares no such type.
+                // Registering it put a phantom /whatever/var into the tree, which typesof()
+                // then handed out as though it were real. TGMC's asset subsystem walks
+                // typesof(/datum/asset) and tries to instantiate everything it finds, so a
+                // single VAR_PRIVATE block was enough to break every spritesheet asset.
+                //
+                // The inner block is still walked with the full path, because that is what
+                // ObjVarDeclInfo strips the `var` off to find the variable's real owner.
+                if (!IsDeclarationBlock(objectDefinition.Path))
+                    CodeTree.AddType(objectDefinition.Path);
+
                 if (objectDefinition.InnerBlock != null)
                     ProcessBlockInner(objectDefinition.InnerBlock, objectDefinition.Path);
                 break;
