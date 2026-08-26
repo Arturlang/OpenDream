@@ -470,9 +470,19 @@ internal sealed partial class DreamViewOverlay : Overlay {
     }
 
     //handles underlays, overlays, appearance flags, images. Adds them to the result list, so they can be sorted and drawn with DrawIcon()
-    private void ProcessIconComponents(DreamIcon icon, Vector2 position, EntityUid uid, bool isScreen, ref int tieBreaker, List<RendererMetaData> result, sbyte seeVis, RendererMetaData? parentIcon = null, bool keepTogether = false, Vector3? turfCoords = null, ClientAppearanceSystem.Flick? flick = null, Vector2i boundOffset = default, Vector2? sortPosition = null) {
+    /// <param name="keepApartTarget">
+    /// Where a KEEP_APART child should go. Inside a keep-together group <paramref name="result"/>
+    /// is the group's own buffer, so a child that escapes the group cannot be added there - it
+    /// has to reach the sprite list the group itself will be drawn into. Null outside a group,
+    /// where <paramref name="result"/> is already that list.
+    /// </param>
+    private void ProcessIconComponents(DreamIcon icon, Vector2 position, EntityUid uid, bool isScreen, ref int tieBreaker, List<RendererMetaData> result, sbyte seeVis, RendererMetaData? parentIcon = null, bool keepTogether = false, Vector3? turfCoords = null, ClientAppearanceSystem.Flick? flick = null, Vector2i boundOffset = default, Vector2? sortPosition = null, List<RendererMetaData>? keepApartTarget = null) {
         if (icon.Appearance is null) //in the event that appearance hasn't loaded yet
             return;
+
+        // Anything that leaves a keep-together group must land in the list the group is
+        // drawn into, not in the group's buffer.
+        var apartTarget = keepApartTarget ?? result;
 
         result.EnsureCapacity(result.Count + icon.Underlays.Count + icon.Overlays.Count + 1);
         RendererMetaData current = RentRendererMetaData();
@@ -607,10 +617,10 @@ internal sealed partial class DreamViewOverlay : Overlay {
                             (underlay.Appearance.AppearanceFlags & AppearanceFlags.KeepApart) != 0;
 
             if (!keepTogether || keepApart) { //KEEP_TOGETHER wasn't set on our parent, or KEEP_APART
-                ProcessIconComponents(underlay, current.Position, uid, isScreen, ref tieBreaker, result, seeVis, current);
+                ProcessIconComponents(underlay, current.Position, uid, isScreen, ref tieBreaker, apartTarget, seeVis, current);
             } else {
                 current.KeepTogetherGroup ??= new();
-                ProcessIconComponents(underlay, current.Position, uid, isScreen, ref tieBreaker, current.KeepTogetherGroup, seeVis, current, keepTogether);
+                ProcessIconComponents(underlay, current.Position, uid, isScreen, ref tieBreaker, current.KeepTogetherGroup, seeVis, current, keepTogether, keepApartTarget: apartTarget);
             }
         }
 
@@ -632,10 +642,10 @@ internal sealed partial class DreamViewOverlay : Overlay {
                             (overlay.Appearance.AppearanceFlags & AppearanceFlags.KeepApart) != 0;
 
             if (!keepTogether || keepApart) { //KEEP_TOGETHER wasn't set on our parent, or KEEP_APART
-                ProcessIconComponents(overlay, current.Position, uid, isScreen, ref tieBreaker, result, seeVis, current);
+                ProcessIconComponents(overlay, current.Position, uid, isScreen, ref tieBreaker, apartTarget, seeVis, current);
             } else {
                 current.KeepTogetherGroup ??= new();
-                ProcessIconComponents(overlay, current.Position, uid, isScreen, ref tieBreaker, current.KeepTogetherGroup, seeVis, current, keepTogether);
+                ProcessIconComponents(overlay, current.Position, uid, isScreen, ref tieBreaker, current.KeepTogetherGroup, seeVis, current, keepTogether, keepApartTarget: apartTarget);
             }
         }
 
