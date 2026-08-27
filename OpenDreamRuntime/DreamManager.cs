@@ -46,8 +46,7 @@ public sealed partial class DreamManager {
     public bool IsShutDown { get; private set; }
 
     /// <summary>
-    /// A millisecond count of when the current tick started.
-    /// Set to Environment.TickCount64 at the beginning of every tick.
+    /// Stopwatch timestamp of when the current tick started. Backs world.tick_usage.
     /// </summary>
     public long CurrentTickStart { get; private set; }
 
@@ -88,7 +87,7 @@ public sealed partial class DreamManager {
             // It is now OK to call user code, like /New procs.
             Initialized = true;
             InitializedTick = _gameTiming.CurTick;
-            CurrentTickStart = Environment.TickCount64;
+            CurrentTickStart = System.Diagnostics.Stopwatch.GetTimestamp();
 
             // Call global <init> with waitfor=FALSE
             _objectTree.GlobalInitProc?.Spawn(WorldInstance, new()).Dispose();
@@ -283,7 +282,7 @@ public sealed partial class DreamManager {
         LogEntityCensus();
 
         using (Profiler.BeginZone("Tick", color: (uint)Color.OrangeRed.ToArgb())) {
-            CurrentTickStart = Environment.TickCount64;
+            CurrentTickStart = System.Diagnostics.Stopwatch.GetTimestamp();
 
             using (Profiler.BeginZone("DM Execution", color: (uint)Color.LightPink.ToArgb()))
                 _procScheduler.Process();

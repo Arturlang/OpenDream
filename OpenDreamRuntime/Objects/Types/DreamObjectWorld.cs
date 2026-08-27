@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using OpenDreamRuntime.Procs.Native;
 using OpenDreamRuntime.Resources;
@@ -18,9 +18,13 @@ public sealed partial class DreamObjectWorld : DreamObject {
     public readonly ViewRange DefaultView;
     public DreamResource? Log;
 
-    // DM code may request this info a *lot* so we use the more performant Environment.TickCount64 over RT's stopwatches
+    // Not Environment.TickCount64: its 15.6ms granularity moved this in steps of 15
+    // percentage points at 10 fps, and SS13's scheduler yields on it. Same cost anyway.
     public float TickUsage =>
-        (Environment.TickCount64 - DreamManager.CurrentTickStart) / (float)(_gameTiming.TickPeriod.TotalMilliseconds) * 100;
+        (float)((System.Diagnostics.Stopwatch.GetTimestamp() - DreamManager.CurrentTickStart) * TimestampToMilliseconds
+                / _gameTiming.TickPeriod.TotalMilliseconds * 100);
+
+    private static readonly double TimestampToMilliseconds = 1000.0 / System.Diagnostics.Stopwatch.Frequency;
 
     public int TimeOfDay => (int)DateTime.UtcNow.TimeOfDay.TotalMilliseconds / 100;
 
