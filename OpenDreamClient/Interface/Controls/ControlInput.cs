@@ -358,6 +358,12 @@ internal sealed class ControlInput(ControlDescriptor controlDescriptor, ControlW
             case "text":
                 value = new DMFPropertyString(_textBox.Text);
                 return true;
+            // Read from the control, not the descriptor. TGMC toggles the verb bar with
+            // winset "input.focus=true ? map.focus=true : input.focus=true", which needs
+            // this to say whether the box actually has focus right now.
+            case "focus":
+                value = new DMFPropertyBool(_textBox.HasKeyboardFocus());
+                return true;
             default:
                 return base.TryGetProperty(property, out value);
         }
