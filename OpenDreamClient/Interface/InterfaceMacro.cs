@@ -340,6 +340,10 @@ public sealed class InterfaceMacro : InterfaceElement {
             Mod1 = keybind.Shift ? Key.Shift : Key.Unknown,
             Mod2 = keybind.Ctrl ? Key.Control : Key.Unknown,
             Mod3 = keybind.Alt ? Key.Alt : Key.Unknown,
+            // Lets the UI claim the key first, so a macro does not fire while the user is
+            // typing in a text field. SS13 binds a macro to every key, so without this the
+            // macro eats every keystroke and nothing can be typed into an input.
+            CanFocus = true,
         };
     }
 }
