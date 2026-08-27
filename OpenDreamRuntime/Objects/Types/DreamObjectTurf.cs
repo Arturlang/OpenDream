@@ -1,4 +1,4 @@
-using OpenDreamRuntime.Map;
+﻿using OpenDreamRuntime.Map;
 using OpenDreamRuntime.Procs;
 using OpenDreamShared.Dream;
 
@@ -34,12 +34,7 @@ public sealed class DreamObjectTurf : DreamObjectAtom {
 
         ObjectDefinition = objectDefinition;
 
-        if (Variables != null) {
-            foreach (var varValue in Variables.Values)
-                varValue.DecRef();
-
-            Variables?.Clear();
-        }
+        ClearInstanceVariables();
 
         Initialize(new());
     }

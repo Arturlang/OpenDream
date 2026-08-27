@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using OpenDreamRuntime.Map;
 using OpenDreamRuntime.Procs;
@@ -52,6 +52,15 @@ public sealed class DreamObjectDefinition {
 
     // Maps variables from their name to their initial value.
     public readonly Dictionary<string, DreamValue> Variables = new();
+
+    /// <summary>
+    /// Dense index for each variable name, shared by every instance of this type so that
+    /// an instance can store its variables as slots rather than as its own hash table.
+    /// Built on first use and only ever appended to, so a slot handed out stays valid for
+    /// as long as instances reference this definition.
+    /// </summary>
+    private Dictionary<string, int>? _varSlots;
+    private List<string>? _slotNames;
     // Maps /static variables from name to their index in the global variable table.
     public readonly Dictionary<string, int> GlobalVariables = new();
     // Contains hashes of variables that are tagged /const.
@@ -137,6 +146,46 @@ public sealed class DreamObjectDefinition {
 
     public void SetVariableDefinition(string variableName, DreamValue value) {
         Variables[variableName] = value;
+    }
+
+    private void EnsureVarSlots() {
+        if (_varSlots is not null)
+            return;
+
+        _varSlots = new Dictionary<string, int>(Variables.Count, StringComparer.Ordinal);
+        _slotNames = new List<string>(Variables.Count);
+
+        foreach (var name in Variables.Keys) {
+            _varSlots[name] = _slotNames.Count;
+            _slotNames.Add(name);
+        }
+    }
+
+    /// <summary>Slot for a variable this type declares, if it declares one.</summary>
+    public bool TryGetVarSlot(string name, out int slot) {
+        EnsureVarSlots();
+        return _varSlots!.TryGetValue(name, out slot);
+    }
+
+    /// <summary>
+    /// Slot for a variable, assigning one if this type does not declare it. Engine code can
+    /// set variables that never appeared in the type tree, and those still need somewhere
+    /// to live.
+    /// </summary>
+    public int GetOrCreateVarSlot(string name) {
+        EnsureVarSlots();
+        if (_varSlots!.TryGetValue(name, out var slot))
+            return slot;
+
+        slot = _slotNames!.Count;
+        _varSlots[name] = slot;
+        _slotNames.Add(name);
+        return slot;
+    }
+
+    public string GetVarSlotName(int slot) {
+        EnsureVarSlots();
+        return _slotNames![slot];
     }
 
     public void SetProcDefinition(string procName, int procId, bool replace = false) {

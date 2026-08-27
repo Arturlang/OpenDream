@@ -67,7 +67,20 @@ public class DreamObject {
     protected ServerVerbSystem? VerbSystem => ObjectDefinition.VerbSystem;
     protected ServerDreamParticlesSystem? ParticlesSystem => ObjectDefinition.ParticlesSystem;
 
-    protected Dictionary<string, DreamValue>? Variables;
+    /// <summary>
+    /// The variables this instance has actually set, as slot indices into its type's
+    /// shared name table alongside the values. Defaults live on the definition and reads
+    /// fall through to them.
+    ///
+    /// This used to be a Dictionary&lt;string, DreamValue&gt; per instance, which cost about
+    /// 874 bytes to hold roughly fifteen values worth 240 - 1.6 GB across 1.9 million
+    /// objects on a full station, a fifth of the heap. The slots are kept sorted so a
+    /// lookup is a binary search: an instance holds only a handful of the variables its
+    /// type declares, so most reads miss and fall through, and a miss has to be cheap.
+    /// </summary>
+    private int[]? _varSlots;
+    private DreamValue[]? _varValues;
+    private int _varCount;
 
 #if TOOLS
     protected ProfilerMemory? TracyMemoryId;
@@ -127,16 +140,15 @@ public class DreamObject {
         // Freeing up the slot for later reuse, as well as the .NET hard ref
         DreamRefManager.DeleteRef(RefId);
 
-        if (Variables != null) {
-            foreach (var varValue in Variables.Values) {
-                varValue.DecRef();
-            }
-        }
+        for (var i = 0; i < _varCount; i++)
+            _varValues![i].DecRef();
 
         //we release all relevant information, making this a very tiny object
         Tag = null;
         Deleted = true;
-        Variables = null;
+        _varSlots = null;
+        _varValues = null;
+        _varCount = 0;
         _varsList?.DecRef();
         _varsList?.Delete();
         _varsList = null;
@@ -282,6 +294,56 @@ public class DreamObject {
                && !(ObjectDefinition.TmpVariables is not null && ObjectDefinition.TmpVariables.Contains(name));
     }
 
+    /// <summary>
+    /// Index of a slot in <see cref="_varSlots"/>, or the bitwise complement of where it
+    /// would be inserted, matching Array.BinarySearch's convention.
+    /// </summary>
+    private int IndexOfSlot(int slot) {
+        var slots = _varSlots;
+        var low = 0;
+        var high = _varCount - 1;
+
+        while (low <= high) {
+            var mid = (low + high) >> 1;
+            var here = slots![mid];
+
+            if (here == slot)
+                return mid;
+
+            if (here < slot)
+                low = mid + 1;
+            else
+                high = mid - 1;
+        }
+
+        return ~low;
+    }
+
+    private bool TryGetInstanceVariable(string name, out DreamValue value) {
+        if (_varCount > 0 && ObjectDefinition.TryGetVarSlot(name, out var slot)) {
+            var index = IndexOfSlot(slot);
+            if (index >= 0) {
+                value = _varValues![index];
+                return true;
+            }
+        }
+
+        value = default;
+        return false;
+    }
+
+    /// <summary>
+    /// Drops every variable this instance has set, so it falls back to its type's defaults
+    /// again. Used when a turf changes type in place.
+    /// </summary>
+    protected void ClearInstanceVariables() {
+        for (var i = 0; i < _varCount; i++)
+            _varValues![i].DecRef();
+
+        // The arrays are kept: a turf that changed type is given variables again at once.
+        _varCount = 0;
+    }
+
     public bool HasVariable(string name) {
         DebugTools.Assert(!Deleted, "Cannot call HasVariable() on a deleted object");
 
@@ -306,11 +368,8 @@ public class DreamObject {
     }
 
     internal IEnumerable<(string Name, DreamValue Value)> EnumerateStoredVariablesForDebug() {
-        if (Variables == null)
-            yield break;
-
-        foreach (var (name, value) in Variables)
-            yield return (name, value);
+        for (var i = 0; i < _varCount; i++)
+            yield return (ObjectDefinition.GetVarSlotName(_varSlots![i]), _varValues![i]);
     }
 
     protected virtual bool TryGetVar(string varName, [MustDisposeResource] out DreamValue value) {
@@ -336,7 +395,7 @@ public class DreamObject {
             default:
                 var success =
                     (ObjectDefinition.GlobalVariables.TryGetValue(varName, out var globalIndex) && ObjectDefinition.DreamManager.Globals.TryGetValue(globalIndex, out value)) ||
-                    (Variables?.TryGetValue(varName, out value) is true) ||
+                    TryGetInstanceVariable(varName, out value) ||
                     (ObjectDefinition.Variables.TryGetValue(varName, out value));
 
                 value.IncRef();
@@ -392,11 +451,36 @@ public class DreamObject {
     public void SetVariableValue(string name, DreamValue value) {
         DebugTools.Assert(!Deleted, "Cannot call SetVariableValue() on a deleted object");
 
-        Variables ??= new(4);
         value.IncRef();
-        if (Variables.TryGetValue(name, out var oldValue))
-            oldValue.DecRef();
-        Variables[name] = value;
+
+        var slot = ObjectDefinition.GetOrCreateVarSlot(name);
+        var index = IndexOfSlot(slot);
+        if (index >= 0) {
+            _varValues![index].DecRef();
+            _varValues[index] = value;
+            return;
+        }
+
+        var insertAt = ~index;
+        if (_varSlots is null) {
+            _varSlots = new int[4];
+            _varValues = new DreamValue[4];
+        } else if (_varCount == _varSlots.Length) {
+            // Grown in small steps on purpose: most objects stop at a handful, and doubling
+            // would put back the slack this layout exists to remove.
+            var grown = _varCount + 4;
+            Array.Resize(ref _varSlots, grown);
+            Array.Resize(ref _varValues, grown);
+        }
+
+        if (insertAt < _varCount) {
+            Array.Copy(_varSlots, insertAt, _varSlots, insertAt + 1, _varCount - insertAt);
+            Array.Copy(_varValues!, insertAt, _varValues!, insertAt + 1, _varCount - insertAt);
+        }
+
+        _varSlots[insertAt] = slot;
+        _varValues![insertAt] = value;
+        _varCount++;
     }
 
     #endregion Variables
