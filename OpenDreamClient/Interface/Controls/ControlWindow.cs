@@ -338,6 +338,9 @@ public sealed partial class ControlWindow : InterfaceControl {
         } else
             ChildControls.Add(control);
 
+        // Robust centres a child bigger than its slot; BYOND keeps it at pos and clips the overflow
+        control.UIElement.HorizontalAlignment = Control.HAlignment.Left;
+        control.UIElement.VerticalAlignment = Control.VAlignment.Top;
         _canvas.Children.Add(control.UIElement);
     }
 
