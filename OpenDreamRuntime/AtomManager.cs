@@ -704,6 +704,8 @@ public sealed partial class AtomManager {
         def.TryGetVariable("mouse_opacity", out var mouseVar);
         def.TryGetVariable("pixel_x", out var xVar);
         def.TryGetVariable("pixel_y", out var yVar);
+        def.TryGetVariable("pixel_w", out var wVar);
+        def.TryGetVariable("pixel_z", out var zVar);
         def.TryGetVariable("layer", out var layerVar);
         def.TryGetVariable("plane", out var planeVar);
         def.TryGetVariable("render_source", out var renderSourceVar);
@@ -734,6 +736,9 @@ public sealed partial class AtomManager {
         SetAppearanceVar(appearance, "mouse_opacity", mouseVar);
         SetAppearanceVar(appearance, "pixel_x", xVar);
         SetAppearanceVar(appearance, "pixel_y", yVar);
+        // Types set these as defaults too: TGMC's busy icon sits a tile above its owner with pixel_z = 32
+        SetAppearanceVar(appearance, "pixel_w", wVar);
+        SetAppearanceVar(appearance, "pixel_z", zVar);
         SetAppearanceVar(appearance, "layer", layerVar);
         SetAppearanceVar(appearance, "plane", planeVar);
         SetAppearanceVar(appearance, "render_source", renderSourceVar);
