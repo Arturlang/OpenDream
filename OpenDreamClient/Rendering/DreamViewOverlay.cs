@@ -63,6 +63,7 @@ internal sealed partial class DreamViewOverlay : Overlay {
     [Dependency] private MarkupTagManager _tagManager = default!;
     [Dependency] private OpenDreamClient.Resources.IDreamResourceManager _dreamResourceManager = default!;
     [Dependency] private Robust.Shared.Configuration.IConfigurationManager _configManager = default!;
+    [Dependency] private Robust.Shared.Timing.IGameTiming _gameTiming = default!;
 
     private readonly ISawmill _sawmill = Logger.GetSawmill("opendream.view");
 
@@ -202,7 +203,8 @@ internal sealed partial class DreamViewOverlay : Overlay {
         if (++_perfFrames >= 120 && _configManager.GetCVar(OpenDreamShared.OpenDreamCVars.DebugRenderPerf)) {
             _sawmill.Info(
                 $"RENDERPERF avg={_perfTotalMs / _perfFrames:F2}ms worst={_perfWorstMs:F2}ms " +
-                $"sprites={_perfSprites} screenSprites={_perfScreenSprites}");
+                $"sprites={_perfSprites} screenSprites={_perfScreenSprites} " +
+                $"fps={_gameTiming.FramesPerSecondAvg:F0} frame={_gameTiming.RealFrameTimeAvg.TotalMilliseconds:F2}ms");
             _perfFrames = 0;
             _perfTotalMs = 0;
             _perfWorstMs = 0;
