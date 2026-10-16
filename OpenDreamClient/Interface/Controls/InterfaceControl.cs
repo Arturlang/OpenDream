@@ -52,9 +52,19 @@ public abstract class InterfaceControl : InterfaceElement {
         UIElement.Name = ControlDescriptor.Id.Value;
 
         //transparent is default because it's white with 0 alpha, and DMF color can't have none-255 alpha
-        StyleBox? styleBox = (ControlDescriptor.BackgroundColor.Value != Color.Transparent)
-            ? new StyleBoxFlat {BackgroundColor = ControlDescriptor.BackgroundColor.Value}
+        var background = ControlDescriptor.BackgroundColor.Value;
+        StyleBox? styleBox = (background != Color.Transparent)
+            ? new StyleBoxFlat {BackgroundColor = background}
             : null;
+
+        // BYOND draws every border style as a 1px frame; #646464 is what DreamSeeker uses for "line"
+        if (ControlDescriptor.Border.Value is "line" or "sunken" or "raised" && UIElement is PanelContainer or LineEdit) {
+            styleBox = new StyleBoxFlat {
+                BackgroundColor = background != Color.Transparent ? background : (UIElement is LineEdit ? Color.White : Color.Transparent),
+                BorderColor = Color.FromHex("#646464"),
+                BorderThickness = new Thickness(1)
+            };
+        }
 
         switch (UIElement) {
             case PanelContainer panel:
