@@ -300,16 +300,42 @@ public sealed partial class DreamResourceManager {
         return true;
     }
 
+    /// <summary>Replaces a file's contents, as rust_g's file_write does</summary>
     public bool SaveTextToFile(string filePath, string text) {
         try {
             Directory.GetParent(filePath)?.Create();
             File.WriteAllText(filePath, text);
-            _listingCache.Clear();
+            FileChanged(filePath);
         } catch (Exception) {
             return false;
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// text2file: appends rather than replaces, and writes each call as lines. Every newline in the text becomes the
+    /// platform's line break and one more always follows, even for an empty string.
+    /// </summary>
+    public bool AppendLinesToFile(string filePath, string text) {
+        try {
+            Directory.GetParent(filePath)?.Create();
+            File.AppendAllText(filePath, text.ReplaceLineEndings(Environment.NewLine) + Environment.NewLine);
+            FileChanged(filePath);
+        } catch (Exception) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private void FileChanged(string filePath) {
+        _listingCache.Clear();
+
+        // A file2text of this path read before the write would otherwise keep returning the old contents
+        var normalized = NormalizeResourcePath(filePath);
+        if (normalized != null && _resourcePathToId.TryGetValue(normalized, out var resourceId))
+            _resourceCache[resourceId].ReloadFromDisk();
     }
 
     public bool CopyFile(DreamResource sourceFile, string destinationFilePath) {
