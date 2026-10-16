@@ -137,8 +137,26 @@ public sealed partial class ControlMap(ControlDescriptor controlDescriptor, Cont
 
                 value = new DMFPropertyVec2(mousePos);
                 return true;
+            // Keys reach the map's macros whenever no other control holds keyboard focus
+            case "focus":
+                value = new DMFPropertyBool(IoCManager.Resolve<IUserInterfaceManager>().KeyboardFocused == null);
+                return true;
             default:
                 return base.TryGetProperty(property, out value);
+        }
+    }
+
+    public override void SetProperty(string property, string value, bool manualWinset = false) {
+        switch (property) {
+            // tgui's chat and stat panels hand focus back with map.focus=true after every click, so movement keeps
+            // working; taking it means releasing whatever control (a browser, an input) has the keyboard
+            case "focus":
+                if (new DMFPropertyBool(value).Value)
+                    IoCManager.Resolve<IUserInterfaceManager>().KeyboardFocused?.ReleaseKeyboardFocus();
+                break;
+            default:
+                base.SetProperty(property, value, manualWinset);
+                break;
         }
     }
 
