@@ -226,6 +226,28 @@ namespace OpenDreamRuntime.Procs {
             return ProcStatus.Continue;
         }
 
+        /// <summary>
+        /// new /proc/proc_name(Destination,Name,Desc). Its own method because the lambda captures state: in
+        /// CreateObject the closure would be allocated on every call, including every ordinary new.
+        /// </summary>
+        private static void AddVerbToTarget(DMProcState state, DMProcState.DMStackArgumentInfo argumentInfo, DreamValue val, DreamProc proc) {
+            using var arguments = state.PopProcArguments(null, argumentInfo);
+            var destination = arguments.GetArgument(0);
+
+            // TODO: Name and Desc arguments
+
+            if (destination.TryGetValueAsDreamObject<DreamObjectAtom>(out var atom)) {
+                state.Proc.AtomManager.UpdateAppearance(atom, appearance => {
+                    state.Proc.VerbSystem?.RegisterVerb(proc);
+
+                    if (proc.VerbId is { } verbId)
+                        appearance.Verbs.Add(verbId);
+                });
+            } else if (destination.TryGetValueAsDreamObject<DreamObjectClient>(out var client)) {
+                client.ClientVerbs.AddValue(val);
+            }
+        }
+
         public static ProcStatus CreateObject(DMProcState state) {
             var argumentInfo = state.ReadProcArguments();
             using var val = state.Pop();
@@ -246,23 +268,7 @@ namespace OpenDreamRuntime.Procs {
                         ThrowCannotCreateUnknownObject(val);
                     }
                 } else if (val.TryGetValueAsProc(out var proc)) {
-                    // new /proc/proc_name(Destination,Name,Desc)
-                    using var arguments = state.PopProcArguments(null, argumentInfo);
-                    var destination = arguments.GetArgument(0);
-
-                    // TODO: Name and Desc arguments
-
-                    if (destination.TryGetValueAsDreamObject<DreamObjectAtom>(out var atom)) {
-                        state.Proc.AtomManager.UpdateAppearance(atom, appearance => {
-                            state.Proc.VerbSystem?.RegisterVerb(proc);
-
-                            if (proc.VerbId is { } verbId)
-                                appearance.Verbs.Add(verbId);
-                        });
-                    } else if (destination.TryGetValueAsDreamObject<DreamObjectClient>(out var client)) {
-                        client.ClientVerbs.AddValue(val);
-                    }
-
+                    AddVerbToTarget(state, argumentInfo, val, proc);
                     return ProcStatus.Continue;
                 } else {
                     ThrowCannotCreateObjectFromInvalid(val);
