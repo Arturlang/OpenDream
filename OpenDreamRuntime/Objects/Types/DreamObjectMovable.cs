@@ -358,6 +358,7 @@ public class DreamObjectMovable : DreamObjectAtom {
 
     private void SetScreenLoc(string? screenLoc) {
         _screenLoc = screenLoc;
-        AtomManager.SetMovableScreenLoc(this, !string.IsNullOrEmpty(screenLoc) ? new ScreenLocation(screenLoc) : new ScreenLocation(0, 0, 0, 0));
+        // BYOND doesn't display a screen object without a screen_loc
+        AtomManager.SetMovableScreenLoc(this, !string.IsNullOrEmpty(screenLoc) ? new ScreenLocation(screenLoc) : null);
     }
 }

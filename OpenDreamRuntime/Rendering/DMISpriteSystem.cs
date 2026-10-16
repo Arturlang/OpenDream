@@ -30,7 +30,7 @@ public sealed partial class DMISpriteSystem : EntitySystem {
         ent.Comp.Appearance = appearance;
     }
 
-    public void SetSpriteScreenLocation(Entity<DMISpriteComponent> ent, ScreenLocation screenLocation) {
+    public void SetSpriteScreenLocation(Entity<DMISpriteComponent> ent, ScreenLocation? screenLocation) {
         DMISpriteComponent component = ent.Comp;
         component.ScreenLocation = screenLocation;
         Dirty(ent, component);

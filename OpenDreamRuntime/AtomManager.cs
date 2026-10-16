@@ -556,7 +556,7 @@ public sealed partial class AtomManager {
         }
     }
 
-    public void SetMovableScreenLoc(DreamObjectMovable movable, ScreenLocation screenLocation) {
+    public void SetMovableScreenLoc(DreamObjectMovable movable, ScreenLocation? screenLocation) {
         DMISpriteSystem?.SetSpriteScreenLocation(new(movable.Entity, movable.SpriteComponent), screenLocation);
     }
 
