@@ -28,9 +28,8 @@ if (!heap.CanWalkHeap) {
     return 1;
 }
 
-// Cost of one Dictionary<string, DreamValue> entry: hash, next, key reference and the
-// 16 byte DreamValue, which is what makes a per-instance dictionary so expensive.
-const int EntryOverhead = 40;
+// Cost of one stored instance var: a 4 byte slot id plus the 16 byte DreamValue
+const int EntryOverhead = 20;
 string[] BackingFields = ["_values", "_entries", "_buckets", "_items", "_array"];
 
 // Per DM type.
@@ -57,6 +56,7 @@ var listContents = new Dictionary<long, DuplicateStat>();
 var emptyListOwners = new Dictionary<(string Type, string Var), ListOwnerStat>();
 var defaultValued = new Dictionary<(string Type, string Var), ListOwnerStat>();
 var definitionDefaults = new Dictionary<ulong, Dictionary<string, long>>();
+var slotNameCache = new Dictionary<ulong, string[]>();
 var listOwnerByAddress = new Dictionary<ulong, (string Type, string Var)>();
 // Most duplicated lists are not held by a variable directly - they are the inner list of
 // an assoc list, like the source list ADD_TRAIT puts inside _status_traits. Remembering
@@ -131,46 +131,30 @@ foreach (var obj in heap.EnumerateObjects()) {
     stat.Count++;
     stat.SelfBytes += (long)obj.Size;
 
-    // DreamObject.Variables is a lazily allocated Dictionary<string, DreamValue> holding
-    // only the vars this instance has actually set; the defaults live on the definition.
-    var vars = obj.ReadObjectField("Variables");
-    if (!vars.IsValid || vars.IsNull)
+    // Instance vars are slot arrays: _varSlots holds sorted slot ids into the definition's
+    // _slotNames, _varValues the matching values, and _varCount how many are live. Only vars
+    // this instance has actually set are stored; the defaults live on the definition.
+    var varCount = obj.ReadField<int>("_varCount");
+    var slotsObj = obj.ReadObjectField("_varSlots");
+    var valuesObj = obj.ReadObjectField("_varValues");
+    if (varCount == 0 || !slotsObj.IsValid || slotsObj.IsNull || !valuesObj.IsValid || valuesObj.IsNull)
         continue;
 
-    stat.VarDictBytes += (long)vars.Size;
+    stat.VarDictBytes += (long)slotsObj.Size + (long)valuesObj.Size;
 
-    var entries = vars.ReadObjectField("_entries");
-    if (!entries.IsValid || entries.IsNull)
-        continue;
+    var slotNames = SlotNamesFor(definition, slotNameCache);
+    var slotArray = slotsObj.AsArray();
+    var valueArray = valuesObj.AsArray();
 
-    stat.VarDictBytes += (long)entries.Size;
-
-    var buckets = vars.ReadObjectField("_buckets");
-    if (buckets.IsValid && !buckets.IsNull)
-        stat.VarDictBytes += (long)buckets.Size;
-
-    var count = vars.ReadField<int>("_count");
-    var array = entries.AsArray();
-
-    for (var i = 0; i < count && i < array.Length; i++) {
-        ClrValueType entry;
+    for (var i = 0; i < varCount && i < slotArray.Length && i < valueArray.Length; i++) {
+        string name;
+        ClrValueType value;
         try {
-            entry = array.GetStructValue(i);
+            var slot = slotArray.GetValue<int>(i);
+            name = slot >= 0 && slot < slotNames.Length ? slotNames[slot] : null;
+            value = valueArray.GetStructValue(i);
         } catch {
             break;
-        }
-
-        if (!entry.IsValid)
-            continue;
-
-        // ReadStringField refuses this: inside a struct array ClrMD types the field as a
-        // plain class reference, so go through the object and read the string off that.
-        string name;
-        try {
-            var key = entry.ReadObjectField("key");
-            name = key.IsValid && !key.IsNull ? key.AsString(512) : null;
-        } catch {
-            continue;
         }
 
         if (name is null)
@@ -179,7 +163,6 @@ foreach (var obj in heap.EnumerateObjects()) {
         // The value is a DreamValue struct; anything heap-allocated hangs off _refValue.
         long valueBytes = 0;
         try {
-            var value = entry.ReadValueTypeField("value");
             var referenced = value.ReadObjectField("_refValue");
             if (referenced.IsValid && !referenced.IsNull) {
                 valueBytes = OwnedSize(referenced, charged, ref sharedBytes);
@@ -208,12 +191,12 @@ foreach (var obj in heap.EnumerateObjects()) {
             // A torn or unreadable field in a dump is not worth aborting the whole run for.
         }
 
-        // Storing what the type already declares is a write that bought nothing. Free on
-        // BYOND, where vars are flat slots; here it allocates a whole dictionary entry.
+        // Storing what the type already declares is a write that bought nothing: free on
+        // BYOND, here it takes a slot the instance would otherwise not need.
         if (definition.IsValid && !definition.IsNull) {
             var defaults = DefaultsFor(definition, definitionDefaults);
             if (defaults is not null && defaults.TryGetValue(name, out var declared) &&
-                declared == ValueKey(entry, "value")) {
+                declared == ValueKey(value, null)) {
                 ref var wasted = ref System.Runtime.InteropServices.CollectionsMarshal
                     .GetValueRefOrAddDefault(defaultValued, (dmType, name), out _);
                 wasted.Count++;
@@ -254,6 +237,34 @@ static long ValueKey(ClrValueType holder, string field) {
     } catch {
         return 0;
     }
+}
+
+// A definition's slot names, indexed by slot id. Read once per definition: every instance
+// of a type shares them.
+static string[] SlotNamesFor(ClrObject definition, Dictionary<ulong, string[]> cache) {
+    if (!definition.IsValid || definition.IsNull)
+        return Array.Empty<string>();
+    if (cache.TryGetValue(definition.Address, out var cached))
+        return cached;
+
+    var names = Array.Empty<string>();
+    try {
+        var list = definition.ReadObjectField("_slotNames");
+        if (list.IsValid && !list.IsNull) {
+            var size = list.ReadField<int>("_size");
+            var items = list.ReadObjectField("_items").AsArray();
+            names = new string[size];
+            for (var i = 0; i < size && i < items.Length; i++) {
+                var item = items.GetObjectValue(i);
+                names[i] = item.IsValid && !item.IsNull ? item.AsString(512) : null;
+            }
+        }
+    } catch {
+        // An unreadable definition just loses its var names
+    }
+
+    cache[definition.Address] = names;
+    return names;
 }
 
 static Dictionary<string, long> DefaultsFor(ClrObject definition, Dictionary<ulong, Dictionary<string, long>> cache) {
