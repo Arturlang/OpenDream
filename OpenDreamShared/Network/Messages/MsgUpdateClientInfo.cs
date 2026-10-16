@@ -17,6 +17,8 @@ public sealed class MsgUpdateClientInfo : NetMessage {
     public int CursorResource;
 
     public bool ShowPopupMenus;
+    /// <summary>client.fps: the frame rate the client renders at, 0 for its own default</summary>
+    public int Fps;
 
     public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer) {
         IconSize = buffer.ReadInt32();
@@ -24,6 +26,7 @@ public sealed class MsgUpdateClientInfo : NetMessage {
         MapFormat = (MapFormat)buffer.ReadInt32();
         ShowPopupMenus = buffer.ReadBoolean();
         CursorResource = buffer.ReadInt32();
+        Fps = buffer.ReadInt32();
     }
 
     public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer) {
@@ -33,5 +36,6 @@ public sealed class MsgUpdateClientInfo : NetMessage {
         buffer.Write((int)MapFormat);
         buffer.Write(ShowPopupMenus);
         buffer.Write(CursorResource);
+        buffer.Write(Fps);
     }
 }

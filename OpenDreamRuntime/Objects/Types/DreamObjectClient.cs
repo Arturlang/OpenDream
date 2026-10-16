@@ -14,6 +14,7 @@ public sealed class DreamObjectClient : DreamObject {
     public readonly ClientVerbsList ClientVerbs;
     public ViewRange View { get; private set; }
     public bool ShowPopupMenus { get; private set; } = true;
+    public int Fps { get; private set; }
     public IconResource? CursorIcon;
 
     public DreamObjectClient(DreamObjectDefinition objectDefinition, DreamConnection connection, ServerScreenOverlaySystem? screenOverlaySystem, ServerClientImagesSystem? clientImagesSystem) : base(objectDefinition) {
@@ -25,6 +26,8 @@ public sealed class DreamObjectClient : DreamObject {
         DreamManager.Clients.Add(this);
 
         View = DreamManager.WorldInstance.DefaultView;
+        if (objectDefinition.Variables["fps"].TryGetValueAsInteger(out var fps))
+            Fps = Math.Max(fps, 0);
     }
 
     protected override void HandleDeletion() {
@@ -57,6 +60,9 @@ public sealed class DreamObjectClient : DreamObject {
             case "eye":
                 Connection.Eye?.IncRef();
                 value = new(Connection.Eye);
+                return true;
+            case "fps":
+                value = new DreamValue(Fps);
                 return true;
             case "view":
                 // Number if square & centerable, string representation otherwise
@@ -150,6 +156,12 @@ public sealed class DreamObjectClient : DreamObject {
                     View = DreamManager.WorldInstance.DefaultView;
                 }
 
+                Connection.SendClientInfoUpdate();
+                break;
+            }
+            case "fps": {
+                value.TryGetValueAsInteger(out var fps);
+                Fps = Math.Max(fps, 0);
                 Connection.SendClientInfoUpdate();
                 break;
             }
