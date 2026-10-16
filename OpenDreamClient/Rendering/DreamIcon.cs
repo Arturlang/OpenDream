@@ -142,19 +142,20 @@ internal sealed class DreamIcon(RenderTargetPool renderTargetPool, IDreamInterfa
     }
 
     public void SetAppearance(uint? appearanceId, AtomDirection? parentDir = null, string? parentIconState = null) {
-        // End any animations that are currently happening, except ones flagged
-        // ANIMATION_CONTINUE: content like projectiles adjusts pixel offsets directly
-        // every tick while a continue-flagged animate() glides them, and the glide has
-        // to keep tweening across those appearance updates or the motion strobes.
-        // Note that ending the rest isn't faithful to the original behavior.
+        // An appearance update doesn't stop running animations in BYOND: removing the shadow filter at the end of
+        // TGMC's jump cut its fall short. They are rebased onto the new appearance once it loads instead.
+        // ANIMATION_CONTINUE keeps its own handling: content like projectiles adjusts pixel offsets directly every
+        // tick while a continue-flagged animate() glides them, so only those survive and nothing is rebased.
+        var rebaseAnimations = false;
         if (_appearanceAnimations != null && _appearanceAnimations.Count > 0) {
             if (_appearanceAnimations.Any(anim => (anim.Flags & AnimationFlags.AnimationContinue) != 0))
                 _appearanceAnimations.RemoveAll(anim => (anim.Flags & AnimationFlags.AnimationContinue) == 0);
             else
-                EndAppearanceAnimation(null);
+                rebaseAnimations = true;
         }
 
         if (appearanceId == null) {
+            EndAppearanceAnimation(null);
             Appearance = null;
             return;
         }
@@ -171,8 +172,55 @@ internal sealed class DreamIcon(RenderTargetPool renderTargetPool, IDreamInterfa
             // icon_state should render that icon's default state instead of
             // trying to use the parent's state.
             _iconState = (appearance.Icon == null) ? appearance.IconState ?? parentIconState : appearance.IconState;
+            if (rebaseAnimations && _appearanceAnimations is { Count: > 0 } && _appearance != null)
+                appearance = RebaseAnimations(appearance);
+
             Appearance = appearance;
         });
+    }
+
+    /// <summary>
+    /// Keeps running animations going across an appearance update. Each step goes on to its own target for the vars it
+    /// animates (those its target changes from the current base) and takes everything else from the new appearance,
+    /// so a filter removed or a direction changed mid-jump shows at once without ending the jump.
+    /// </summary>
+    /// <returns>The new base appearance: the update, with the animated vars still at their animation start</returns>
+    private ImmutableAppearance RebaseAnimations(ImmutableAppearance updated) {
+        var oldBase = _appearance!;
+        var newBase = updated.ToMutable();
+
+        for (var i = 0; i < _appearanceAnimations!.Count; i++) {
+            var animation = _appearanceAnimations[i];
+            var target = updated.ToMutable();
+            CopyAnimatedVars(animation.EndAppearance, oldBase, animation.EndAppearance, target);
+            CopyAnimatedVars(animation.EndAppearance, oldBase, oldBase, newBase);
+
+            _appearanceAnimations[i] = new AppearanceAnimation(animation.Start, animation.Duration,
+                new ImmutableAppearance(target, null), animation.Easing, animation.Flags, animation.Delay,
+                animation.LastInSequence, animation.Tag, animation.Command, animation.CommandRunner);
+        }
+
+        return new ImmutableAppearance(newBase, null);
+    }
+
+    /// <summary>Copies from <paramref name="source"/> each var the step towards <paramref name="end"/> changes from <paramref name="start"/></summary>
+    private static void CopyAnimatedVars(ImmutableAppearance end, ImmutableAppearance start, ImmutableAppearance source, MutableAppearance into) {
+        if (end.Direction != start.Direction) into.Direction = source.Direction;
+        if (end.Icon != start.Icon) into.Icon = source.Icon;
+        if (end.IconState != start.IconState) into.IconState = source.IconState;
+        if (end.Invisibility != start.Invisibility) into.Invisibility = source.Invisibility;
+        if (end.Maptext != start.Maptext) into.Maptext = source.Maptext;
+        if (end.Alpha != start.Alpha) into.Alpha = source.Alpha;
+        if (end.Color != start.Color) into.Color = source.Color;
+        if (!end.ColorMatrix.Equals(start.ColorMatrix)) into.ColorMatrix = source.ColorMatrix;
+        if (!end.GlideSize.Equals(start.GlideSize)) into.GlideSize = source.GlideSize;
+        if (!end.Layer.Equals(start.Layer)) into.Layer = source.Layer;
+        if (end.MaptextSize != start.MaptextSize) into.MaptextSize = source.MaptextSize;
+        if (end.MaptextOffset != start.MaptextOffset) into.MaptextOffset = source.MaptextOffset;
+        if (end.PixelOffset != start.PixelOffset) into.PixelOffset = source.PixelOffset;
+        if (end.PixelOffset2 != start.PixelOffset2) into.PixelOffset2 = source.PixelOffset2;
+        if (!end.Transform.SequenceEqual(start.Transform))
+            into.Transform = (float[])source.Transform.Clone();
     }
 
     //three things to do here, chained animations, loops and parallel animations
@@ -307,6 +355,55 @@ internal sealed class DreamIcon(RenderTargetPool renderTargetPool, IDreamInterfa
             DirtyTexture();
     }
 
+    /// <summary>Each easing's curve with a fast start and slow finish (its EASE_OUT shape), for 0 &lt;= t &lt;= 1</summary>
+    private static float EaseOutCurve(AnimationEasing curve, float timeFactor) {
+        float factor = 0;
+        switch (curve) {
+            case AnimationEasing.Linear:
+                factor = timeFactor;
+                break;
+            case AnimationEasing.Sine:
+                factor = MathF.Sin(timeFactor * MathF.PI / 2);
+                break;
+            case AnimationEasing.Circular:
+                factor = MathF.Sqrt(1 - MathF.Pow(1 - timeFactor, 2));
+                break;
+            case AnimationEasing.Cubic:
+                factor = 1 - MathF.Pow(1-timeFactor, 3);
+                break;
+            case AnimationEasing.Bounce: //https://stackoverflow.com/questions/25249829/bouncing-ease-equation-in-c-sharp great match for byond behaviour
+                float bounce = timeFactor*2.75f;
+                if(bounce<1)
+                    factor = MathF.Pow(bounce, 2);
+                else if(bounce<2) {
+                    bounce -= 1.5f;
+                    factor = MathF.Pow(bounce, 2)+ 0.75f;
+                } else if(bounce<2.5) {
+                    bounce -= 2.25f;
+                    factor = MathF.Pow(bounce, 2) + 0.9375f;
+                } else {
+                    bounce -= 2.625f;
+                    factor = MathF.Pow(bounce, 2) + 0.984375f;
+                }
+
+                break;
+            case AnimationEasing.Elastic: //http://www.java2s.com/example/csharp/system/easing-equation-function-for-an-elastic-exponentially-decaying-sine-w.html with d=1, s=pi/2, c=2, b = -1
+                factor = MathF.Pow(2, -10 * timeFactor) * MathF.Sin((timeFactor - MathF.PI/2.0f) * (2.0f*MathF.PI/0.3f)) + 1.0f;
+                break;
+            case AnimationEasing.Back: //https://learn.microsoft.com/en-us/dotnet/api/system.windows.media.animation.backease?view=windowsdesktop-8.0
+                factor = MathF.Pow(timeFactor, 3) - timeFactor * MathF.Sin(timeFactor * MathF.PI);
+                break;
+            case AnimationEasing.Quad:
+                factor = 1 - MathF.Pow(1-timeFactor,2);
+                break;
+            case AnimationEasing.Jump:
+                factor = (timeFactor < 1) ? 0 : 1;
+                break;
+        }
+
+        return factor;
+    }
+
     private ImmutableAppearance? CalculateAnimatedAppearance() {
         if (_appearanceAnimations == null || _appearanceAnimations.Count == 0 || _appearance == null) {
             _animatedAppearance = null; //null it if _appearanceAnimations is empty
@@ -325,54 +422,20 @@ internal sealed class DreamIcon(RenderTargetPool renderTargetPool, IDreamInterfa
 
             var animationDurationTicks = Math.Max(animation.Duration.Ticks, 1);
             float timeFactor = Math.Clamp((float)(gameTiming.CurTime - animation.Start).Ticks / animationDurationTicks, 0.0f, 1.0f);
-            float factor = 0;
-            if((animation.Easing & AnimationEasing.EaseIn) != 0)
-                timeFactor /= 2.0f;
-            if((animation.Easing & AnimationEasing.EaseOut) != 0)
-                timeFactor = 0.5f+timeFactor/2.0f;
-
-            switch (animation.Easing) {
-                case AnimationEasing.Linear:
-                    factor = timeFactor;
-                    break;
-                case AnimationEasing.Sine:
-                    factor = MathF.Sin(timeFactor * MathF.PI / 2);
-                    break;
-                case AnimationEasing.Circular:
-                    factor = MathF.Sqrt(1 - MathF.Pow(1 - timeFactor, 2));
-                    break;
-                case AnimationEasing.Cubic:
-                    factor = 1 - MathF.Pow(1-timeFactor, 3);
-                    break;
-                case AnimationEasing.Bounce: //https://stackoverflow.com/questions/25249829/bouncing-ease-equation-in-c-sharp great match for byond behaviour
-                    float bounce = timeFactor*2.75f;
-                    if(bounce<1)
-                        factor = MathF.Pow(bounce, 2);
-                    else if(bounce<2) {
-                        bounce -= 1.5f;
-                        factor = MathF.Pow(bounce, 2)+ 0.75f;
-                    } else if(bounce<2.5) {
-                        bounce -= 2.25f;
-                        factor = MathF.Pow(bounce, 2) + 0.9375f;
-                    } else {
-                        bounce -= 2.625f;
-                        factor = MathF.Pow(bounce, 2) + 0.984375f;
-                    }
-
-                    break;
-                case AnimationEasing.Elastic: //http://www.java2s.com/example/csharp/system/easing-equation-function-for-an-elastic-exponentially-decaying-sine-w.html with d=1, s=pi/2, c=2, b = -1
-                    factor = MathF.Pow(2, -10 * timeFactor) * MathF.Sin((timeFactor - MathF.PI/2.0f) * (2.0f*MathF.PI/0.3f)) + 1.0f;
-                    break;
-                case AnimationEasing.Back: //https://learn.microsoft.com/en-us/dotnet/api/system.windows.media.animation.backease?view=windowsdesktop-8.0
-                    factor = MathF.Pow(timeFactor, 3) - timeFactor * MathF.Sin(timeFactor * MathF.PI);
-                    break;
-                case AnimationEasing.Quad:
-                    factor = 1 - MathF.Pow(1-timeFactor,2);
-                    break;
-                case AnimationEasing.Jump:
-                    factor = (timeFactor < 1) ? 0 : 1;
-                    break;
-            }
+            // The easing type and its EASE_IN/EASE_OUT flags share one value; switching on all of it matched no
+            // curve for e.g. CIRCULAR_EASING|EASE_OUT, so the animation snapped instead of moving (TGMC's jump)
+            var curve = animation.Easing & ~(AnimationEasing.EaseIn | AnimationEasing.EaseOut);
+            var easeIn = (animation.Easing & AnimationEasing.EaseIn) != 0;
+            var easeOut = (animation.Easing & AnimationEasing.EaseOut) != 0;
+            float factor;
+            if (easeIn && easeOut) // in, then out
+                factor = timeFactor < 0.5f
+                    ? (1 - EaseOutCurve(curve, 1 - timeFactor * 2)) / 2
+                    : 0.5f + EaseOutCurve(curve, timeFactor * 2 - 1) / 2;
+            else if (easeIn) // the curve mirrored: slow start, fast finish
+                factor = 1 - EaseOutCurve(curve, 1 - timeFactor);
+            else
+                factor = EaseOutCurve(curve, timeFactor);
 
             var endAppearance = animation.EndAppearance;
 
