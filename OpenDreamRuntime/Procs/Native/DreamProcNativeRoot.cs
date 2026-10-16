@@ -3314,7 +3314,7 @@ internal static class DreamProcNativeRoot {
             return new DreamValue(0);
         }
 
-        return new DreamValue(bundle.ResourceManager.SaveTextToFile(file, text) ? 1 : 0);
+        return new DreamValue(bundle.ResourceManager.AppendLinesToFile(file, text) ? 1 : 0);
     }
 
     [DreamProc("text2num")]
