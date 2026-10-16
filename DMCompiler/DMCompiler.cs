@@ -476,7 +476,7 @@ public struct DMCompilerSettings {
     public int DMVersion = 516;
 
     /// <summary> The value of the DM_BUILD macro </summary>
-    public int DMBuild = 1655;
+    public int DMBuild = 1686;
 
     /// <summary> Typechecking won't fail if the RHS type is "as anything" to ease migration, thus only emitting for explicit mismatches (e.g. "num" and "text") </summary>
     public bool SkipAnythingTypecheck = false;
