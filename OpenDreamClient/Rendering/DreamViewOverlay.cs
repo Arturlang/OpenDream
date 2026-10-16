@@ -476,6 +476,14 @@ internal sealed partial class DreamViewOverlay : Overlay {
     /// has to reach the sprite list the group itself will be drawn into. Null outside a group,
     /// where <paramref name="result"/> is already that list.
     /// </param>
+    /// <summary>
+    /// An overlay with a render_target draws only into that target, never where it sits, so it must leave a
+    /// keep-together group like a KEEP_APART one does. Drawn into the group, TGMC's hair mask (a white shape that
+    /// only feeds an alpha mask filter) showed up as a white silhouette on everyone wearing a helmet.
+    /// </summary>
+    private static bool RendersElsewhere(DreamIcon icon) =>
+        !string.IsNullOrEmpty(icon.Appearance?.RenderTarget);
+
     private void ProcessIconComponents(DreamIcon icon, Vector2 position, EntityUid uid, bool isScreen, ref int tieBreaker, List<RendererMetaData> result, sbyte seeVis, RendererMetaData? parentIcon = null, bool keepTogether = false, Vector3? turfCoords = null, ClientAppearanceSystem.Flick? flick = null, Vector2i boundOffset = default, Vector2? sortPosition = null, List<RendererMetaData>? keepApartTarget = null) {
         if (icon.Appearance is null) //in the event that appearance hasn't loaded yet
             return;
@@ -614,7 +622,8 @@ internal sealed partial class DreamViewOverlay : Overlay {
                 ? icon.Appearance.Plane + (underlay.Appearance.Plane + 32767)
                 : underlay.Appearance.Plane;
             var keepApart = underlayPlane != icon.Appearance.Plane ||
-                            (underlay.Appearance.AppearanceFlags & AppearanceFlags.KeepApart) != 0;
+                            (underlay.Appearance.AppearanceFlags & AppearanceFlags.KeepApart) != 0 ||
+                            RendersElsewhere(underlay);
 
             if (!keepTogether || keepApart) { //KEEP_TOGETHER wasn't set on our parent, or KEEP_APART
                 ProcessIconComponents(underlay, current.Position, uid, isScreen, ref tieBreaker, apartTarget, seeVis, current);
@@ -639,7 +648,8 @@ internal sealed partial class DreamViewOverlay : Overlay {
                 ? icon.Appearance.Plane + (overlay.Appearance.Plane + 32767)
                 : overlay.Appearance.Plane;
             var keepApart = overlayPlane != icon.Appearance.Plane ||
-                            (overlay.Appearance.AppearanceFlags & AppearanceFlags.KeepApart) != 0;
+                            (overlay.Appearance.AppearanceFlags & AppearanceFlags.KeepApart) != 0 ||
+                            RendersElsewhere(overlay);
 
             if (!keepTogether || keepApart) { //KEEP_TOGETHER wasn't set on our parent, or KEEP_APART
                 ProcessIconComponents(overlay, current.Position, uid, isScreen, ref tieBreaker, apartTarget, seeVis, current);
