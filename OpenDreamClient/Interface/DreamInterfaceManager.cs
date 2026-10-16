@@ -526,8 +526,13 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
         var mapFormat = msg.MapFormat;
         var showPopupMenus = msg.ShowPopupMenus;
         var cursorResource = msg.CursorResource;
+        var fps = msg.Fps;
 
-        RunOnMainThread(() => UpdateClientInfo(iconSize, view, mapFormat, showPopupMenus, cursorResource));
+        RunOnMainThread(() => {
+            // BYOND draws at client.fps, so a game asking for 60 doesn't render 240 frames on a 240Hz monitor
+            _gameController.ContentMaxFps = fps;
+            UpdateClientInfo(iconSize, view, mapFormat, showPopupMenus, cursorResource);
+        });
     }
 
     private void UpdateClientInfo(int iconSize, ViewRange view, MapFormat mapFormat, bool showPopupMenus, int cursorResource) {

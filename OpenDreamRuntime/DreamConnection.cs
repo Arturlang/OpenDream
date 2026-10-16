@@ -198,7 +198,8 @@ public sealed partial class DreamConnection {
             View = Client!.View,
             MapFormat = _dreamManager.WorldInstance.MapFormat,
             ShowPopupMenus = Client!.ShowPopupMenus,
-            CursorResource = Client!.CursorIcon?.Id ?? 0
+            CursorResource = Client!.CursorIcon?.Id ?? 0,
+            Fps = Client!.Fps
         };
 
         Session?.Channel.SendMessage(msg);
