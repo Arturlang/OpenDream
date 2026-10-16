@@ -244,6 +244,9 @@ public sealed class InterfaceMacro : InterfaceElement {
     private readonly bool _isRelease;
     private readonly bool _isAny;
 
+    /// <summary>Keys whose ANY press was sent to the game and whose release has not been yet</summary>
+    private static readonly HashSet<Keyboard.Key> AnyPressesDelivered = new();
+
     public InterfaceMacro(string contextName, MacroDescriptor descriptor, IEntitySystemManager entitySystemManager, IInputManager inputManager, IInputCmdContext inputContext, IUserInterfaceManager uiManager) : base(descriptor) {
         _entitySystemManager = entitySystemManager;
         _uiManager = uiManager;
@@ -294,7 +297,11 @@ public sealed class InterfaceMacro : InterfaceElement {
             return;
         if (string.IsNullOrEmpty(Command))
             return;
-        if (_uiManager.KeyboardFocused != null) {
+
+        // A release always follows a press the game was told about, even if a control took the keyboard in between
+        // (clicking the stat panel mid-move). Otherwise the game never hears the key go up and keeps moving forever.
+        var releasingDeliveredPress = _isRelease && AnyPressesDelivered.Contains(args.Key);
+        if (_uiManager.KeyboardFocused != null && !releasingDeliveredPress) {
             // don't trigger  macros if we're typing somewhere
             // Ideally this would be way more robust and would instead go through the RT keybind pipeline, most importantly passing through control.KeyBindDown.
             // However, currently it all seems to be internal, protected or protected internal so no luck.
@@ -304,6 +311,12 @@ public sealed class InterfaceMacro : InterfaceElement {
         string? keyName = ParsedKeybind.KeyToKeyName(args.Key);
         if (keyName == null)
             return;
+
+        if (_isRelease)
+            AnyPressesDelivered.Remove(args.Key);
+        else
+            AnyPressesDelivered.Add(args.Key);
+
         string command = Command.Replace("[[*]]", keyName);
         InterfaceManager.RunCommand(command);
         // args.Handle() omitted on purpose, in BYOND both the "specific" keybind and the ANY keybind are triggered
