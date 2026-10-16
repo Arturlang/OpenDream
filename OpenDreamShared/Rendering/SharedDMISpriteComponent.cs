@@ -10,9 +10,9 @@ namespace OpenDreamShared.Rendering;
 [NetworkedComponent]
 public abstract partial class SharedDMISpriteComponent : Component {
     [Serializable, NetSerializable]
-    public sealed class DMISpriteComponentState(uint? appearanceId, ScreenLocation screenLocation, Vector2i boundOffset) : ComponentState {
+    public sealed class DMISpriteComponentState(uint? appearanceId, ScreenLocation? screenLocation, Vector2i boundOffset) : ComponentState {
         public readonly uint? AppearanceId = appearanceId;
-        public readonly ScreenLocation ScreenLocation = screenLocation;
+        public readonly ScreenLocation? ScreenLocation = screenLocation;
         public readonly Vector2i BoundOffset = boundOffset;
     }
 }
