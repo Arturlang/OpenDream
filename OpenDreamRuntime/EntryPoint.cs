@@ -89,8 +89,13 @@ namespace OpenDreamRuntime {
                         break;
                     }
 
-            if(_configManager.GetCVar(OpenDreamCVars.TracyEnable))
-                Profiler.Activate();
+            if (_configManager.GetCVar(OpenDreamCVars.TracyEnable)) {
+                var delay = _configManager.GetCVar(OpenDreamCVars.TracyDelay);
+                if (delay > 0)
+                    Timer.Spawn(TimeSpan.FromSeconds(delay), Profiler.Activate);
+                else
+                    Profiler.Activate();
+            }
 
             _prototypeManager.LoadDirectory(new ResPath("/Resources/Prototypes"));
 

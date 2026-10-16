@@ -132,6 +132,13 @@ public abstract class OpenDreamCVars {
     public static readonly CVarDef<bool> TracyEnable =
         CVarDef.Create("opendream.enable_tracy", false, CVar.SERVERONLY);
 
+    /// <summary>
+    /// Seconds to wait before Tracy starts recording, so a capture can cover steady state without world init.
+    /// The Tracy client only accepts one connection per process, so this is the way to profile a running round.
+    /// </summary>
+    public static readonly CVarDef<float> TracyDelay =
+        CVarDef.Create("opendream.tracy_delay", 0f, CVar.SERVERONLY);
+
     /*
     * INFOLINKS
     */
