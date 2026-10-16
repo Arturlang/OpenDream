@@ -146,6 +146,29 @@ public sealed class DreamObjectDefinition {
 
     public void SetVariableDefinition(string variableName, DreamValue value) {
         Variables[variableName] = value;
+        _gcDestroyedSlot = GcDestroyedUnknown;
+    }
+
+    private const int GcDestroyedUnknown = -2;
+    private int _gcDestroyedSlot = GcDestroyedUnknown;
+    private bool _gcDestroyedDefaultTruthy;
+
+    /// <summary>
+    /// The slot of the gc_destroyed var qdel() sets, or -1 if this type has none. Every datum checks it when its
+    /// last reference goes away, so it is resolved once per type instead of by name each time.
+    /// </summary>
+    public int GetGcDestroyedSlot(out bool defaultTruthy) {
+        if (_gcDestroyedSlot == GcDestroyedUnknown) {
+            if (Variables.TryGetValue("gc_destroyed", out var declared) && TryGetVarSlot("gc_destroyed", out var slot)) {
+                _gcDestroyedSlot = slot;
+                _gcDestroyedDefaultTruthy = declared.IsTruthy();
+            } else {
+                _gcDestroyedSlot = -1;
+            }
+        }
+
+        defaultTruthy = _gcDestroyedDefaultTruthy;
+        return _gcDestroyedSlot;
     }
 
     private void EnsureVarSlots() {

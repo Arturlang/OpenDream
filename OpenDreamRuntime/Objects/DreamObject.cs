@@ -197,11 +197,17 @@ public class DreamObject {
     }
 
     private bool IsManagedByQdel() {
-        if (!ObjectDefinition.HasVariable("gc_destroyed"))
+        var slot = ObjectDefinition.GetGcDestroyedSlot(out var defaultTruthy);
+        if (slot < 0)
             return false;
 
-        using var gcDestroyed = GetVariable("gc_destroyed");
-        return gcDestroyed.IsTruthy();
+        if (_varCount > 0) {
+            var index = IndexOfSlot(slot);
+            if (index >= 0)
+                return _varValues![index].IsTruthy();
+        }
+
+        return defaultTruthy;
     }
 
     private void TraceRefChange(string op, int oldRefCount, int newRefCount, int stackSkip = 2) {
