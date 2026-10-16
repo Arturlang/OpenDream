@@ -10,8 +10,16 @@ public sealed class RenderTargetPool(IClyde clyde) {
     private readonly HashSet<IRenderTexture> _filteredSet = new();
     private readonly Stack<IRenderTexture> _renderTargetsToReturn = new();
 
+    // Pooled targets of a size nobody has rented for this many frames get freed, or every size ever rented
+    // (maptext, filters, keep-together groups) would hold its VRAM for the rest of the session
+    private const int IdleFramesBeforeFree = 600;
+    private readonly Dictionary<Vector2i, int> _lastRented = new();
+    private readonly Dictionary<Vector2i, int> _lastRentedFiltered = new();
+    private int _frame;
+
     public IRenderTexture Rent(Vector2i size) {
         IRenderTexture result;
+        _lastRented[size] = _frame;
 
         if (!_renderTargets.TryGetValue(size, out var listResult)) {
             result = clyde.CreateRenderTarget(size, new(RenderTargetColorFormat.Rgba8));
@@ -31,6 +39,7 @@ public sealed class RenderTargetPool(IClyde clyde) {
     /// </summary>
     public IRenderTexture RentFiltered(Vector2i size) {
         IRenderTexture result;
+        _lastRentedFiltered[size] = _frame;
 
         if (_filteredRenderTargets.TryGetValue(size, out var listResult) && listResult.Count > 0) {
             result = listResult.Pop();
@@ -62,5 +71,32 @@ public sealed class RenderTargetPool(IClyde clyde) {
         //some render targets need to be kept until the end of the render cycle, so return them here.
         while (_renderTargetsToReturn.TryPop(out var toReturn))
             Return(toReturn);
+
+        if (++_frame % 60 == 0) {
+            FreeIdle(_renderTargets, _lastRented);
+            FreeIdle(_filteredRenderTargets, _lastRentedFiltered);
+        }
+    }
+
+    private void FreeIdle(Dictionary<Vector2i, List<IRenderTexture>> store, Dictionary<Vector2i, int> lastRented) {
+        List<Vector2i>? idle = null;
+        foreach (var (size, lastFrame) in lastRented) {
+            if (_frame - lastFrame > IdleFramesBeforeFree)
+                (idle ??= new()).Add(size);
+        }
+
+        if (idle == null)
+            return;
+
+        foreach (var size in idle) {
+            lastRented.Remove(size);
+            if (!store.Remove(size, out var targets))
+                continue;
+
+            foreach (var target in targets) {
+                _filteredSet.Remove(target);
+                target.Dispose();
+            }
+        }
     }
 }
