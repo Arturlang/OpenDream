@@ -790,12 +790,10 @@ internal sealed partial class DreamViewOverlay : Overlay {
 
         //KEEP_TOGETHER groups
         if (iconMetaData.KeepTogetherGroup?.Count > 0) {
-            // TODO: Calculate an appropriate size based on overlays/underlays, offsets and transforms.
-            // For now, just generate a buffer of 128 pixels around the main icon...
-            Vector2i ktSize = (256, 256) + iconMetaData.MainIcon?.DMI?.IconSize ?? (0,0);
-            iconMetaData.TextureOverride = ProcessKeepTogether(handle, iconMetaData, ktSize);
+            var (ktMin, ktSize) = GetKeepTogetherBounds(iconMetaData, renderTargetSize, positionOffset);
+            var ktOffset = -ktMin / IconSize;
+            iconMetaData.TextureOverride = ProcessKeepTogether(handle, iconMetaData, ktSize, ktOffset);
             iconMetaData.TextureOverridePremultiplied = true;
-            var ktOffset = ((ktSize / IconSize) - Vector2.One) * new Vector2(0.5f);
             positionOffset -= ktOffset; //correct for KT group texture offset
             // The mouse map draws from the same texture and must shift identically.
             iconMetaData.KeepTogetherPixelOffset = ktOffset * IconSize;
@@ -1275,7 +1273,52 @@ internal sealed partial class DreamViewOverlay : Overlay {
     /// <summary>
     /// Collect all of an icon's keep-together group and render them into one texture.
     /// </summary>
-    private Texture ProcessKeepTogether(DrawingHandleWorld handle, RendererMetaData iconMetaData, Vector2i size) {
+    /// <summary>
+    /// The pixel rect a keep-together group's texture must cover, relative to the main icon's position.
+    /// BYOND sizes the group to fit every member, so overlays far outside the main icon (e.g. a tiled parallax
+    /// layer) still draw. Members are only kept where they can reach the render target, unless the group is
+    /// scaled or rotated: that pivots on the texture's centre, so the rect has to stay centred on the main icon.
+    /// </summary>
+    private (Vector2 Min, Vector2i Size) GetKeepTogetherBounds(RendererMetaData iconMetaData, Vector2i renderTargetSize, Vector2 positionOffset) {
+        // Room for filters and transforms on members that the rects below don't account for
+        const float margin = 128;
+        const int maxSize = 8192;
+
+        static int RoundUp(int value) => (value + 127) / 128 * 128;
+        Vector2 IconSizeOf(RendererMetaData item) => item.MainIcon?.DMI?.IconSize ?? new Vector2i(IconSize, IconSize);
+
+        var mainSize = IconSizeOf(iconMetaData);
+        var min = Vector2.Zero;
+        var max = mainSize;
+        foreach (var item in iconMetaData.KeepTogetherGroup!) {
+            var itemMin = (item.Position - iconMetaData.Position) * IconSize;
+            min = Vector2.Min(min, itemMin);
+            max = Vector2.Max(max, itemMin + IconSizeOf(item));
+        }
+
+        min -= new Vector2(margin);
+        max += new Vector2(margin);
+
+        if (IsScalingOrRotating(iconMetaData.TransformToApply)) {
+            var center = mainSize / 2;
+            var extent = Vector2.Max(center - min, max - center);
+            min = center - extent;
+            max = center + extent;
+        } else {
+            var origin = (iconMetaData.Position + positionOffset) * IconSize;
+            min = Vector2.Max(min, -origin - new Vector2(margin));
+            max = Vector2.Min(max, renderTargetSize - origin + new Vector2(margin));
+        }
+
+        // Rounded up so a moving group keeps reusing the same pooled render targets
+        min = new Vector2(MathF.Floor(min.X), MathF.Floor(min.Y));
+        var size = new Vector2i(
+            Math.Clamp(RoundUp((int)MathF.Ceiling(max.X - min.X)), 1, maxSize),
+            Math.Clamp(RoundUp((int)MathF.Ceiling(max.Y - min.Y)), 1, maxSize));
+        return (min, size);
+    }
+
+    private Texture ProcessKeepTogether(DrawingHandleWorld handle, RendererMetaData iconMetaData, Vector2i size, Vector2 ktOffset) {
         //store the parent's transform, color, blend, and alpha - then clear them for drawing to the render target
         Matrix3x2 ktParentTransform = iconMetaData.TransformToApply;
         Color ktParentColor = iconMetaData.ColorToApply;
@@ -1304,8 +1347,8 @@ internal sealed partial class DreamViewOverlay : Overlay {
         // group's full render-target quad.
         handle.RenderInRenderTarget(tempTexture, () => {
             foreach (RendererMetaData ktItem in ktItems) {
-                //draw the icon in the centre of the KT render target, based on the main icon position
-                DrawIcon(handle, tempTexture.Size, ktItem, -iconMetaData.Position+((tempTexture.Size/IconSize) - Vector2.One) * new Vector2(0.5f));
+                //draw relative to the main icon, which sits ktOffset tiles into the KT render target
+                DrawIcon(handle, tempTexture.Size, ktItem, -iconMetaData.Position + ktOffset);
             }
         }, Color.Black.WithAlpha(0));
 
