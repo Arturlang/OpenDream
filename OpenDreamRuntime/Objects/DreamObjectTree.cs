@@ -151,53 +151,72 @@ public sealed partial class DreamObjectTree {
     /// It is the job of whatever calls this function to then initialize the object! <br/>
     /// (by calling the result of <see cref="DreamObject.InitProc(DreamThread, DreamObject?, DreamProcArguments)"/> or <see cref="DreamObject.InitSpawn(DreamProcArguments)"/>)
     /// </remarks>
-    public DreamObject CreateObject(TreeEntry type) {
-        if (type == List)
-            return CreateList();
-        if (type == AssocList)
-            return CreateAssocList();
-        if (type == Savefile)
-            return new DreamObjectSavefile(Savefile.ObjectDefinition);
-        if (type.ObjectDefinition.IsSubtypeOf(DatabaseQuery))
-            return new DreamObjectDatabaseQuery(type.ObjectDefinition);
-        if (type.ObjectDefinition.IsSubtypeOf(Database))
-            return new DreamObjectDatabase(type.ObjectDefinition);
-        if (type.ObjectDefinition.IsSubtypeOf(Matrix))
-            return new DreamObjectMatrix(type.ObjectDefinition);
-        if (type.ObjectDefinition.IsSubtypeOf(Sound))
-            return new DreamObjectSound(type.ObjectDefinition);
-        if (type.ObjectDefinition.IsSubtypeOf(Regex))
-            return new DreamObjectRegex(type.ObjectDefinition);
-        if (type.ObjectDefinition.IsSubtypeOf(Image))
-            return new DreamObjectImage(type.ObjectDefinition);
-        if (type.ObjectDefinition.IsSubtypeOf(Icon))
-            return new DreamObjectIcon(type.ObjectDefinition);
-        if (type.ObjectDefinition.IsSubtypeOf(Filter))
-            return new DreamObjectFilter(type.ObjectDefinition);
-        if (type.ObjectDefinition.IsSubtypeOf(Mob))
-            return new DreamObjectMob(type.ObjectDefinition);
-        if (type.ObjectDefinition.IsSubtypeOf(Movable))
-            return new DreamObjectMovable(type.ObjectDefinition);
-        if (type.ObjectDefinition.IsSubtypeOf(Area))
-            return new DreamObjectArea(type.ObjectDefinition);
-        if (type.ObjectDefinition.IsSubtypeOf(Atom))
-            return new DreamObjectAtom(type.ObjectDefinition);
-        if (type.ObjectDefinition.IsSubtypeOf(Particles))
-            return new DreamObjectParticles(type.ObjectDefinition);
-        if (type.ObjectDefinition.IsSubtypeOf(Client))
-            throw new DMException("Cannot create objects of type /client");
-        if (type.ObjectDefinition.IsSubtypeOf(Turf))
-            throw new DMException("New turfs must be created by the map manager");
-        if (type.ObjectDefinition.IsSubtypeOf(Exception))
-            return new DreamObjectException(type.ObjectDefinition);
-        if (type.ObjectDefinition.IsSubtypeOf(Callee))
-            return new DreamObjectCallee(type.ObjectDefinition);
-        if (type.ObjectDefinition.IsSubtypeOf(Vector))
-            return new DreamObjectVector(type.ObjectDefinition);
-        if (type.ObjectDefinition.IsSubtypeOf(Generator))
-            return new DreamObjectGenerator(type.ObjectDefinition);
+    // Which object class a type instantiates as, decided once per type: new on a plain datum otherwise ran
+    // through every special type check below each time
+    private enum ObjectKind : byte {
+        Unclassified, List, AssocList, Savefile, DatabaseQuery, Database, Matrix, Sound, Regex, Image, Icon,
+        Filter, Mob, Movable, Area, Atom, Particles, Client, Turf, Exception, Callee, Vector, Generator, Datum
+    }
 
-        return new DreamObject(type.ObjectDefinition);
+    private ObjectKind Classify(TreeEntry type) {
+        if (type == List) return ObjectKind.List;
+        if (type == AssocList) return ObjectKind.AssocList;
+        if (type == Savefile) return ObjectKind.Savefile;
+
+        var def = type.ObjectDefinition;
+        if (def.IsSubtypeOf(DatabaseQuery)) return ObjectKind.DatabaseQuery;
+        if (def.IsSubtypeOf(Database)) return ObjectKind.Database;
+        if (def.IsSubtypeOf(Matrix)) return ObjectKind.Matrix;
+        if (def.IsSubtypeOf(Sound)) return ObjectKind.Sound;
+        if (def.IsSubtypeOf(Regex)) return ObjectKind.Regex;
+        if (def.IsSubtypeOf(Image)) return ObjectKind.Image;
+        if (def.IsSubtypeOf(Icon)) return ObjectKind.Icon;
+        if (def.IsSubtypeOf(Filter)) return ObjectKind.Filter;
+        if (def.IsSubtypeOf(Mob)) return ObjectKind.Mob;
+        if (def.IsSubtypeOf(Movable)) return ObjectKind.Movable;
+        if (def.IsSubtypeOf(Area)) return ObjectKind.Area;
+        if (def.IsSubtypeOf(Atom)) return ObjectKind.Atom;
+        if (def.IsSubtypeOf(Particles)) return ObjectKind.Particles;
+        if (def.IsSubtypeOf(Client)) return ObjectKind.Client;
+        if (def.IsSubtypeOf(Turf)) return ObjectKind.Turf;
+        if (def.IsSubtypeOf(Exception)) return ObjectKind.Exception;
+        if (def.IsSubtypeOf(Callee)) return ObjectKind.Callee;
+        if (def.IsSubtypeOf(Vector)) return ObjectKind.Vector;
+        if (def.IsSubtypeOf(Generator)) return ObjectKind.Generator;
+        return ObjectKind.Datum;
+    }
+
+    public DreamObject CreateObject(TreeEntry type) {
+        var kind = (ObjectKind)type.ObjectKind;
+        if (kind == ObjectKind.Unclassified)
+            type.ObjectKind = (byte)(kind = Classify(type));
+
+        var def = type.ObjectDefinition;
+        return kind switch {
+            ObjectKind.List => CreateList(),
+            ObjectKind.AssocList => CreateAssocList(),
+            ObjectKind.Savefile => new DreamObjectSavefile(Savefile.ObjectDefinition),
+            ObjectKind.DatabaseQuery => new DreamObjectDatabaseQuery(def),
+            ObjectKind.Database => new DreamObjectDatabase(def),
+            ObjectKind.Matrix => new DreamObjectMatrix(def),
+            ObjectKind.Sound => new DreamObjectSound(def),
+            ObjectKind.Regex => new DreamObjectRegex(def),
+            ObjectKind.Image => new DreamObjectImage(def),
+            ObjectKind.Icon => new DreamObjectIcon(def),
+            ObjectKind.Filter => new DreamObjectFilter(def),
+            ObjectKind.Mob => new DreamObjectMob(def),
+            ObjectKind.Movable => new DreamObjectMovable(def),
+            ObjectKind.Area => new DreamObjectArea(def),
+            ObjectKind.Atom => new DreamObjectAtom(def),
+            ObjectKind.Particles => new DreamObjectParticles(def),
+            ObjectKind.Client => throw new DMException("Cannot create objects of type /client"),
+            ObjectKind.Turf => throw new DMException("New turfs must be created by the map manager"),
+            ObjectKind.Exception => new DreamObjectException(def),
+            ObjectKind.Callee => new DreamObjectCallee(def),
+            ObjectKind.Vector => new DreamObjectVector(def),
+            ObjectKind.Generator => new DreamObjectGenerator(def),
+            _ => new DreamObject(def)
+        };
     }
 
     public T CreateObject<T>(TreeEntry type) where T : DreamObject {
@@ -584,6 +603,9 @@ public sealed class TreeEntry {
     /// The total amount of children this node has
     /// </summary>
     public uint ChildCount;
+
+    /// <summary>Cached by <see cref="DreamObjectTree.CreateObject(TreeEntry)"/>; 0 until first created</summary>
+    public byte ObjectKind;
 
     public TreeEntry(string path, int id) {
         int lastSlash = path.LastIndexOf('/');
