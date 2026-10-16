@@ -37,10 +37,15 @@ void fragment() {
 
     sampled_shadow_alpha /= weight_total;
 
-    highp vec4 final_shadow_color = vec4(shadow_color.rgb, shadow_color.a * sampled_shadow_alpha);
+    highp float shadow_alpha = shadow_color.a * sampled_shadow_alpha;
 
-    // Mix the shadow with the initial image based on the image's alpha
-    COLOR.rgb = final_shadow_color.rgb * (1.0 - texture_color.a) + (texture_color.rgb / texture_color.a); //texture color needs to be divided by alpha to account for alpha premultiplication in the overlay shader
-    COLOR.a = clamp(final_shadow_color.a + texture_color.a, 0.0, 1.0);
-    COLOR.rgb *= COLOR.a;
+    // The image over its shadow. Image in and result out are both straight alpha, and transparent texels can
+    // still hold white, so the blend is done premultiplied and divided back once at the end. Dividing the image
+    // by its own alpha instead, as this used to, gave NaN wherever it is transparent - exactly where the shadow
+    // shows - which drew as a white halo.
+    highp float under = shadow_alpha * (1.0 - texture_color.a);
+    highp float alpha = texture_color.a + under;
+    highp vec3 premultiplied = texture_color.rgb * texture_color.a + shadow_color.rgb * under;
+    COLOR.rgb = alpha > 0.0 ? premultiplied / alpha : vec3(0.0);
+    COLOR.a = alpha;
 }
