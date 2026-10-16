@@ -287,3 +287,29 @@ Two related notes:
 - **Check the data before the renderer.** An `AUTO_OBSERVE` build dumping the
   server's per-turf lighting matrices showed both engines byte-identical across
   81 turfs, which ruled out the server in one run.
+
+## Runtime
+
+### Replacing a list item by index drops its association
+`L[i] = x` over an item that has an association removes that association in BYOND, even if
+another copy of the key remains. OpenDream kept it, so a later `L[key] = v` found the stale
+association, updated it and returned without putting the key back in the list. TGMC's `keyUp`
+nulls `keys_held[i]` and then does `keys_held -= key`, so after enough direction changes every
+held key went missing and movement needed one press per tile.
+Fix: `DreamList.SetValue`'s index branch drops the replaced item's association.
+Test: `Content.Tests/DMProject/Tests/List/assoc_index_replace.dm`.
+
+### text2file appends lines
+BYOND appends and writes each call as lines: every newline becomes the platform line break and
+one more always follows, even for `""`. A `file2text` of the same path sees the new contents at
+once. OpenDream overwrote the file. rust_g's `file_write` emulation keeps overwriting, so
+`text2file` has its own `DreamResourceManager.AppendLinesToFile`.
+Test: `Content.Tests/DMProject/Tests/Resources/text2file_appends.dm`.
+
+### Render-target overlays leave keep-together groups
+An overlay with a `render_target` draws only into that target. Inside a KEEP_TOGETHER group
+OpenDream drew it into the group's texture as well. TGMC masks hair under helmets with a white
+`Jeager_Mask` image rendered to `*jaegFACE[...]` and read back by an alpha mask filter, and
+every human (KEEP_TOGETHER) wearing such a helmet showed the white mask as a silhouette.
+`ProcessIconComponents` now routes render-target overlays out of the group like KEEP_APART ones,
+so they go through the normal render-target path. Scene: `scenes/hairmask` in the harness.
