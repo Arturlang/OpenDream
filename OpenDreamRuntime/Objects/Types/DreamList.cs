@@ -203,7 +203,15 @@ public class DreamList : DreamObject, IDreamList {
             }
 
             value.IncRef();
-            _values[keyInteger - 1].DecRef();
+            var replaced = _values[keyInteger - 1];
+
+            // Replacing an item drops its association, even when another copy of it is still in the list. Left behind,
+            // L[key] = x would later find the stale association and update it without ever putting key back in the
+            // list, which is how TGMC's keys_held lost every held key after enough direction changes.
+            if (_associativeValues?.Remove(replaced, out var replacedAssociation) is true)
+                replacedAssociation.DecRef();
+
+            replaced.DecRef();
             _values[keyInteger - 1] = value;
             _valueSet = null;
         } else {
@@ -323,6 +331,14 @@ public class DreamList : DreamObject, IDreamList {
     }
 
     public void Swap(int index1, int index2) {
+        // Exchanged in place: associations belong to the keys and move with them. Going through SetValue would drop
+        // them, since replacing an item by index discards its association.
+        if (index1 >= 1 && index2 >= 1 && index1 <= _values.Count && index2 <= _values.Count) {
+            (_values[index1 - 1], _values[index2 - 1]) = (_values[index2 - 1], _values[index1 - 1]);
+            _valueSet = null;
+            return;
+        }
+
         using var temp = GetValue(new DreamValue(index1));
 
         SetValue(new DreamValue(index1), GetValue(new DreamValue(index2)));
