@@ -278,7 +278,8 @@ namespace OpenDreamRuntime {
                     ProcStatus status;
                     try {
                         #if TOOLS
-                        if (_current.TracyZoneId is null && _current.Proc != null) {
+                        // Checked first: building the zone's name and location allocates on every resume
+                        if (Profiler.IsActivated() && _current.TracyZoneId is null && _current.Proc != null) {
                             var location =_current.TracyLocationId;
                             var procpath = (_current.Proc.OwningType.Path.Equals("/") ? "/proc/" : _current.Proc.OwningType.Path+"/") +_current.Proc.Name;
                             // ReSharper disable ExplicitCallerInfoArgument
