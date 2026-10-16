@@ -189,6 +189,7 @@ public sealed class DreamObjectDefinition {
     }
 
     public void SetProcDefinition(string procName, int procId, bool replace = false) {
+        _procVersion++;
         if (HasProc(procName) && !replace) {
             var proc = ObjectTree.Procs[procId];
             proc.SuperProc = GetProc(procName);
@@ -206,7 +207,29 @@ public sealed class DreamObjectDefinition {
         }
     }
 
+    // Resolving a proc by name walks the type's ancestry with two lookups per level, and every New(), Del() and
+    // obj.proc() call does it, so results (misses too) are cached per type. A child's answer depends on its
+    // ancestors' procs, so any change to any type's procs clears every cache.
+    private static int _procVersion;
+    private int _procCacheVersion = -1;
+    private Dictionary<string, DreamProc?>? _procCache;
+
     public bool TryGetProc(string procName, [NotNullWhen(true)] out DreamProc? proc) {
+        if (_procCacheVersion != _procVersion) {
+            _procCache?.Clear();
+            _procCacheVersion = _procVersion;
+        }
+
+        _procCache ??= new(StringComparer.Ordinal);
+        if (_procCache.TryGetValue(procName, out proc))
+            return proc != null;
+
+        var found = TryGetProcUncached(procName, out proc);
+        _procCache[procName] = proc;
+        return found;
+    }
+
+    private bool TryGetProcUncached(string procName, [NotNullWhen(true)] out DreamProc? proc) {
         if (OverridingProcs.TryGetValue(procName, out var procId)) {
             proc = ObjectTree.Procs[procId];
             return true;
