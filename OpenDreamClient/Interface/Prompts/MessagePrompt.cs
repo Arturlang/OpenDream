@@ -1,4 +1,5 @@
-﻿using OpenDreamShared.Dream;
+﻿using System.Text;
+using OpenDreamShared.Dream;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Utility;
 
@@ -22,5 +23,16 @@ internal sealed class MessagePrompt : InputWindow {
 
     protected override void OkButtonClicked() {
         FinishPrompt(DreamValueType.Message, Rope.Collapse(_textEdit.TextRope));
+    }
+
+    protected override void TestDescribeInput(StringBuilder json) {
+        PromptTestHook.AppendString(json, "text", Rope.Collapse(_textEdit.TextRope));
+    }
+
+    protected override string TestSetInput(string action, string argument) {
+        if (action != "text")
+            return base.TestSetInput(action, argument);
+        _textEdit.TextRope = new Rope.Leaf(argument);
+        return "text set";
     }
 }

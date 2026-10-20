@@ -1,4 +1,5 @@
-﻿using OpenDreamShared.Dream;
+﻿using System.Text;
+using OpenDreamShared.Dream;
 using Robust.Client.UserInterface.Controls;
 
 namespace OpenDreamClient.Interface.Prompts;
@@ -28,5 +29,17 @@ internal sealed class NumberPrompt : InputWindow {
 
     private void NumberInput_TextEntered(LineEdit.LineEditEventArgs obj) {
         ButtonClicked(DefaultButton);
+    }
+
+    protected override void TestDescribeInput(StringBuilder json) {
+        PromptTestHook.AppendString(json, "text", _numberInput.Text);
+    }
+
+    protected override string TestSetInput(string action, string argument) {
+        if (action != "text")
+            return base.TestSetInput(action, argument);
+        // The IsValid filter can refuse the text.
+        _numberInput.Text = argument;
+        return _numberInput.Text == argument ? "text set" : $"text refused, now '{_numberInput.Text}'";
     }
 }

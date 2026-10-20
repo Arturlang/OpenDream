@@ -259,8 +259,7 @@ internal sealed partial class MouseInputSystem : SharedMouseInputSystem {
         bool alt = _inputManager.IsKeyDown(Keyboard.Key.Alt);
         UIBox2i viewportBox = viewport.GetDrawBox();
         Vector2 screenLocPos = (args.RelativePixelPosition - viewportBox.TopLeft) / viewportBox.Size * viewport.ViewportSize;
-        float screenLocY = viewport.ViewportSize.Y - screenLocPos.Y; // Flip the Y
-        ScreenLocation screenLoc = new ScreenLocation((int)screenLocPos.X, (int)screenLocY, 32); // TODO: icon_size other than 32
+        ScreenLocation screenLoc = ViewRelativeScreenLoc(viewport, screenLocPos);
 
         // TODO: Take icon transformations into account for iconPos
         return new(screenLoc, button, shift, ctrl, alt, iconPos.X, iconPos.Y);
@@ -273,11 +272,28 @@ internal sealed partial class MouseInputSystem : SharedMouseInputSystem {
     private ClickParams CreateClickParams(ScalingViewport viewport, Vector2 relativePos, Vector2i iconPos) {
         UIBox2i viewportBox = viewport.GetDrawBox();
         Vector2 screenLocPos = (relativePos - viewportBox.TopLeft) / viewportBox.Size * viewport.ViewportSize;
-        float screenLocY = viewport.ViewportSize.Y - screenLocPos.Y; // Flip the Y
-        ScreenLocation screenLoc = new ScreenLocation((int) screenLocPos.X, (int) screenLocY, 32); // TODO: icon_size other than 32
+        ScreenLocation screenLoc = ViewRelativeScreenLoc(viewport, screenLocPos);
 
         // TODO: Take icon transformations into account for iconPos
         return new(screenLoc, MouseButton.Left, false, false, false, iconPos.X, iconPos.Y);
+    }
+
+    /// <summary>
+    /// The screen-loc of a viewport pixel. BYOND counts it from the view's corner even where the
+    /// default map grew past the view to fit screen objects, so a HUD left of the view has x of 0 or less.
+    /// </summary>
+    private ScreenLocation ViewRelativeScreenLoc(ScalingViewport viewport, Vector2 viewportPixel) {
+        const int iconSize = 32; // TODO: icon_size other than 32
+        float x = viewportPixel.X;
+        float y = viewport.ViewportSize.Y - viewportPixel.Y; // Flip the Y
+
+        if (viewport.MapControlId == null) {
+            var bounds = _dreamInterfaceManager.DefaultMapBounds;
+            x += bounds.Left * iconSize;
+            y += bounds.Bottom * iconSize;
+        }
+
+        return new ScreenLocation((int)MathF.Floor(x), (int)MathF.Floor(y), iconSize);
     }
 
     public static MouseButton GetMouseButton(BoundKeyFunction function) {

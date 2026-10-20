@@ -70,6 +70,8 @@ internal partial class DMCodeTree {
 
             variable.Value = new Null(Location.Internal);
             dmObject.InitializationProcAssignments.Add((variable.Name, assign));
+            if (constant is null)
+                dmObject.RuntimeInitVariables.Add(variable.Name);
             return true;
         }
 

@@ -759,6 +759,11 @@ namespace OpenDreamRuntime.Procs {
                 result = DreamValue.Null;
             }
 
+            // BYOND has no compile-time value for a var initialized to e.g. list(), and returns an opaque truthy
+            // placeholder instead. Code relies on that to test whether a type sets such a var at all.
+            if (result.IsNull && treeEntry.ObjectDefinition.RuntimeInitVariables?.Contains(property) == true)
+                result = new DreamValue(new DreamObjectInitialPlaceholder(state.Proc.ObjectTree.Root.ObjectDefinition));
+
             state.Push(result);
             return ProcStatus.Continue;
         }

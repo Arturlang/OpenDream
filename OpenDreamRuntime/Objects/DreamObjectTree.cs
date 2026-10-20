@@ -471,6 +471,12 @@ public sealed partial class DreamObjectTree {
                 using var value = GetDreamValueFromJsonElement(jsonVariable.Value);
 
                 objectDefinition.SetVariableDefinition(jsonVariable.Key, value);
+
+                // The nearest type that sets a var decides whether its initial value is a runtime one
+                if (jsonObject.RuntimeInitVariables?.Contains(jsonVariable.Key) == true)
+                    (objectDefinition.RuntimeInitVariables ??= new()).Add(jsonVariable.Key);
+                else
+                    objectDefinition.RuntimeInitVariables?.Remove(jsonVariable.Key);
             }
         }
 

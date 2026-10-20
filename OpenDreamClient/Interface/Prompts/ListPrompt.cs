@@ -1,4 +1,6 @@
-﻿using OpenDreamShared.Dream;
+﻿using System.Text;
+using System.Web;
+using OpenDreamShared.Dream;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
@@ -43,6 +45,30 @@ internal sealed class ListPrompt : InputWindow {
         }
 
         // Prompt is not finished if nothing was selected
+    }
+
+    protected override void TestDescribeInput(StringBuilder json) {
+        json.Append(",\"items\":[");
+        var selected = -1;
+        for (var i = 0; i < _itemList.Count; i++) {
+            if (i > 0)
+                json.Append(',');
+            json.Append('"').Append(HttpUtility.JavaScriptStringEncode(_itemList[i].Text ?? string.Empty)).Append('"');
+            if (_itemList[i].Selected && selected == -1)
+                selected = i;
+        }
+
+        json.Append("],\"selected\":").Append(selected);
+    }
+
+    protected override string TestSetInput(string action, string argument) {
+        if (action != "select")
+            return base.TestSetInput(action, argument);
+        if (!int.TryParse(argument, out var index) || index < 0 || index >= _itemList.Count)
+            return $"no item {argument}";
+        _itemList.ClearSelected();
+        _itemList[index].Selected = true;
+        return "selected";
     }
 
     private void ItemList_KeyBindDown(GUIBoundKeyEventArgs e) {

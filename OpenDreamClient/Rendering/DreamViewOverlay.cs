@@ -1195,6 +1195,15 @@ internal sealed partial class DreamViewOverlay : Overlay {
 
             List<(EntityUid Uid, DMISpriteComponent Sprite, ScreenLocation ScreenLocation, Vector2i IconSize)> screenObjects = new();
             ScreenLocationBounds screenBounds = new(0, 0, _interfaceManager.View.Width, _interfaceManager.View.Height);
+            // What the default map grows to. BYOND grows it by whole tiles: pixel offsets don't widen it.
+            ScreenLocationBounds mapBounds = screenBounds;
+
+            // The default map grows past the view to fit screen objects outside it, so the
+            // viewport's corner is no longer the view's. Screen positions stay relative to the view.
+            if (mapControlId == null) {
+                var displayed = _interfaceManager.DefaultMapBounds;
+                viewOffset -= new Vector2(displayed.Left, displayed.Bottom);
+            }
 
             int totalScreenObjects = 0;
             int nullSpriteOrLocation = 0;
@@ -1220,9 +1229,24 @@ internal sealed partial class DreamViewOverlay : Overlay {
                 ScreenLocation screenLocation = sprite.ScreenLocation;
                 Vector2i dmiIconSize = sprite.Icon.DMI?.IconSize ?? new(IconSize, IconSize);
                 screenObjects.Add((uid, sprite, screenLocation, dmiIconSize));
-                if (!screenLocation.AnchorToScreenBounds)
-                    screenBounds = screenBounds.Include(screenLocation.GetScreenBounds(_interfaceManager.View, IconSize, dmiIconSize));
+                if (!screenLocation.AnchorToScreenBounds) {
+                    var objectBounds = screenLocation.GetScreenBounds(_interfaceManager.View, IconSize, dmiIconSize);
+                    var pixelX = screenLocation.PixelOffsetX / (float)IconSize;
+                    var pixelY = screenLocation.PixelOffsetY / (float)IconSize;
+
+                    screenBounds = screenBounds.Include(objectBounds);
+                    var grown = mapBounds.Include(new(objectBounds.Left - pixelX, objectBounds.Bottom - pixelY,
+                        objectBounds.Right - pixelX, objectBounds.Top - pixelY));
+                    if (grown != mapBounds && mapControlId == null && grown != _interfaceManager.DefaultMapBounds &&
+                        _configManager.GetCVar(OpenDreamShared.OpenDreamCVars.DebugRenderPerf))
+                        _sawmill.Info($"map grows to {grown} for screen object {sprite.Icon.Appearance?.Name} " +
+                                      $"icon={sprite.Icon.DMI?.IconSize} screen_loc={screenLocation}");
+                    mapBounds = grown;
+                }
             }
+
+            if (mapControlId == null)
+                _interfaceManager.UpdateDefaultMapScreenBounds(mapBounds);
 
             foreach ((EntityUid uid, DMISpriteComponent sprite, ScreenLocation screenLocation, Vector2i dmiIconSize) in screenObjects) {
                 Vector2 position = screenLocation.GetViewPosition(viewOffset, _interfaceManager.View, IconSize, dmiIconSize, screenBounds);
