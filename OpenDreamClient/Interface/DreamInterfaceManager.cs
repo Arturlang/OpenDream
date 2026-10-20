@@ -91,8 +91,27 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
                 value = new(Math.Min(value.Width, 45), Math.Min(value.Height, 45));
 
             _view = value;
-            DefaultMap?.UpdateViewRange(_view);
+            DefaultMapBounds = new(0, 0, _view.Width, _view.Height);
+            DefaultMap?.UpdateViewRange(_view, DefaultMapBounds);
         }
+    }
+
+    /// <inheritdoc/>
+    public ScreenLocationBounds DefaultMapBounds { get; private set; }
+
+    /// <inheritdoc/>
+    public void UpdateDefaultMapScreenBounds(ScreenLocationBounds bounds) {
+        // Same cap as the view itself, see View
+        bounds = bounds with {
+            Left = Math.Max(bounds.Left, bounds.Right - 45),
+            Bottom = Math.Max(bounds.Bottom, bounds.Top - 45)
+        };
+
+        if (bounds == DefaultMapBounds)
+            return;
+
+        DefaultMapBounds = bounds;
+        DefaultMap?.UpdateViewRange(_view, bounds);
     }
 
     public bool ShowPopupMenus { get; private set; } = true;
@@ -282,18 +301,20 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
         var size = pBrowse.Size;
         var file = pBrowse.File;
         var display = pBrowse.Display;
+        var titlebar = pBrowse.Titlebar;
+        var canClose = pBrowse.CanClose;
 
         if (display && window != null && (htmlSource != null || bodyData != null))
             _pendingBrowseWindows.Add(window);
 
-        RunOnMainThread(() => Browse(window, htmlSource, bodyData, size, file, display));
+        RunOnMainThread(() => Browse(window, htmlSource, bodyData, size, file, display, titlebar, canClose));
     }
 
-    private void Browse(string? windowId, string? htmlSource, byte[]? bodyData, Vector2i size, string? fileName = null, bool display = true) {
-        BrowseInternal(windowId, htmlSource, bodyData, size, fileName, display);
+    private void Browse(string? windowId, string? htmlSource, byte[]? bodyData, Vector2i size, string? fileName = null, bool display = true, bool titlebar = true, bool canClose = true) {
+        BrowseInternal(windowId, htmlSource, bodyData, size, fileName, display, titlebar, canClose);
     }
 
-    private void BrowseInternal(string? windowId, string? htmlSource, byte[]? bodyData, Vector2i size, string? fileName = null, bool display = true) {
+    private void BrowseInternal(string? windowId, string? htmlSource, byte[]? bodyData, Vector2i size, string? fileName = null, bool display = true, bool titlebar = true, bool canClose = true) {
         var referencedElement = (windowId != null) ? FindElementWithId(windowId) : DefaultWindow;
 
         if (htmlSource == null && bodyData == null && referencedElement != null) {
@@ -346,7 +367,7 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
                     }
                 } else if (windowId != null) {
                     // Creating a new popup
-                    var popup = new BrowsePopup(windowId, size);
+                    var popup = new BrowsePopup(windowId, size, titlebar, canClose);
                     popup.Closed += () => {
                         Windows.Remove(windowId);
                         _pendingBrowseWindows.Remove(windowId);
@@ -361,6 +382,9 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
                     popup.Open();
                 }
             }
+
+            if (windowId != null && _browsePopups.TryGetValue(windowId, out var targetPopup))
+                targetPopup.PageSent();
 
             if (outputBrowser == null) {
                 if (windowId != null) {
@@ -593,7 +617,13 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
         }
 
         CameraPan = pan;
-        eye.Offset = pan;
+
+        // Centre the camera on the whole displayed region, which is wider than the view when
+        // screen objects sit outside it. CameraPan leaves this out: only the view shows the world.
+        var displayed = DefaultMapBounds;
+        eye.Offset = pan + new Vector2(
+            (displayed.Left + displayed.Right - View.Width) / 2f,
+            (displayed.Bottom + displayed.Top - View.Height) / 2f);
     }
 
     /// <summary>
@@ -623,6 +653,8 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
         foreach (var popup in _browsePopups.Values) {
             popup.ProcessNativeDrag();
         }
+
+        PromptTestHook.FrameUpdate(frameEventArgs.DeltaSeconds, _cfg, _resourceManager);
     }
 
     public InterfaceElement? FindElementWithId(string id) {
@@ -1652,6 +1684,15 @@ public interface IDreamInterfaceManager {
     /// window can cover the same region the camera shows.
     /// </summary>
     public Vector2 CameraPan { get; }
+
+    /// <summary>
+    /// The default map's displayed region in tiles, relative to the view's bottom-left: the view,
+    /// grown to include screen objects placed outside it as BYOND does.
+    /// </summary>
+    public ScreenLocationBounds DefaultMapBounds { get; }
+
+    /// <summary>Called by the renderer with the bounds of the default map's screen objects, view included.</summary>
+    void UpdateDefaultMapScreenBounds(ScreenLocationBounds bounds);
 
     public bool ShowPopupMenus { get; }
     public int IconSize { get; }

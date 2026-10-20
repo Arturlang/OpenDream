@@ -571,6 +571,7 @@ public sealed partial class DreamConnection {
         string? window = null;
         string? file = null;
         bool display = true;
+        bool titlebar = true, canClose = true;
         Vector2i size = (480, 480);
 
         if (options != null) {
@@ -588,6 +589,10 @@ public sealed partial class DreamConnection {
                         file = value;
                     } else if (key == "display") {
                         display = value != "0" && !value.Equals("false", StringComparison.OrdinalIgnoreCase);
+                    } else if (key == "titlebar") {
+                        titlebar = value != "0" && !value.Equals("false", StringComparison.OrdinalIgnoreCase);
+                    } else if (key is "can_close" or "can-close") {
+                        canClose = value != "0" && !value.Equals("false", StringComparison.OrdinalIgnoreCase);
                     } else if (key == "size") {
                         string[] sizeSeparated = value.Split("x", 2);
 
@@ -602,6 +607,8 @@ public sealed partial class DreamConnection {
             Window = window,
             File = file,
             Display = display,
+            Titlebar = titlebar,
+            CanClose = canClose,
             HtmlSource = body,
             BodyData = bodyData
         };

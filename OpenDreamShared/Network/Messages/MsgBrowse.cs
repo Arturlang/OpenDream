@@ -12,6 +12,9 @@ namespace OpenDreamShared.Network.Messages {
         public byte[]? BodyData;
         public string? File;
         public bool Display = true;
+        /// Popup chrome, from browse()'s titlebar and can_close options
+        public bool Titlebar = true;
+        public bool CanClose = true;
         public Vector2i Size;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer) {
@@ -20,6 +23,8 @@ namespace OpenDreamShared.Network.Messages {
             var hasFile = buffer.ReadBoolean();
             var hasBodyData = buffer.ReadBoolean();
             Display = buffer.ReadBoolean();
+            Titlebar = buffer.ReadBoolean();
+            CanClose = buffer.ReadBoolean();
             buffer.ReadPadBits();
 
             if (hasWindow)
@@ -42,6 +47,8 @@ namespace OpenDreamShared.Network.Messages {
             buffer.Write(File != null);
             buffer.Write(BodyData != null);
             buffer.Write(Display);
+            buffer.Write(Titlebar);
+            buffer.Write(CanClose);
             buffer.WritePadBits();
 
             if (Window != null)

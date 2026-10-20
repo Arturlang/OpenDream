@@ -106,6 +106,20 @@ internal sealed partial class ControlBrowser : InterfaceControl {
         </script>
         """;
 
+    // Reports the page's load event, so a popup whose page never sets its own visibility can be shown
+    private const string BrowserLoadShim = """
+        <script>
+        (function() {
+            if (window.__opendreamLoadShim)
+                return;
+            window.__opendreamLoadShim = true;
+            window.addEventListener("load", function() {
+                (new Image()).src = "byond://odloaded";
+            });
+        })();
+        </script>
+        """;
+
     private const string BrowserStorageShim = """
         <script>
         (function() {
@@ -736,13 +750,16 @@ internal sealed partial class ControlBrowser : InterfaceControl {
 
         if (html.Contains("window.__opendreamStorageShim", StringComparison.Ordinal) &&
             html.Contains("window.__opendreamGeometryShim", StringComparison.Ordinal) &&
-            html.Contains("window.__opendreamErrorShim", StringComparison.Ordinal))
+            html.Contains("window.__opendreamErrorShim", StringComparison.Ordinal) &&
+            html.Contains("window.__opendreamLoadShim", StringComparison.Ordinal))
             return new MemoryStream(Encoding.UTF8.GetBytes(html));
 
         var shims = string.Empty;
         // First, so it is installed before anything else on the page can throw.
         if (!html.Contains("window.__opendreamErrorShim", StringComparison.Ordinal))
             shims += BrowserErrorShim;
+        if (!html.Contains("window.__opendreamLoadShim", StringComparison.Ordinal))
+            shims += BrowserLoadShim;
         if (!skipStorageShim && !html.Contains("window.__opendreamStorageShim", StringComparison.Ordinal))
             shims += BrowserStorageShim;
         if (!_cfg.GetCVar(OpenDreamCVars.DisableBrowserGeometryShim) &&
@@ -827,6 +844,11 @@ internal sealed partial class ControlBrowser : InterfaceControl {
     /// Raised when the page reports the drag's button release.
     /// </summary>
     public event Action? NativeDragEnded;
+
+    /// <summary>
+    /// Raised when the page's load event fires.
+    /// </summary>
+    public event Action? PageLoaded;
 
     private void HandleNativeDragBeacon(string query) {
         var what = HttpUtility.ParseQueryString(query).Get("e");
@@ -969,6 +991,11 @@ internal sealed partial class ControlBrowser : InterfaceControl {
                         return;
                     case "oddrag":
                         HandleNativeDragBeacon(newUri.Query);
+                        context.DoCancel();
+                        return;
+                    case "odloaded":
+                        // Arrives on a CEF thread, see HandleNativeDragBeacon
+                        _taskManager.RunOnMainThread(() => PageLoaded?.Invoke());
                         context.DoCancel();
                         return;
                 }

@@ -45,11 +45,23 @@ public sealed partial class ControlMap(ControlDescriptor controlDescriptor, Cont
         UpdateViewRange(InterfaceManager.View);
     }
 
-    public void UpdateViewRange(ViewRange view) {
-        var viewWidth = Math.Max(view.Width, 1);
-        var viewHeight = Math.Max(view.Height, 1);
+    /// <param name="bounds">The region to display in tiles, relative to the view's bottom-left. BYOND grows the map
+    /// past the view to fit screen objects placed outside it. Defaults to just the view.</param>
+    public void UpdateViewRange(ViewRange view, ScreenLocationBounds? bounds = null) {
+        // The default map keeps showing the screen objects outside its view across skin updates
+        if (bounds == null && MapDescriptor.IsDefault.Value)
+            bounds = InterfaceManager.DefaultMapBounds;
 
-        Viewport.ViewportSize = new Vector2i(viewWidth, viewHeight) * InterfaceManager.IconSize;
+        var viewWidth = (float)Math.Max(view.Width, 1);
+        var viewHeight = (float)Math.Max(view.Height, 1);
+        if (bounds is { } b) {
+            viewWidth = Math.Max(b.Right - b.Left, 1);
+            viewHeight = Math.Max(b.Top - b.Bottom, 1);
+        }
+
+        Viewport.ViewportSize = new Vector2i(
+            (int)MathF.Round(viewWidth * InterfaceManager.IconSize),
+            (int)MathF.Round(viewHeight * InterfaceManager.IconSize));
         if (MapDescriptor.IconSize.Value != 0) {
             // BYOND supports a negative number here (flips the view), but we're gonna enforce a positive number instead
             var iconSize = Math.Max(MapDescriptor.IconSize.Value, 1);

@@ -369,18 +369,19 @@ public sealed class DreamObjectSavefile : DreamObject {
     /// <summary>
     /// Turn the json magic value into real DM values
     /// </summary>
+    /// <param name="container">The list node <paramref name="value"/> came from; objects stored in a list keep their vars there</param>
     [MustDisposeResource]
-    public DreamValue DeserializeJsonValue(SfDreamJsonValue value) {
+    public DreamValue DeserializeJsonValue(SfDreamJsonValue value, SfDreamJsonValue? container = null) {
         switch (value) {
             case SfDreamFileValue sfDreamFileValue:
                 return new DreamValue(DreamResourceManager.CreateResource(Convert.FromBase64String(sfDreamFileValue.Data)));
             case SfDreamListValue sfDreamListValue:
                 var l = ObjectTree.CreateList();
                 for (int i=0; i < sfDreamListValue.AssocKeys.Count; i++) {
-                    using var sfValue = DeserializeJsonValue(sfDreamListValue.AssocKeys[i]);
+                    using var sfValue = DeserializeJsonValue(sfDreamListValue.AssocKeys[i], sfDreamListValue);
 
                     if (sfDreamListValue.AssocData?[i] != null) { //note that null != DreamValue.Null
-                        using var sfAssocValue = DeserializeJsonValue(sfDreamListValue.AssocData[i]!);
+                        using var sfAssocValue = DeserializeJsonValue(sfDreamListValue.AssocData[i]!, sfDreamListValue);
 
                         l.SetValue(sfValue, sfAssocValue);
                     } else {
@@ -390,13 +391,10 @@ public sealed class DreamObjectSavefile : DreamObject {
 
                 return new DreamValue(l);
             case SfDreamObjectPathValue sfDreamObjectPath:
-                SfDreamJsonValue storedObjectVars = sfDreamObjectPath;
-                SfDreamJsonValue searchDir = sfDreamObjectPath;
-                while(searchDir != _rootNode)
-                    if (!searchDir.TryGetValue(sfDreamObjectPath.Path, out storedObjectVars!))
-                        searchDir = SeekTo("..");
-                    else
-                        break;
+                // SerializeDreamValue stores an object's vars beside its path value, or in the list node holding it
+                if (!sfDreamObjectPath.TryGetValue(sfDreamObjectPath.Path, out var storedObjectVars) &&
+                    container?.TryGetValue(sfDreamObjectPath.Path, out storedObjectVars) != true)
+                    throw new InvalidDataException($"Unable to deserialize object in savefile: no data stored at {sfDreamObjectPath.Path} (corrupted savefile?)");
 
                 if (storedObjectVars.TryGetValue("type", out SfDreamJsonValue? storedObjectTypeJson)) {
                     using var storedObject = DeserializeJsonValue(storedObjectTypeJson);

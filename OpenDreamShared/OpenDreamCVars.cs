@@ -45,6 +45,12 @@ public abstract class OpenDreamCVars {
         CVarDef.Create("opendream.skin_dump_delay", 10f, CVar.CLIENTONLY);
 
     /// <summary>
+    /// User data directory for the prompt test hook (prompts.json, answer.txt). Empty disables the hook.
+    /// </summary>
+    public static readonly CVarDef<string> TestPromptDir =
+        CVarDef.Create("opendream.test_prompt_dir", string.Empty, CVar.CLIENTONLY);
+
+    /// <summary>
     /// Enables the periodic entity/sprite census logging on both client and server.
     /// Each census walks EVERY entity to build its histogram - a quarter of a million
     /// of them on a full station - so it is a real periodic stall, not just log noise.

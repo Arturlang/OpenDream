@@ -67,6 +67,8 @@ public sealed class DreamObjectDefinition {
     public HashSet<string>? ConstVariables = null;
     // Contains hashes of variables that are tagged /tmp.
     public HashSet<string>? TmpVariables = null;
+    // Variables whose initial value is set at runtime, e.g. list(). initial() reports these with a placeholder.
+    public HashSet<string>? RuntimeInitVariables = null;
 
     public DreamObjectDefinition(DreamObjectDefinition copyFrom) {
         DreamManager = copyFrom.DreamManager;
@@ -93,6 +95,7 @@ public sealed class DreamObjectDefinition {
         GlobalVariables = new Dictionary<string, int>(copyFrom.GlobalVariables);
         ConstVariables = copyFrom.ConstVariables is not null ? new HashSet<string>(copyFrom.ConstVariables) : null;
         TmpVariables = copyFrom.TmpVariables is not null ? new HashSet<string>(copyFrom.TmpVariables) : null;
+        RuntimeInitVariables = copyFrom.RuntimeInitVariables is not null ? new HashSet<string>(copyFrom.RuntimeInitVariables) : null;
         Procs = new Dictionary<string, int>(copyFrom.Procs);
         OverridingProcs = new Dictionary<string, int>(copyFrom.OverridingProcs);
         if (copyFrom.Verbs != null)
@@ -130,6 +133,8 @@ public sealed class DreamObjectDefinition {
                 ConstVariables = new HashSet<string>(Parent.ConstVariables);
             if (Parent.TmpVariables != null)
                 TmpVariables = new HashSet<string>(Parent.TmpVariables);
+            if (Parent.RuntimeInitVariables != null)
+                RuntimeInitVariables = new HashSet<string>(Parent.RuntimeInitVariables);
         }
     }
 

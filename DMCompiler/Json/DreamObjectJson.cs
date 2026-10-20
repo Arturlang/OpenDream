@@ -20,6 +20,8 @@ public sealed class DreamTypeJson {
     public Dictionary<string, int>? GlobalVariables { get; set; }
     public HashSet<string>? ConstVariables { get; set; }
     public HashSet<string>? TmpVariables { get; set; }
+    /// <summary>Vars this type initializes to a non-constant value, which initial() reports as a placeholder</summary>
+    public HashSet<string>? RuntimeInitVariables { get; set; }
 }
 
 public sealed class GlobalListJson {

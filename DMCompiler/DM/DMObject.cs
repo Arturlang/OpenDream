@@ -21,6 +21,11 @@ internal sealed class DMObject(DMCompiler compiler, int id, DreamPath path, DMOb
     public readonly Dictionary<string, DMVariable> VariableOverrides = new();
     public readonly HashSet<string> TmpVariables = new();
     public readonly HashSet<string> ConstVariables = new();
+    /// <summary>
+    /// Vars this type sets to a non-constant value such as list(). Unlike <see cref="IsRuntimeInitialized"/>, this excludes
+    /// constants that only go through the init proc to override a parent's runtime initializer.
+    /// </summary>
+    public readonly HashSet<string> RuntimeInitVariables = new();
     public int? InitializationProc;
 
     /// <summary>A list of var and verb initializations implicitly done before the user's New() is called.</summary>
@@ -239,6 +244,10 @@ internal sealed class DMObject(DMCompiler compiler, int id, DreamPath path, DMOb
 
         if (TmpVariables.Count > 0) {
             typeJson.TmpVariables = TmpVariables;
+        }
+
+        if (RuntimeInitVariables.Count > 0) {
+            typeJson.RuntimeInitVariables = RuntimeInitVariables;
         }
 
         if (InitializationProc != null) {

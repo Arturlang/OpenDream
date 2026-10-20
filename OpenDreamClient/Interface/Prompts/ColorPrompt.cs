@@ -1,3 +1,4 @@
+using System.Text;
 using System.Linq;
 using OpenDreamShared.Dream;
 using Robust.Client.Graphics;
@@ -76,6 +77,22 @@ internal sealed class ColorPrompt : InputWindow {
 
     protected override void OkButtonClicked() {
         FinishPrompt(DreamValueType.Color, _colorSelector.Color);
+    }
+
+    protected override void TestDescribeInput(StringBuilder json) {
+        PromptTestHook.AppendString(json, "text", _hexColor.Text);
+    }
+
+    protected override string TestSetInput(string action, string argument) {
+        if (action != "text")
+            return base.TestSetInput(action, argument);
+        var text = argument.Trim();
+        if (!text.StartsWith('#')) text = '#' + text;
+        if (!Color.TryFromHex(text, out var newColor))
+            return "not a colour";
+        _colorSelector.Color = newColor;
+        _hexColor.Text = argument;
+        return "text set";
     }
 }
 

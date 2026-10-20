@@ -117,11 +117,12 @@ public sealed class ScreenLocation {
     }
 
     public ScreenLocation(int x, int y, int iconSize) {
-        X = x / iconSize;
-        Y = y / iconSize;
+        // Floored, so a position left of or below the view (a HUD outside it) still gets a positive pixel offset
+        X = (int)Math.Floor(x / (float)iconSize);
+        Y = (int)Math.Floor(y / (float)iconSize);
 
-        PixelOffsetX = x % iconSize;
-        PixelOffsetY = y % iconSize;
+        PixelOffsetX = x - X * iconSize;
+        PixelOffsetY = y - Y * iconSize;
         Range = null;
     }
 

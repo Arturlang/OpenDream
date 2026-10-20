@@ -1,4 +1,5 @@
-﻿using OpenDreamShared.Dream;
+﻿using System.Text;
+using OpenDreamShared.Dream;
 using Robust.Client.UserInterface.Controls;
 
 namespace OpenDreamClient.Interface.Prompts;
@@ -25,5 +26,16 @@ internal sealed class TextPrompt : InputWindow {
 
     private void TextEdit_TextEntered(LineEdit.LineEditEventArgs e) {
         ButtonClicked(DefaultButton);
+    }
+
+    protected override void TestDescribeInput(StringBuilder json) {
+        PromptTestHook.AppendString(json, "text", _textEdit.Text);
+    }
+
+    protected override string TestSetInput(string action, string argument) {
+        if (action != "text")
+            return base.TestSetInput(action, argument);
+        _textEdit.Text = argument;
+        return "text set";
     }
 }

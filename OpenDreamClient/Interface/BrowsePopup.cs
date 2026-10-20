@@ -1,6 +1,7 @@
 using OpenDreamClient.Interface.Controls;
 using OpenDreamShared.Interface.Descriptors;
 using OpenDreamShared.Interface.DMF;
+using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -20,12 +21,15 @@ internal sealed class BrowsePopup {
 
     private readonly ChromelessBrowseWindow _window;
     private bool _closed;
+    /// Whether anything set is-visible since the current page was sent. TGUI pages show and hide
+    /// themselves; any other page is shown once it loads, as BYOND shows every browse() popup.
+    private bool _visibilitySet;
 
     private IInputManager? _inputManager;
     private bool _nativeDragging;
     private Vector2i _nativeDragOffset;
 
-    public BrowsePopup(string name, Vector2i size) {
+    public BrowsePopup(string name, Vector2i size, bool titlebar, bool canClose) {
         WindowDescriptor popupWindowDescriptor = new WindowDescriptor(name,
             new() {
                 new ControlDescriptorBrowser {
@@ -42,13 +46,24 @@ internal sealed class BrowsePopup {
         WindowElement = new ControlWindow(popupWindowDescriptor);
         WindowElement.CreateChildControls();
 
-        _window = new ChromelessBrowseWindow(name, size, WindowElement.UIElement);
+        _window = new ChromelessBrowseWindow(name, size, WindowElement.UIElement, titlebar, canClose);
         _window.OnClose += OnWindowClosed;
         _window.OnResized += OnWindowResized;
 
         Browser = (ControlBrowser)WindowElement.ChildControls[0];
         Browser.NativeDragStarted += StartNativeDrag;
         Browser.NativeDragEnded += EndNativeDrag;
+        Browser.PageLoaded += OnPageLoaded;
+    }
+
+    /// <summary>Call before sending a new page to this popup.</summary>
+    public void PageSent() {
+        _visibilitySet = false;
+    }
+
+    private void OnPageLoaded() {
+        if (!_visibilitySet && !_closed)
+            SetVisible(true);
     }
 
     /// <summary>
@@ -119,6 +134,7 @@ internal sealed class BrowsePopup {
                 SetSize(new DMFPropertySize(value).Vector);
                 break;
             case "is-visible":
+                _visibilitySet = true;
                 SetVisible(new DMFPropertyBool(value).Value);
                 break;
             case "can-resize":
@@ -142,7 +158,7 @@ internal sealed class BrowsePopup {
             case "size":
             case "inner-size":
             case "outer-size":
-                value = new DMFPropertySize(_window.Size);
+                value = new DMFPropertySize(_window.Size - new Vector2(0, _window.TitlebarHeight));
                 return true;
             case "is-visible":
                 value = new DMFPropertyBool(_window.Visible && _window.IsOpen);
@@ -165,7 +181,7 @@ internal sealed class BrowsePopup {
 
     private void SetSize(Vector2i size) {
         size = new Vector2i(Math.Max(size.X, 150), Math.Max(size.Y, 50));
-        _window.SetSize = size;
+        _window.SetSize = size + new Vector2(0, _window.TitlebarHeight);
         // Engine plumbing, not a content winset: fully-anchored controls ignore manual
         // size winsets, but these panes must track the popup window's real size.
         WindowElement.SetProperty("size", $"{size.X}x{size.Y}");
@@ -199,11 +215,12 @@ internal sealed class BrowsePopup {
     }
 
     private void UpdateBrowserGeometry() {
-        Browser.SetGeometryOrigin(_window.GlobalPixelPosition);
+        var titlebarPixels = (int)(_window.TitlebarHeight * _window.UIScale);
+        Browser.SetGeometryOrigin(_window.GlobalPixelPosition + new Vector2i(0, titlebarPixels));
     }
 
     private void OnWindowResized() {
-        var size = _window.Size;
+        var size = _window.Size - new Vector2(0, _window.TitlebarHeight);
         var pixelSize = new Vector2i((int)size.X, (int)size.Y);
         WindowElement.SetProperty("size", $"{pixelSize.X}x{pixelSize.Y}");
         Browser.SetProperty("size", $"{pixelSize.X}x{pixelSize.Y}");
@@ -227,14 +244,53 @@ internal sealed class BrowsePopup {
         Closed?.Invoke();
     }
 
+    /// <summary>
+    /// A popup window with no chrome of its own, unless browse() asked for a titlebar. TGUI's fancy
+    /// windows turn the titlebar off and draw their own; plain HTML popups need one to be dragged.
+    /// </summary>
     private sealed class ChromelessBrowseWindow : BaseWindow {
-        public ChromelessBrowseWindow(string name, Vector2i size, Control contents) {
+        public float TitlebarHeight { get; }
+
+        public ChromelessBrowseWindow(string name, Vector2i size, Control contents, bool titlebar, bool canClose) {
             Name = name;
-            SetSize = size;
+            TitlebarHeight = titlebar ? 22 : 0;
+            SetSize = size + new Vector2(0, TitlebarHeight);
             MinSize = new Vector2(150, 50);
             MouseFilter = MouseFilterMode.Stop;
             Resizable = true;
-            AddChild(contents);
+
+            if (!titlebar) {
+                AddChild(contents);
+                return;
+            }
+
+            var closeButton = new Button {
+                Text = "×",
+                Visible = canClose,
+                MinWidth = TitlebarHeight
+            };
+            closeButton.OnPressed += _ => Close();
+
+            contents.VerticalExpand = true;
+            AddChild(new BoxContainer {
+                Orientation = BoxContainer.LayoutOrientation.Vertical,
+                Children = {
+                    new PanelContainer {
+                        MinHeight = TitlebarHeight,
+                        PanelOverride = new StyleBoxFlat(Color.FromHex("#202020")),
+                        Children = {
+                            new BoxContainer {
+                                Orientation = BoxContainer.LayoutOrientation.Horizontal,
+                                Children = {
+                                    new Control { HorizontalExpand = true, MouseFilter = MouseFilterMode.Ignore },
+                                    closeButton
+                                }
+                            }
+                        }
+                    },
+                    contents
+                }
+            });
         }
 
         public void OpenHiddenCentered() {
@@ -251,7 +307,7 @@ internal sealed class BrowsePopup {
             const int dragMarginSize = 6;
 
             if (!Resizable)
-                return DragMode.None;
+                return relativeMousePos.Y < TitlebarHeight ? DragMode.Move : DragMode.None;
 
             var mode = DragMode.None;
             if (relativeMousePos.Y < dragMarginSize)
@@ -263,6 +319,9 @@ internal sealed class BrowsePopup {
                 mode |= DragMode.Left;
             else if (relativeMousePos.X > Size.X - dragMarginSize)
                 mode |= DragMode.Right;
+
+            if (mode == DragMode.None && relativeMousePos.Y < TitlebarHeight)
+                mode = DragMode.Move;
 
             return mode;
         }

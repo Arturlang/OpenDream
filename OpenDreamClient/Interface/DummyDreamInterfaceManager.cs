@@ -19,6 +19,8 @@ public sealed partial class DummyDreamInterfaceManager : IDreamInterfaceManager 
     public ControlMap? DefaultMap => null;
     public ViewRange View => new(5);
     public Vector2 CameraPan => Vector2.Zero;
+    public ScreenLocationBounds DefaultMapBounds => new(0, 0, 5, 5);
+    public void UpdateDefaultMapScreenBounds(ScreenLocationBounds bounds) { }
     public bool ShowPopupMenus => true;
     public int IconSize => 32;
     public MapFormat MapFormat => MapFormat.TopDown;
