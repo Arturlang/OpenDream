@@ -696,7 +696,9 @@ internal abstract class AssignmentBinaryOp(Location location, DMExpression lhs, 
 
         // A dereference keeps its object and index on the stack while the RHS is evaluated after it.
         // When the order is observable, evaluate the RHS into a hidden local before the LHS instead.
-        if (EvaluatesRHSFirst && LHS is Dereference dereference && !RHS.TryAsConstant(ctx.Compiler, out _) &&
+        // Not when a ?. or ?[] in the LHS can short-circuit: then the RHS isn't evaluated at all.
+        if (EvaluatesRHSFirst && LHS is Dereference dereference && !dereference.CanReferenceShortCircuit() &&
+            !RHS.TryAsConstant(ctx.Compiler, out _) &&
             !(Dereference.IsSideEffectFree(ctx, RHS) && dereference.HasSideEffectFreeOperands(ctx))) {
             var hiddenLocal = ctx.Proc.AddHiddenLocalVariable();
 
