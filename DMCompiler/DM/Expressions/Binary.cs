@@ -680,14 +680,34 @@ internal abstract class AssignmentBinaryOp(Location location, DMExpression lhs, 
     /// <remarks>You should always make use of the reference argument, unless you totally override AssignmentBinaryOp's EmitPushValue method.</remarks>
     /// <param name="ctx"></param>
     /// <param name="reference">A reference to the LHS emitted via <see cref="DMExpression.EmitReference(ExpressionContext,string,DMExpression.ShortCircuitMode)"/></param>
+    /// <param name="rhs">The RHS to emit. Use this instead of <see cref="BinaryOp.RHS"/>, it may already have been evaluated.</param>
     /// <param name="endLabel"></param>
-    protected abstract void EmitOp(ExpressionContext ctx, DMReference reference, string endLabel);
+    protected abstract void EmitOp(ExpressionContext ctx, DMReference reference, DMExpression rhs, string endLabel);
+
+    /// <summary>
+    /// Whether the RHS is evaluated before the LHS's object and index, as in BYOND: <c>L[i] = f(++i)</c> uses the incremented i.
+    /// The short-circuiting assignments evaluate the LHS first, since they may not evaluate the RHS at all.
+    /// </summary>
+    protected virtual bool EvaluatesRHSFirst => true;
 
     public override void EmitPushValue(ExpressionContext ctx) {
         string endLabel = ctx.Proc.NewLabelName();
+        DMExpression rhs = RHS;
+
+        // A dereference keeps its object and index on the stack while the RHS is evaluated after it.
+        // When the order is observable, evaluate the RHS into a hidden local before the LHS instead.
+        if (EvaluatesRHSFirst && LHS is Dereference dereference && !RHS.TryAsConstant(ctx.Compiler, out _) &&
+            !(Dereference.IsSideEffectFree(ctx, RHS) && dereference.HasSideEffectFreeOperands(ctx))) {
+            var hiddenLocal = ctx.Proc.AddHiddenLocalVariable();
+
+            RHS.EmitPushValue(ctx);
+            ctx.Proc.Assign(DMReference.CreateLocal(hiddenLocal.Id));
+            ctx.Proc.Pop();
+            rhs = new Local(RHS.Location, hiddenLocal, false);
+        }
 
         DMReference reference = LHS.EmitReference(ctx, endLabel);
-        EmitOp(ctx, reference, endLabel);
+        EmitOp(ctx, reference, rhs, endLabel);
 
         ctx.Proc.AddLabel(endLabel);
     }
@@ -699,8 +719,8 @@ internal sealed class Assignment(Location location, DMExpression lhs, DMExpressi
 
     public override DreamPath? Path => LHS.Path;
 
-    protected override void EmitOp(ExpressionContext ctx, DMReference reference, string endLabel) {
-        RHS.EmitPushValue(ctx);
+    protected override void EmitOp(ExpressionContext ctx, DMReference reference, DMExpression rhs, string endLabel) {
+        rhs.EmitPushValue(ctx);
         ctx.Proc.Assign(reference);
 
         if (!LHS.ValType.MatchesType(ctx.Compiler, RHS.ValType) && !LHS.ValType.IsUnimplemented) {
@@ -717,128 +737,118 @@ internal sealed class Assignment(Location location, DMExpression lhs, DMExpressi
 internal sealed class AssignmentInto(Location location, DMExpression lhs, DMExpression rhs) : AssignmentBinaryOp(location, lhs, rhs) {
     public override DreamPath? Path => LHS.Path;
 
-    protected override void EmitOp(ExpressionContext ctx, DMReference reference,
-        string endLabel) {
-        RHS.EmitPushValue(ctx);
+    protected override void EmitOp(ExpressionContext ctx, DMReference reference, DMExpression rhs, string endLabel) {
+        rhs.EmitPushValue(ctx);
         ctx.Proc.AssignInto(reference);
     }
 }
 
 // x += y
 internal sealed class Append(Location location, DMExpression lhs, DMExpression rhs) : AssignmentBinaryOp(location, lhs, rhs) {
-    protected override void EmitOp(ExpressionContext ctx, DMReference reference,
-        string endLabel) {
-        RHS.EmitPushValue(ctx);
+    protected override void EmitOp(ExpressionContext ctx, DMReference reference, DMExpression rhs, string endLabel) {
+        rhs.EmitPushValue(ctx);
         ctx.Proc.Append(reference);
     }
 }
 
 // x |= y
 internal sealed class Combine(Location location, DMExpression lhs, DMExpression rhs) : AssignmentBinaryOp(location, lhs, rhs) {
-    protected override void EmitOp(ExpressionContext ctx, DMReference reference,
-        string endLabel) {
-        RHS.EmitPushValue(ctx);
+    protected override void EmitOp(ExpressionContext ctx, DMReference reference, DMExpression rhs, string endLabel) {
+        rhs.EmitPushValue(ctx);
         ctx.Proc.Combine(reference);
     }
 }
 
 // x -= y
 internal sealed class Remove(Location location, DMExpression lhs, DMExpression rhs) : AssignmentBinaryOp(location, lhs, rhs) {
-    protected override void EmitOp(ExpressionContext ctx, DMReference reference,
-        string endLabel) {
-        RHS.EmitPushValue(ctx);
+    protected override void EmitOp(ExpressionContext ctx, DMReference reference, DMExpression rhs, string endLabel) {
+        rhs.EmitPushValue(ctx);
         ctx.Proc.Remove(reference);
     }
 }
 
 // x &= y
 internal sealed class Mask(Location location, DMExpression lhs, DMExpression rhs) : AssignmentBinaryOp(location, lhs, rhs) {
-    protected override void EmitOp(ExpressionContext ctx, DMReference reference,
-        string endLabel) {
-        RHS.EmitPushValue(ctx);
+    protected override void EmitOp(ExpressionContext ctx, DMReference reference, DMExpression rhs, string endLabel) {
+        rhs.EmitPushValue(ctx);
         ctx.Proc.Mask(reference);
     }
 }
 
 // x &&= y
 internal sealed class LogicalAndAssign(Location location, DMExpression lhs, DMExpression rhs) : AssignmentBinaryOp(location, lhs, rhs) {
-    protected override void EmitOp(ExpressionContext ctx, DMReference reference,
-        string endLabel) {
+    protected override bool EvaluatesRHSFirst => false;
+
+    protected override void EmitOp(ExpressionContext ctx, DMReference reference, DMExpression rhs, string endLabel) {
         ctx.Proc.JumpIfFalseReference(reference, endLabel);
-        RHS.EmitPushValue(ctx);
+        rhs.EmitPushValue(ctx);
         ctx.Proc.Assign(reference);
     }
 }
 
 // x ||= y
 internal sealed class LogicalOrAssign(Location location, DMExpression lhs, DMExpression rhs) : AssignmentBinaryOp(location, lhs, rhs) {
-    protected override void EmitOp(ExpressionContext ctx, DMReference reference,
-        string endLabel) {
+    protected override bool EvaluatesRHSFirst => false;
+
+    protected override void EmitOp(ExpressionContext ctx, DMReference reference, DMExpression rhs, string endLabel) {
         ctx.Proc.JumpIfTrueReference(reference, endLabel);
-        RHS.EmitPushValue(ctx);
+        rhs.EmitPushValue(ctx);
         ctx.Proc.Assign(reference);
     }
 }
 
 // x *= y
 internal sealed class MultiplyAssign(Location location, DMExpression lhs, DMExpression rhs) : AssignmentBinaryOp(location, lhs, rhs) {
-    protected override void EmitOp(ExpressionContext ctx, DMReference reference,
-        string endLabel) {
-        RHS.EmitPushValue(ctx);
+    protected override void EmitOp(ExpressionContext ctx, DMReference reference, DMExpression rhs, string endLabel) {
+        rhs.EmitPushValue(ctx);
         ctx.Proc.MultiplyReference(reference);
     }
 }
 
 // x /= y
 internal sealed class DivideAssign(Location location, DMExpression lhs, DMExpression rhs) : AssignmentBinaryOp(location, lhs, rhs) {
-    protected override void EmitOp(ExpressionContext ctx, DMReference reference,
-        string endLabel) {
-        RHS.EmitPushValue(ctx);
+    protected override void EmitOp(ExpressionContext ctx, DMReference reference, DMExpression rhs, string endLabel) {
+        rhs.EmitPushValue(ctx);
         ctx.Proc.DivideReference(reference);
     }
 }
 
 // x <<= y
 internal sealed class LeftShiftAssign(Location location, DMExpression lhs, DMExpression rhs) : AssignmentBinaryOp(location, lhs, rhs) {
-    protected override void EmitOp(ExpressionContext ctx, DMReference reference,
-        string endLabel) {
-        RHS.EmitPushValue(ctx);
+    protected override void EmitOp(ExpressionContext ctx, DMReference reference, DMExpression rhs, string endLabel) {
+        rhs.EmitPushValue(ctx);
         ctx.Proc.BitShiftLeftReference(reference);
     }
 }
 
 // x >>= y
 internal sealed class RightShiftAssign(Location location, DMExpression lhs, DMExpression rhs) : AssignmentBinaryOp(location, lhs, rhs) {
-    protected override void EmitOp(ExpressionContext ctx, DMReference reference,
-        string endLabel) {
-        RHS.EmitPushValue(ctx);
+    protected override void EmitOp(ExpressionContext ctx, DMReference reference, DMExpression rhs, string endLabel) {
+        rhs.EmitPushValue(ctx);
         ctx.Proc.BitShiftRightReference(reference);
     }
 }
 
 // x ^= y
 internal sealed class XorAssign(Location location, DMExpression lhs, DMExpression rhs) : AssignmentBinaryOp(location, lhs, rhs) {
-    protected override void EmitOp(ExpressionContext ctx, DMReference reference,
-        string endLabel) {
-        RHS.EmitPushValue(ctx);
+    protected override void EmitOp(ExpressionContext ctx, DMReference reference, DMExpression rhs, string endLabel) {
+        rhs.EmitPushValue(ctx);
         ctx.Proc.BinaryXorReference(reference);
     }
 }
 
 // x %= y
 internal sealed class ModulusAssign(Location location, DMExpression lhs, DMExpression rhs) : AssignmentBinaryOp(location, lhs, rhs) {
-    protected override void EmitOp(ExpressionContext ctx, DMReference reference,
-        string endLabel) {
-        RHS.EmitPushValue(ctx);
+    protected override void EmitOp(ExpressionContext ctx, DMReference reference, DMExpression rhs, string endLabel) {
+        rhs.EmitPushValue(ctx);
         ctx.Proc.ModulusReference(reference);
     }
 }
 
 // x %%= y
 internal sealed class ModulusModulusAssign(Location location, DMExpression lhs, DMExpression rhs) : AssignmentBinaryOp(location, lhs, rhs) {
-    protected override void EmitOp(ExpressionContext ctx, DMReference reference,
-        string endLabel) {
-        RHS.EmitPushValue(ctx);
+    protected override void EmitOp(ExpressionContext ctx, DMReference reference, DMExpression rhs, string endLabel) {
+        rhs.EmitPushValue(ctx);
         ctx.Proc.ModulusModulusReference(reference);
     }
 }

@@ -93,6 +93,7 @@ internal sealed class DMProc {
     private readonly List<string> _localVariableNames = new();
     private int _localVariableIdCounter;
     private int _localVariableHighestId;
+    private int _hiddenLocalIdCounter;
 
     private readonly List<SourceInfoJson> _sourceInfo = new();
     private string? _lastSourceFile;
@@ -510,6 +511,19 @@ internal sealed class DMProc {
 
         int localVarId = AllocLocalVariable(name);
         return _scopes.Peek().LocalVariables.TryAdd(name, new LocalVariable(name, localVarId, false, type, valType));
+    }
+
+    /// <summary>
+    /// Allocates a local variable that DM code cannot name. It is freed along with the current scope.
+    /// </summary>
+    public LocalVariable AddHiddenLocalVariable() {
+        // A space can never appear in a DM identifier, so this can't collide with a user's var
+        string name = $"hidden local {_hiddenLocalIdCounter++}";
+        int localVarId = AllocLocalVariable(name);
+        var localVariable = new LocalVariable(name, localVarId, false, null, DMValueType.Anything);
+
+        _scopes.Peek().LocalVariables.Add(name, localVariable);
+        return localVariable;
     }
 
     public bool TryAddLocalConstVariable(string name, DreamPath? type, Constant value) {
