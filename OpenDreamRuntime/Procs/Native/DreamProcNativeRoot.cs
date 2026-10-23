@@ -1347,7 +1347,7 @@ internal static class DreamProcNativeRoot {
                     switch(first.Name) {
                         case "__number__": {
                             var raw = first.Value.GetString();
-                            var val = raw != null ? float.Parse(raw) : float.NaN;
+                            var val = raw != null ? float.Parse(raw, CultureInfo.InvariantCulture) : float.NaN;
                             return new DreamValue(val);
                         }
                     }
@@ -2013,15 +2013,15 @@ internal static class DreamProcNativeRoot {
         }
 
         if(bundle.Arguments.Length == 1) {
-            return new DreamValue(floatNum.ToString("g6"));
+            return new DreamValue(floatNum.ToString("g6", CultureInfo.InvariantCulture));
         }
 
         if(bundle.Arguments.Length == 2) {
             if(!bundle.GetArgument(1, "A").TryGetValueAsInteger(out var sigFig)) {
-                return new DreamValue(floatNum.ToString("g6"));
+                return new DreamValue(floatNum.ToString("g6", CultureInfo.InvariantCulture));
             }
 
-            return new DreamValue(floatNum.ToString($"g{sigFig}"));
+            return new DreamValue(floatNum.ToString($"g{sigFig}", CultureInfo.InvariantCulture));
         }
 
         if(bundle.Arguments.Length == 3) {

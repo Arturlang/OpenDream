@@ -370,7 +370,7 @@ public sealed class ScreenLocation {
                     bool isPercent = offsetStr.EndsWith('%');
                     string numberStr = isPercent ? offsetStr[..^1] : offsetStr;
 
-                    if (!float.TryParse(numberStr, out var offset)) {
+                    if (!float.TryParse(numberStr, NumberStyles.Float, CultureInfo.InvariantCulture, out var offset)) {
                         Sawmill.Error($"Invalid offset {offsetStr} in {coordinate}");
                         break;
                     }

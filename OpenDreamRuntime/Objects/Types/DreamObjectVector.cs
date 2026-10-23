@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using OpenDreamRuntime.Procs;
@@ -53,11 +54,11 @@ public sealed class DreamObjectVector(DreamObjectDefinition definition) : DreamO
             var components = vectorStr.Split(',', 'x');
 
             if (components.Length is 2 or 3) {
-                X = float.Parse(components[0]);
-                Y = float.Parse(components[1]);
+                X = float.Parse(components[0], CultureInfo.InvariantCulture);
+                Y = float.Parse(components[1], CultureInfo.InvariantCulture);
                 if (components.Length == 3) {
                     Is3D = true;
-                    Z = float.Parse(components[2]);
+                    Z = float.Parse(components[2], CultureInfo.InvariantCulture);
                 }
 
                 return;
