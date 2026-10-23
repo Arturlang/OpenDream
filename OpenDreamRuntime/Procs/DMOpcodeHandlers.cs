@@ -2523,9 +2523,13 @@ namespace OpenDreamRuntime.Procs {
                 values[i] = (value, totalWeight);
             }
 
+            // BYOND errors only on a zero total; negative weights fall through to the last value
+            if (totalWeight == 0)
+                throw new DMException("At least one element must have non-zero probability");
+
             double pick = state.DreamManager.Random.NextFloat() * totalWeight;
             for (int i = 0; i < values.Length; i++) {
-                if (pick < values[i].CumulativeWeight) {
+                if (pick < values[i].CumulativeWeight || i == values.Length - 1) {
                     state.Push(values[i].Value);
                     break;
                 }
