@@ -1412,7 +1412,7 @@ internal static class DreamProcNativeRoot {
                 writer.WriteNumberValue(floatValue);
             else {
                 writer.WriteStartObject();
-                writer.WriteString("__number__", floatValue.ToString());
+                writer.WriteString("__number__", floatValue.ToString(CultureInfo.InvariantCulture));
                 writer.WriteEndObject();
             }
         } else if (value.TryGetValueAsString(out var text))
