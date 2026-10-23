@@ -185,28 +185,28 @@ public sealed partial class DreamMapManager : IDreamMapManager {
 
     public void SetTurfAppearance(DreamObjectTurf turf, ImmutableAppearance appearance) {
         appearance.EnabledMouseEvents = _atomManager.GetEnabledMouseEvents(turf);
+        turf.Appearance = appearance;
 
         // BYOND draws an area's appearance, overlays included, on every turf in it. tg relies on this for
         // fullbright areas (/area/space's starlight is an additive overlay on the area) and area weather.
+        // Only the tile clients draw gets the area; DM still sees the turf's own appearance (overlays, vars).
+        var drawn = appearance;
         if (turf.Cell.Area.Appearance != _appearanceSystem.DefaultAppearance) {
-            if (!appearance.Overlays.Contains(turf.Cell.Area.Appearance)) {
-                if (!_turfAreaLookup.TryGetValue((appearance, turf.Cell.Area.Appearance.MustGetId()), out var newAppearance)) {
-                    var mutable = appearance.ToMutable();
+            var key = (appearance, turf.Cell.Area.Appearance.MustGetId());
+            if (!_turfAreaLookup.TryGetValue(key, out drawn)) {
+                var mutable = appearance.ToMutable();
 
-                    mutable.Overlays.Add(turf.Cell.Area.Appearance);
-                    newAppearance = _appearanceSystem.AddAppearance(mutable);
-                    _turfAreaLookup.Add((appearance, turf.Cell.Area.Appearance.MustGetId()), newAppearance);
-                }
-
-                appearance = newAppearance;
+                mutable.Overlays.Add(turf.Cell.Area.Appearance);
+                drawn = _appearanceSystem.AddAppearance(mutable);
+                _turfAreaLookup.Add(key, drawn);
             }
         }
 
+        turf.DrawnAppearance = drawn;
         var level = _levels[turf.Z - 1];
-        var turfId = appearance.MustGetId();
+        var turfId = drawn.MustGetId();
         var turfPos = new Vector2i(turf.X, turf.Y);
         level.QueuedTileUpdates.Add( (turfPos, new Tile((int)turfId)) );
-        turf.Appearance = appearance;
     }
 
     public void SetTurfAppearance(DreamObjectTurf turf, MutableAppearance appearance) {
@@ -218,32 +218,13 @@ public sealed partial class DreamMapManager : IDreamMapManager {
     public void SetAreaAppearance(DreamObjectArea area, MutableAppearance appearance) {
         //if an area changes appearance, invalidate the lookup
         _turfAreaLookup.Clear();
-        var oldAppearance = area.Appearance;
         appearance.AppearanceFlags |= AppearanceFlags.ResetColor | AppearanceFlags.ResetAlpha | AppearanceFlags.ResetTransform;
         area.Appearance  = _appearanceSystem.AddAppearance(appearance);
 
-        //get all unique turf appearances
-        //create the new version of each of those appearances
-        //for each turf, update the appropriate ID
-
-        Dictionary<ImmutableAppearance, ImmutableAppearance> oldToNewAppearance = new();
+        // Redraw every turf in the area; the lookup makes one merged appearance per distinct turf appearance
         foreach (var turf in area.Turfs) {
-            if(oldToNewAppearance.TryGetValue(turf.Appearance, out var newAppearance))
-                turf.Appearance = newAppearance;
-            else {
-                MutableAppearance turfAppearance = _atomManager.MustGetAppearance(turf).ToMutable();
-
-                turfAppearance.Overlays.Remove(oldAppearance);
-                turfAppearance.Overlays.Add(area.Appearance);
-                newAppearance = _appearanceSystem.AddAppearance(turfAppearance);
-                oldToNewAppearance.Add(turf.Appearance, newAppearance);
-                turf.Appearance = newAppearance;
-            }
-
-            var level = _levels[turf.Z - 1];
-            var turfId = newAppearance.MustGetId();
-            var turfPos = new Vector2i(turf.X, turf.Y);
-            level.QueuedTileUpdates.Add( (turfPos, new Tile((int)turfId)));
+            if (turf.Appearance != null!)
+                SetTurfAppearance(turf, turf.Appearance);
         }
     }
 

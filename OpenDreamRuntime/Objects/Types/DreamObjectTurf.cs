@@ -8,6 +8,8 @@ public sealed class DreamObjectTurf : DreamObjectAtom {
     public readonly int X, Y, Z;
     public readonly TurfContentsList Contents;
     public ImmutableAppearance Appearance;
+    /// <summary>What clients draw for this turf: <see cref="Appearance"/> plus its area's appearance as an overlay</summary>
+    public ImmutableAppearance? DrawnAppearance;
     public IDreamMapManager.Cell Cell;
     public bool IsDense;
 
@@ -50,10 +52,8 @@ public sealed class DreamObjectTurf : DreamObjectAtom {
         if (Appearance == null! || oldArea.Appearance == null!)
             return;
 
-        using var newAppearance = Appearance.ToMutable();
-
-        newAppearance.Overlays.Remove(oldArea.Appearance);
-        DreamMapManager.SetTurfAppearance(this, newAppearance);
+        // Appearance never holds the area, so this only redraws the turf with its new area
+        DreamMapManager.SetTurfAppearance(this, Appearance);
     }
 
     protected override void HandleDeletion() {
