@@ -67,7 +67,8 @@ public sealed class ScreenLocation {
     /// whole viewport), so the raw <see cref="RepeatX"/> difference reports 1x1
     /// for them and leaves stretched screen objects drawing a single tile.
     /// </summary>
-    public Vector2i GetRepeat(ViewRange view, float tileSize, Vector2i iconSize, ScreenLocationBounds? screenBounds = null) {
+    public Vector2i GetRepeat(ViewRange view, float tileSize, Vector2i iconSize, ScreenLocationBounds? screenBounds = null,
+        bool overdraw = true) {
         if (Range == null)
             return new Vector2i(1, 1);
         if (!IsAnchored && !Range.IsAnchored)
@@ -77,14 +78,16 @@ public sealed class ScreenLocation {
         Vector2 end = Range.GetViewPosition(Vector2.Zero, view, tileSize, iconSize, screenBounds);
         Vector2 iconSizeTiles = iconSize / tileSize;
 
-        // One extra tile on each axis. The view origin is fractional while the
+        // With overdraw, one extra tile on each axis. The view origin is fractional while the
         // camera is mid-glide, so tiling exactly the anchored span leaves up to a
         // tile uncovered at the far edge, which appears and disappears as the view
         // scrolls - a flickering strip along the edge. Overdraw is clipped by the
-        // viewport, so covering one tile past the end is free.
+        // viewport, so covering one tile past the end is free when drawing. It must not
+        // count toward the map's size, or the map grows by a tile on the right and top.
+        int extra = overdraw ? 2 : 1;
         return new Vector2i(
-            Math.Max((int)MathF.Floor((end.X - start.X) / iconSizeTiles.X) + 2, 1),
-            Math.Max((int)MathF.Floor((end.Y - start.Y) / iconSizeTiles.Y) + 2, 1)
+            Math.Max((int)MathF.Floor((end.X - start.X) / iconSizeTiles.X) + extra, 1),
+            Math.Max((int)MathF.Floor((end.Y - start.Y) / iconSizeTiles.Y) + extra, 1)
         );
     }
 
@@ -163,7 +166,7 @@ public sealed class ScreenLocation {
     public ScreenLocationBounds GetScreenBounds(ViewRange view, float tileSize, Vector2i iconSize) {
         Vector2 position = GetViewPosition(Vector2.Zero, view, tileSize, iconSize);
         Vector2 iconSizeTiles = iconSize / tileSize;
-        Vector2i repeat = GetRepeat(view, tileSize, iconSize);
+        Vector2i repeat = GetRepeat(view, tileSize, iconSize, overdraw: false);
 
         return new ScreenLocationBounds(
             position.X,

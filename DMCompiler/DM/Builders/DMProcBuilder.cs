@@ -578,12 +578,8 @@ internal sealed class DMProcBuilder(DMCompiler compiler, DMObject dmObject, DMPr
     }
 
     private void ProcessStatementForType(Location location, DMExpression? initializer, DMExpression outputVar, DreamPath? type, DMASTProcBlockInner body) {
-        if (type == null) {
-            // This shouldn't happen, just to be safe
-            compiler.ForcedError(location,
-                "Attempted to create a type enumerator with a null type");
-            return;
-        }
+        // for(var/x) with no type and no list: BYOND loops over every atom in the world
+        type ??= DreamPath.Atom;
 
         if (compiler.DMObjectTree.TryGetTypeId(type.Value, out var typeId)) {
             proc.PushType(typeId);

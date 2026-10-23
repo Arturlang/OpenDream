@@ -647,6 +647,12 @@ internal class Initial(Location location, DMExpression expr) : DMExpression(loca
             return;
         }
 
+        // type::var is already the compile-time value, as BYOND gives for initial(type::var)
+        if (Expression is ScopeReference) {
+            Expression.EmitPushValue(ctx);
+            return;
+        }
+
         ctx.Compiler.Emit(WarningCode.BadArgument, Expression.Location, $"can't get initial value of {Expression}");
         ctx.Proc.PushNullAndError();
     }

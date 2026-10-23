@@ -1351,9 +1351,10 @@ namespace DMCompiler.Compiler.DM {
 
             Whitespace();
             Consume(TokenType.DM_LeftParenthesis, "Expected '('");
-            Whitespace();
+            BracketWhitespace();
             DMASTExpression? conditional = Expression();
             RequireExpression(ref conditional, "Expected a condition");
+            BracketWhitespace();
             ConsumeRightParenthesis();
             Check(TokenType.DM_Semicolon);
             Whitespace();
@@ -1409,9 +1410,10 @@ namespace DMCompiler.Compiler.DM {
 
             Whitespace();
             Consume(TokenType.DM_LeftParenthesis, "Expected '('");
-            Whitespace();
+            BracketWhitespace();
             DMASTExpression? conditional = Expression();
             RequireExpression(ref conditional, "Expected a condition");
+            BracketWhitespace();
             ConsumeRightParenthesis();
             Whitespace();
 
@@ -1789,7 +1791,7 @@ namespace DMCompiler.Compiler.DM {
                 PathArray(ref path.Path);
 
                 if (path.Path.LastElement is "usr" or "src" or "args" or "world" or "global" or "callee" or "caller")
-                    Compiler.Emit(WarningCode.SoftReservedKeyword, loc, $"Proc parameter named {path.Path.LastElement} overrides the built-in {path.Path.LastElement} in this context.");
+                    Compiler.Emit(WarningCode.ProcArgumentBuiltinName, loc, $"Proc parameter named {path.Path.LastElement} overrides the built-in {path.Path.LastElement} in this context.");
 
                 DMASTExpression? value = null;
                 DMASTExpression? possibleValues = null;
