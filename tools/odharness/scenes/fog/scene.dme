@@ -1,0 +1,7 @@
+// Camera fog prototype for TGMC overwatch.
+// Default: soft reveal disks glide with each camera (client side) and are masked by server-side LOS markers
+//          (soft 64px sprites per visible turf, faded in/out), so open-space edges are smooth and walls still occlude.
+// -D TILE_STATIC: TGMC-style hard per-turf static swapped per step, for comparison.
+// -D NO_LOS: reveal disks only (sees through walls), to show what the LOS layer adds.
+#include "scene.dm"
+#include "skin.dmf"

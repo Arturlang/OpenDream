@@ -1,0 +1,454 @@
+prompt#8fabe78cc8	t:"OK"
+prompt#8e7d9f4a2d	t:"OK"
+prompt#665644c9fa	t:"Yes"
+prompt#49ab13b7b4	t:"Yes"
+prompt#0e7be78ae0	t:"No"
+prompt#9370928376	t:"Yes"
+prompt#81b289144b	t:"Yes"
+prompt#ee70164435	t:"No"
+prompt#07de07be0a	t:"Maybe"
+prompt#7e7a3bd79f	t:"Yes"
+prompt#87fbe134bb	t:"Yes"
+prompt#a261ccdd73	t:"OK"
+prompt#ab798c1cf7	t:"B"
+prompt#76dfdee1aa	t:"A"
+prompt#dca96c305a	t:"OK"
+prompt#859e4d13e8	t:"B"
+prompt#d3417cb613	t:"C"
+prompt#d603da6b35	t:"B"
+prompt#dcb61b592a	t:"OK"
+prompt#04ac960cc7	t:"Yes"
+prompt#623c1cc0cf	t:"A"
+prompt#8a070940ee	t:"Long label xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+prompt#20a47a8ea6	t:"Ja ✓"
+prompt#4982bc9d23	t:"Да"
+prompt#8b0a4b222f	t:"日本"
+prompt#881916cfcd	t:"Cancel"
+prompt#648bde4a7d	t:"A"
+prompt#8b8ed01020	t:"A"
+prompt#a244689aa8	t:"A"
+prompt#fe75a0798e	t:"A"
+prompt#da984735c2	t:"A"
+prompt#b76d11cb5e	t:"A"
+prompt#3ef8325e59	t:"A"
+prompt#bdd90239ea	t:"A"
+prompt#40850f6c80	t:"B4"
+prompt#1c1cd1bbbb	n:42~42
+prompt#4d415cf360	n:3~3
+prompt#e66625c031	n:-2.5~-2.5
+prompt#f18527f15a	n:0~0
+prompt#ad9b66c20a	n:16777216~16777216
+prompt#1d8426a5e4	n:7~7
+prompt#fa0e754924	n:0.1~0.10000000149
+prompt#fd35f5750e	n:10000000~10000000
+prompt#a718bff735	n:12~12
+prompt#efad2b85a2	n:5~5
+prompt#c3476f746b	n:8~8
+prompt#3aa5dcd072	null
+prompt#5417743d77	null
+prompt#ec827caddf	null
+prompt#128a43f1fe	t:"#00ff00"
+prompt#8aacea1b9e	t:"#ff0000"
+prompt#9f468841f3	t:"#000000"
+prompt#e02b593160	null
+prompt#8887d67dc6	null
+prompt#562d961278	null
+prompt#abe38dfb99	null
+prompt#394718737c	null
+prompt#1ed666a3dc	null
+prompt#e78e2b33dd	null
+prompt#b89ca2de45	t:"Bob"
+prompt#05b3ffef91	t:"def"
+prompt#13106226d3	t:""
+prompt#dd8b2eafe2	t:"Grüße ☃ 日本語 😀"
+prompt#d4e0a12bf1	t:"[x] "q" <b>&amp;"
+prompt#3a6f058f28	t:"abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij"
+prompt#a8adc88a96	t:""
+prompt#38f0f84671	t:"Bob"
+prompt#f377266ee4	t:"5"
+prompt#cd23ab3f31	t:""
+prompt#69fe7dc3cb	t:"/list"
+prompt#2340121e54	t:"Grüße ☃ 日本語 😀"
+prompt#9580550c9d	t:"Bob"
+prompt#8e81378a8b	null
+prompt#1d97cf8f6e	t:""
+prompt#6631c14124	null
+prompt#dd6df8bc61	null
+prompt#5b6ff01ef6	t:"hello world"
+prompt#932ed261f3	t:"line1\nline2"
+prompt#c17e52e4ff	t:""
+prompt#d0cc79e066	null
+prompt#cc5c79c173	t:"def"
+prompt#6fd75a4ec5	t:"def"
+prompt#07723ce680	t:"x"
+prompt#f0bb58afe9	t:"d"
+prompt#e69c9eb649	t:"d"
+prompt#1bf15c6f1b	t:"d"
+prompt#6a21b04dda	t:"d"
+prompt#d99eac4b87	t:"d"
+prompt#c3e6f50c20	t:"d"
+prompt#d330709e50	t:"d"
+prompt#5fdc570d30	t:"d"
+prompt#f36f397c9b	t:"alpha"
+prompt#c70c4d2035	t:"beta"
+prompt#699169372a	t:"gamma"
+prompt#bec49fea34	t:"alpha"
+prompt#2eb8b9ec18	t:"gamma"
+prompt#6224878f81	t:"beta"
+prompt#b74d4acc49	t:"日本"
+prompt#5f4b9d8cb6	t:"b"
+prompt#c9ede36210	t:"long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long "
+prompt#eef0807167	t:"gamma"
+prompt#d53bce0feb	t:"alpha"
+prompt#afd3b4ab1d	t:"alpha"
+prompt#18bf074527	t:"2"
+prompt#fcccca39ea	n:2~2
+prompt#54f5966381	t:"beta"
+prompt#6ce1398d36	null
+prompt#6917bd0d4b	null
+prompt#3088cf18ae	null
+prompt#328eb7a415	null
+prompt#e8f246431a	n:2.5~2.5
+prompt#0712cc5e45	t:"b"
+prompt#a5acdce23a	t:"a"
+prompt#9a9764e2c4	t:"b"
+prompt#38c4bdf504	a:/obj/prompts_x_pear@1,1,1 t:"pear"
+prompt#a276fab420	a:/obj/prompts_x_apple@1,1,1 t:"apple"
+prompt#6fce870ce2	a:/obj/prompts_x_pear@1,1,1 t:"pear"
+prompt#2ace38bf42	a:/obj/prompts_x_apple@1,1,1 t:"apple"
+prompt#826d4404cc	t:"apple"
+prompt#23e5247a38	t:"x"
+prompt#facf712530	a:/obj/prompts_x_improper@1,1,1 t:"ÿ\x16the thing"
+prompt#d055345e23	a:/turf@1,1,1
+prompt#d6d0f32bd7	d:/datum/prompts_x_plain
+prompt#a94f5c052c	a:/obj/prompts_x_pear@1,1,1 t:"pear"
+prompt#f115054b76	p:/datum/prompts_x_named
+prompt#312043dcc2	t:"a"
+prompt#697a69c12f	t:"b"
+prompt#36495e1f38	t:"c"
+prompt#9096184e1a	t:"a"
+prompt#4f0a4ce352	n:3~3
+prompt#0971db49cb	t:"y"
+prompt#d230c62e7e	t:"only"
+prompt#deaed206b4	t:"only"
+prompt#addb28ef69	null
+prompt#d0a0012470	null
+prompt#3cb689c5e9	t:"item50"
+prompt#7f1f4facd8	t:"item37"
+prompt#e9e644a2a1	t:"alpha"
+prompt#7b402c2e87	t:"alpha"
+prompt#15bee0496c	n:3~3
+prompt#656ebfadce	n:1000~1000
+prompt#e38b116521	n:42~42
+prompt#5839d24f9e	n:16~16
+prompt#316ed5c5fb	n:3~3
+prompt#a5ae08e1fa	null
+prompt#9e2c4ef642	null
+prompt#ebffa1d658	t:"d"
+prompt#b47087b23f	t:""
+prompt#3adb8acc88	null
+prompt#8d6273507d	null
+prompt#77f409204d	t:""
+prompt#22ed10aa7f	t:""
+prompt#2352ffff6a	COMPILE_ERROR
+prompt#148155a8cc	COMPILE_ERROR
+prompt#8fabe78cc8:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Sure?", "selected": null, "text": null, "title": "Confirm"}
+prompt#8fabe78cc8:answer	ok
+prompt#8e7d9f4a2d:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Sure?", "selected": null, "text": null, "title": ""}
+prompt#8e7d9f4a2d:answer	ok
+prompt#665644c9fa:ui	j:{"buttons": ["Yes"], "default_button": "Yes", "items": null, "message": "Sure?", "selected": null, "text": null, "title": "Confirm"}
+prompt#665644c9fa:answer	ok
+prompt#49ab13b7b4:ui	j:{"buttons": ["Yes", "No"], "default_button": "Yes", "items": null, "message": "Sure?", "selected": null, "text": null, "title": "Confirm"}
+prompt#49ab13b7b4:answer	ok
+prompt#0e7be78ae0:ui	j:{"buttons": ["Yes", "No"], "default_button": "Yes", "items": null, "message": "Sure?", "selected": null, "text": null, "title": "Confirm"}
+prompt#0e7be78ae0:answer	ok
+prompt#9370928376:ui	j:{"buttons": ["Yes", "No"], "default_button": "Yes", "items": null, "message": "Sure?", "selected": null, "text": null, "title": "Confirm"}
+prompt#9370928376:answer	ok
+prompt#81b289144b:ui	j:{"buttons": ["Yes", "No", "Maybe"], "default_button": "Yes", "items": null, "message": "Sure?", "selected": null, "text": null, "title": "Confirm"}
+prompt#81b289144b:answer	ok
+prompt#ee70164435:ui	j:{"buttons": ["Yes", "No", "Maybe"], "default_button": "Yes", "items": null, "message": "Sure?", "selected": null, "text": null, "title": "Confirm"}
+prompt#ee70164435:answer	ok
+prompt#07de07be0a:ui	j:{"buttons": ["Yes", "No", "Maybe"], "default_button": "Yes", "items": null, "message": "Sure?", "selected": null, "text": null, "title": "Confirm"}
+prompt#07de07be0a:answer	ok
+prompt#7e7a3bd79f:ui	j:{"buttons": ["Yes", "No", "Maybe"], "default_button": "Yes", "items": null, "message": "Sure?", "selected": null, "text": null, "title": "Confirm"}
+prompt#7e7a3bd79f:answer	ok
+prompt#87fbe134bb:ui	j:{"buttons": ["Yes", "No", "Maybe"], "default_button": "Yes", "items": null, "message": "Sure?", "selected": null, "text": null, "title": "Confirm"}
+prompt#87fbe134bb:answer	ok STUCK
+prompt#a261ccdd73:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Sure?", "selected": null, "text": null, "title": ""}
+prompt#a261ccdd73:answer	ok
+prompt#ab798c1cf7:ui	j:{"buttons": ["A", "B"], "default_button": "A", "items": null, "message": "Sure?", "selected": null, "text": null, "title": "Confirm"}
+prompt#ab798c1cf7:answer	ok
+prompt#76dfdee1aa:ui	j:{"buttons": ["A", "B"], "default_button": "A", "items": null, "message": "Sure?", "selected": null, "text": null, "title": "Confirm"}
+prompt#76dfdee1aa:answer	ok
+prompt#dca96c305a:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "m", "selected": null, "text": null, "title": "t"}
+prompt#dca96c305a:answer	ok
+prompt#859e4d13e8:ui	j:{"buttons": ["OK", "B"], "default_button": "OK", "items": null, "message": "m", "selected": null, "text": null, "title": "t"}
+prompt#859e4d13e8:answer	ok
+prompt#d3417cb613:ui	j:{"buttons": ["A", "C"], "default_button": "A", "items": null, "message": "m", "selected": null, "text": null, "title": "t"}
+prompt#d3417cb613:answer	ok
+prompt#d603da6b35:ui	j:{"buttons": ["OK", "B"], "default_button": "OK", "items": null, "message": "m", "selected": null, "text": null, "title": "t"}
+prompt#d603da6b35:answer	ok
+prompt#dcb61b592a:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "m", "selected": null, "text": null, "title": "t"}
+prompt#dcb61b592a:answer	failed: no button '2' at ['press', '2']
+prompt#04ac960cc7:ui	j:{"buttons": ["Yes"], "default_button": "Yes", "items": null, "message": "m", "selected": null, "text": null, "title": "t"}
+prompt#04ac960cc7:answer	ok
+prompt#623c1cc0cf:ui	j:{"buttons": ["A", "B"], "default_button": "A", "items": null, "message": "m", "selected": null, "text": null, "title": "t"}
+prompt#623c1cc0cf:answer	ok
+prompt#8a070940ee:ui	j:{"buttons": ["Short", "Long label xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"], "default_button": "Short", "items": null, "message": "m", "selected": null, "text": null, "title": "t"}
+prompt#8a070940ee:answer	ok
+prompt#20a47a8ea6:ui	j:{"buttons": ["Ja ✓", "Да", "日本"], "default_button": "Ja ✓", "items": null, "message": "m", "selected": null, "text": null, "title": "t"}
+prompt#20a47a8ea6:answer	ok
+prompt#4982bc9d23:ui	j:{"buttons": ["Ja ✓", "Да", "日本"], "default_button": "Ja ✓", "items": null, "message": "m", "selected": null, "text": null, "title": "t"}
+prompt#4982bc9d23:answer	ok
+prompt#8b0a4b222f:ui	j:{"buttons": ["Ja ✓", "Да", "日本"], "default_button": "Ja ✓", "items": null, "message": "m", "selected": null, "text": null, "title": "t"}
+prompt#8b0a4b222f:answer	ok
+prompt#881916cfcd:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": null, "message": "m", "selected": null, "text": null, "title": "t"}
+prompt#881916cfcd:answer	ok
+prompt#648bde4a7d:ui	j:{"buttons": ["A"], "default_button": "A", "items": null, "message": "Sure?", "selected": null, "text": null, "title": ""}
+prompt#648bde4a7d:answer	ok
+prompt#8b8ed01020:ui	j:{"buttons": ["A"], "default_button": "A", "items": null, "message": "Sure?", "selected": null, "text": null, "title": ""}
+prompt#8b8ed01020:answer	ok
+prompt#a244689aa8:ui	j:{"buttons": ["A"], "default_button": "A", "items": null, "message": "", "selected": null, "text": null, "title": "Title"}
+prompt#a244689aa8:answer	ok
+prompt#fe75a0798e:ui	j:{"buttons": ["A"], "default_button": "A", "items": null, "message": "", "selected": null, "text": null, "title": "Title"}
+prompt#fe75a0798e:answer	ok
+prompt#da984735c2:ui	j:{"buttons": ["A"], "default_button": "A", "items": null, "message": "", "selected": null, "text": null, "title": ""}
+prompt#da984735c2:answer	ok
+prompt#b76d11cb5e:ui	j:{"buttons": ["A"], "default_button": "A", "items": null, "message": "line one\nline two\nline three", "selected": null, "text": null, "title": "Lines"}
+prompt#b76d11cb5e:answer	ok
+prompt#3ef8325e59:ui	j:{"buttons": ["A"], "default_button": "A", "items": null, "message": "word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word ", "selected": null, "text": null, "title": "Long"}
+prompt#3ef8325e59:answer	ok
+prompt#bdd90239ea:ui	j:{"buttons": ["A"], "default_button": "A", "items": null, "message": "Grüße ☃ 日本語", "selected": null, "text": null, "title": "Tïtle ✓"}
+prompt#bdd90239ea:answer	ok
+prompt#40850f6c80:ui	j:{"buttons": ["B4"], "default_button": "B4", "items": null, "message": "Value: 3", "selected": null, "text": null, "title": "Expr 6"}
+prompt#40850f6c80:answer	ok
+prompt#1c1cd1bbbb:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "3", "title": "Count"}
+prompt#1c1cd1bbbb:answer	ok
+prompt#4d415cf360:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "3", "title": "Count"}
+prompt#4d415cf360:answer	ok
+prompt#e66625c031:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "3", "title": "Count"}
+prompt#e66625c031:answer	ok
+prompt#f18527f15a:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "3", "title": "Count"}
+prompt#f18527f15a:answer	ok
+prompt#ad9b66c20a:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "3", "title": "Count"}
+prompt#ad9b66c20a:answer	ok
+prompt#1d8426a5e4:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "", "title": "Count"}
+prompt#1d8426a5e4:answer	ok
+prompt#fa0e754924:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "0.1", "title": "Count"}
+prompt#fa0e754924:answer	ok
+prompt#fd35f5750e:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "10000000", "title": "Count"}
+prompt#fd35f5750e:answer	ok
+prompt#a718bff735:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "12", "title": "Count"}
+prompt#a718bff735:answer	ok
+prompt#efad2b85a2:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "", "title": "Count"}
+prompt#efad2b85a2:answer	ok
+prompt#c3476f746b:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "3", "title": "Count"}
+prompt#c3476f746b:answer	ok
+prompt#3aa5dcd072:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "3", "title": "Count"}
+prompt#3aa5dcd072:answer	ok
+prompt#5417743d77:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "", "title": "Count"}
+prompt#5417743d77:answer	ok
+prompt#ec827caddf:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "3", "title": "Count"}
+prompt#ec827caddf:answer	ok
+prompt#128a43f1fe:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["RGB", "HSL"], "message": "Pick\n&R\n&G\n&B\nNew\nCurrent", "selected": 0, "text": "0", "title": "Colour"}
+prompt#128a43f1fe:answer	ok
+prompt#8aacea1b9e:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["RGB", "HSL"], "message": "Pick\n&R\n&G\n&B\nNew\nCurrent", "selected": 0, "text": "255", "title": "Colour"}
+prompt#8aacea1b9e:answer	ok
+prompt#9f468841f3:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["RGB", "HSL"], "message": "Pick\n&R\n&G\n&B\nNew\nCurrent", "selected": 0, "text": "0", "title": "Colour"}
+prompt#9f468841f3:answer	ok
+prompt#e02b593160:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": ["RGB", "HSL"], "message": "Pick\n&R\n&G\n&B\nNew\nCurrent", "selected": 0, "text": "18", "title": "Colour"}
+prompt#e02b593160:answer	ok
+prompt#8887d67dc6:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": ["\"", "turf", "area"], "message": "Any?", "selected": 0, "text": null, "title": "Any"}
+prompt#8887d67dc6:answer	ok
+prompt#562d961278:ui	NO_PROMPT
+prompt#562d961278:answer	no window; client restarted
+prompt#abe38dfb99:ui	NO_PROMPT
+prompt#abe38dfb99:answer	no window; client restarted
+prompt#394718737c:ui	NO_PROMPT
+prompt#394718737c:answer	no window; client restarted
+prompt#1ed666a3dc:ui	NO_PROMPT
+prompt#1ed666a3dc:answer	no window; client restarted
+prompt#e78e2b33dd:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": ["\""], "message": "Val?", "selected": 0, "text": null, "title": "Mixed"}
+prompt#e78e2b33dd:answer	ok
+prompt#b89ca2de45:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "def", "title": "Name"}
+prompt#b89ca2de45:answer	ok
+prompt#05b3ffef91:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "def", "title": "Name"}
+prompt#05b3ffef91:answer	ok
+prompt#13106226d3:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "def", "title": "Name"}
+prompt#13106226d3:answer	ok
+prompt#dd8b2eafe2:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "def", "title": "Name"}
+prompt#dd8b2eafe2:answer	ok
+prompt#d4e0a12bf1:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "", "title": "Name"}
+prompt#d4e0a12bf1:answer	ok
+prompt#3a6f058f28:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "", "title": "Name"}
+prompt#3a6f058f28:answer	ok
+prompt#a8adc88a96:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "", "title": "Name"}
+prompt#a8adc88a96:answer	ok
+prompt#38f0f84671:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "def", "title": "Name"}
+prompt#38f0f84671:answer	ok
+prompt#f377266ee4:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "5", "title": "Name"}
+prompt#f377266ee4:answer	ok
+prompt#cd23ab3f31:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "", "title": "Name"}
+prompt#cd23ab3f31:answer	ok
+prompt#69fe7dc3cb:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "/list", "title": "Name"}
+prompt#69fe7dc3cb:answer	ok
+prompt#2340121e54:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "Grüße ☃ 日本語 😀", "title": "Name"}
+prompt#2340121e54:answer	ok
+prompt#9580550c9d:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "def", "title": "Name"}
+prompt#9580550c9d:answer	ok
+prompt#8e81378a8b:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "def", "title": "Name"}
+prompt#8e81378a8b:answer	ok
+prompt#1d97cf8f6e:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "def", "title": "Name"}
+prompt#1d97cf8f6e:answer	ok
+prompt#6631c14124:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "def", "title": "Name"}
+prompt#6631c14124:answer	ok
+prompt#dd6df8bc61:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "def", "title": "Name"}
+prompt#dd6df8bc61:answer	ok
+prompt#5b6ff01ef6:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Write", "selected": null, "text": "a", "title": "Msg"}
+prompt#5b6ff01ef6:answer	ok
+prompt#932ed261f3:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Write", "selected": null, "text": "line1\r\nline2", "title": "Msg"}
+prompt#932ed261f3:answer	ok
+prompt#c17e52e4ff:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Write", "selected": null, "text": "a", "title": "Msg"}
+prompt#c17e52e4ff:answer	ok
+prompt#d0cc79e066:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": null, "message": "Write", "selected": null, "text": "a", "title": "Msg"}
+prompt#d0cc79e066:answer	ok
+prompt#cc5c79c173:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "def", "title": "Name"}
+prompt#cc5c79c173:answer	ok
+prompt#6fd75a4ec5:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "def", "title": "Name"}
+prompt#6fd75a4ec5:answer	ok
+prompt#07723ce680:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "", "title": ""}
+prompt#07723ce680:answer	ok
+prompt#f0bb58afe9:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "d", "title": ""}
+prompt#f0bb58afe9:answer	ok
+prompt#e69c9eb649:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Name?", "selected": null, "text": "d", "title": ""}
+prompt#e69c9eb649:answer	ok
+prompt#1bf15c6f1b:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "", "selected": null, "text": "d", "title": "Title"}
+prompt#1bf15c6f1b:answer	ok
+prompt#6a21b04dda:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "", "selected": null, "text": "d", "title": "Title"}
+prompt#6a21b04dda:answer	ok
+prompt#d99eac4b87:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "", "selected": null, "text": "d", "title": ""}
+prompt#d99eac4b87:answer	ok
+prompt#c3e6f50c20:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word ", "selected": null, "text": "d", "title": "Long"}
+prompt#c3e6f50c20:answer	ok
+prompt#d330709e50:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "one\ntwo\nthree", "selected": null, "text": "d", "title": "Lines"}
+prompt#d330709e50:answer	ok
+prompt#5fdc570d30:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Grüße ☃ 日本語 😀", "selected": null, "text": "d", "title": "Tïtle ✓"}
+prompt#5fdc570d30:answer	ok
+prompt#f36f397c9b:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["alpha", "beta", "gamma"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#f36f397c9b:answer	ok
+prompt#c70c4d2035:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["alpha", "beta", "gamma"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#c70c4d2035:answer	ok
+prompt#699169372a:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["alpha", "beta", "gamma"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#699169372a:answer	ok
+prompt#bec49fea34:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["alpha", "beta", "gamma"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#bec49fea34:answer	ok
+prompt#2eb8b9ec18:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["alpha", "beta", "gamma"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#2eb8b9ec18:answer	ok
+prompt#6224878f81:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["alpha", "beta", "gamma"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#6224878f81:answer	ok
+prompt#b74d4acc49:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["äpfel", "日本", "☃"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#b74d4acc49:answer	ok
+prompt#5f4b9d8cb6:ui	NO_PROMPT
+prompt#c9ede36210:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long ", "b"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#c9ede36210:answer	ok
+prompt#eef0807167:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["alpha", "beta", "gamma"], "message": "Pick", "selected": 2, "text": null, "title": "List"}
+prompt#eef0807167:answer	ok
+prompt#d53bce0feb:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["alpha", "beta", "gamma"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#d53bce0feb:answer	ok
+prompt#afd3b4ab1d:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["alpha", "beta", "gamma"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#afd3b4ab1d:answer	ok
+prompt#18bf074527:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["1", "2", "3"], "message": "Pick", "selected": 1, "text": null, "title": "List"}
+prompt#18bf074527:answer	ok
+prompt#fcccca39ea:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["1", "2", "3"], "message": "Pick", "selected": 1, "text": null, "title": "List"}
+prompt#fcccca39ea:answer	ok
+prompt#54f5966381:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["alpha", "beta", "gamma"], "message": "Pick", "selected": 1, "text": null, "title": "List"}
+prompt#54f5966381:answer	ok
+prompt#6ce1398d36:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": ["alpha", "beta", "gamma"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#6ce1398d36:answer	ok
+prompt#6917bd0d4b:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": ["alpha", "beta", "gamma"], "message": "Pick", "selected": 1, "text": null, "title": "List"}
+prompt#6917bd0d4b:answer	ok
+prompt#3088cf18ae:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": null, "message": "Pick", "selected": null, "text": "", "title": "List"}
+prompt#3088cf18ae:answer	ok
+prompt#328eb7a415:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": ["alpha", "beta", "gamma"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#328eb7a415:answer	ok
+prompt#e8f246431a:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["1", "2.5", "-3", "10000000"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#e8f246431a:answer	ok
+prompt#0712cc5e45:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["a", "b"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#0712cc5e45:answer	ok
+prompt#a5acdce23a:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["a", "b"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#a5acdce23a:answer	ok
+prompt#9a9764e2c4:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["a", "b"], "message": "Pick", "selected": 1, "text": null, "title": "List"}
+prompt#9a9764e2c4:answer	ok
+prompt#38c4bdf504:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["apple", "pear"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#38c4bdf504:answer	ok
+prompt#a276fab420:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["apple", "pear"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#a276fab420:answer	ok
+prompt#6fce870ce2:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["apple", "pear"], "message": "Pick", "selected": 1, "text": null, "title": "List"}
+prompt#6fce870ce2:answer	ok
+prompt#2ace38bf42:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["apple", "pear"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#2ace38bf42:answer	ok
+prompt#826d4404cc:ui	NO_PROMPT
+prompt#23e5247a38:ui	NO_PROMPT
+prompt#facf712530:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["the thing", "x"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#facf712530:answer	ok
+prompt#d055345e23:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["turf", "x"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#d055345e23:answer	ok
+prompt#d6d0f32bd7:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["named datum", "/datum/prompts_x_plain"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#d6d0f32bd7:answer	ok
+prompt#a94f5c052c:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["apple", "pear"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#a94f5c052c:answer	ok
+prompt#f115054b76:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["/obj", "/mob", "/datum/prompts_x_named"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#f115054b76:answer	ok
+prompt#312043dcc2:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["a", "/list"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#312043dcc2:answer	ok
+prompt#697a69c12f:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["a", "b", "c"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#697a69c12f:answer	ok
+prompt#36495e1f38:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["a", "b", "c"], "message": "Pick", "selected": 2, "text": null, "title": "List"}
+prompt#36495e1f38:answer	ok
+prompt#9096184e1a:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["a", "b", "c"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#9096184e1a:answer	ok
+prompt#4f0a4ce352:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["a", "b", "c"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#4f0a4ce352:answer	ok
+prompt#0971db49cb:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["x", "y"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#0971db49cb:answer	ok
+prompt#d230c62e7e:ui	NO_PROMPT
+prompt#deaed206b4:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": ["only"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#deaed206b4:answer	ok
+prompt#addb28ef69:ui	NO_PROMPT
+prompt#d0a0012470:ui	NO_PROMPT
+prompt#3cb689c5e9:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["item1", "item2", "item3", "item4", "item5", "item6", "item7", "item8", "item9", "item10", "item11", "item12", "item13", "item14", "item15", "item16", "item17", "item18", "item19", "item20", "item21", "item22", "item23", "item24", "item25", "item26", "item27", "item28", "item29", "item30", "item31", "item32", "item33", "item34", "item35", "item36", "item37", "item38", "item39", "item40", "item41", "item42", "item43", "item44", "item45", "item46", "item47", "item48", "item49", "item50"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#3cb689c5e9:answer	ok
+prompt#7f1f4facd8:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["item1", "item2", "item3", "item4", "item5", "item6", "item7", "item8", "item9", "item10", "item11", "item12", "item13", "item14", "item15", "item16", "item17", "item18", "item19", "item20", "item21", "item22", "item23", "item24", "item25", "item26", "item27", "item28", "item29", "item30", "item31", "item32", "item33", "item34", "item35", "item36", "item37", "item38", "item39", "item40", "item41", "item42", "item43", "item44", "item45", "item46", "item47", "item48", "item49", "item50"], "message": "Pick", "selected": 36, "text": null, "title": "List"}
+prompt#7f1f4facd8:answer	ok
+prompt#e9e644a2a1:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["alpha", "beta", "gamma"], "message": "", "selected": 0, "text": null, "title": ""}
+prompt#e9e644a2a1:answer	ok
+prompt#7b402c2e87:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["alpha", "beta", "gamma"], "message": "one\ntwo", "selected": 0, "text": null, "title": "List"}
+prompt#7b402c2e87:answer	ok
+prompt#15bee0496c:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "3", "title": "Count"}
+prompt#15bee0496c:answer	ok
+prompt#656ebfadce:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "3", "title": "Count"}
+prompt#656ebfadce:answer	ok
+prompt#e38b116521:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "3", "title": "Count"}
+prompt#e38b116521:answer	ok
+prompt#5839d24f9e:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "3", "title": "Count"}
+prompt#5839d24f9e:answer	ok
+prompt#316ed5c5fb:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "3", "title": "Count"}
+prompt#316ed5c5fb:answer	ok
+prompt#9e2c4ef642:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "3", "title": "Count"}
+prompt#9e2c4ef642:answer	ok STUCK
+prompt#a5ae08e1fa:ui	NO_PROMPT
+prompt#a5ae08e1fa:answer	no window; client restarted
+prompt#ebffa1d658:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": null, "message": "Nothing?", "selected": null, "text": "d", "title": "Null"}
+prompt#ebffa1d658:answer	ok
+prompt#b47087b23f:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Pick", "selected": null, "text": "", "title": "T"}
+prompt#b47087b23f:answer	failed: no list at ['select', 1]
+prompt#8d6273507d:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Pick\nas number", "selected": null, "text": "", "title": "T"}
+prompt#8d6273507d:answer	failed: no list at ['select', 2] STUCK
+prompt#3adb8acc88:ui	NO_PROMPT
+prompt#3adb8acc88:answer	no window; client restarted
+prompt#77f409204d:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Pick", "selected": null, "text": "", "title": "T"}
+prompt#77f409204d:answer	ok
+prompt#22ed10aa7f:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Pick", "selected": null, "text": "", "title": "T"}
+prompt#22ed10aa7f:answer	ok STUCK
+prompt#2352ffff6a:ui	NO_PROMPT
+prompt#148155a8cc:ui	NO_PROMPT

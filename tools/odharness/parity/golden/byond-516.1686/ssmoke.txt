@@ -1,0 +1,7 @@
+winget#115f29d261	t:"hello"
+winget#43804ae672	t:"120x30"
+winget#58cc1a49ea	t:"parity"
+winset#cd81f54e96	t:"changed"
+winset#95c0340882	t:"text=quoted+value;font-size=12"
+winexists#957a55625e	t:"BUTTON"
+winexists#426e101f64	t:""

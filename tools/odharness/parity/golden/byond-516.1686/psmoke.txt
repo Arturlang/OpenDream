@@ -1,0 +1,21 @@
+prompt#25865db9fb	t:"Bob"
+prompt#3294686869	null
+prompt#1c1cd1bbbb	n:42~42
+prompt#f937d968f3	t:"line1"
+prompt#c70c4d2035	t:"beta"
+prompt#eef0807167	t:"gamma"
+prompt#ee70164435	t:"No"
+prompt#25865db9fb:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Your name?", "selected": null, "text": "def", "title": "Name"}
+prompt#25865db9fb:answer	ok
+prompt#3294686869:ui	j:{"buttons": ["OK", "Cancel"], "default_button": "OK", "items": null, "message": "Your name?", "selected": null, "text": "def", "title": "Name"}
+prompt#3294686869:answer	ok
+prompt#1c1cd1bbbb:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "How many?\nas number", "selected": null, "text": "3", "title": "Count"}
+prompt#1c1cd1bbbb:answer	ok
+prompt#f937d968f3:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": null, "message": "Write", "selected": null, "text": "a", "title": "Msg"}
+prompt#f937d968f3:answer	ok
+prompt#c70c4d2035:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["alpha", "beta", "gamma"], "message": "Pick", "selected": 0, "text": null, "title": "List"}
+prompt#c70c4d2035:answer	ok
+prompt#eef0807167:ui	j:{"buttons": ["OK"], "default_button": "OK", "items": ["alpha", "beta", "gamma"], "message": "Pick", "selected": 2, "text": null, "title": "List"}
+prompt#eef0807167:answer	ok
+prompt#ee70164435:ui	j:{"buttons": ["Yes", "No", "Maybe"], "default_button": "Yes", "items": null, "message": "Sure?", "selected": null, "text": null, "title": "Confirm"}
+prompt#ee70164435:answer	ok

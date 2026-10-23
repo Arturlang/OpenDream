@@ -1,0 +1,463 @@
+macro "macro"
+	elem "mac_f5"
+		name = "F5"
+		command = "skinxecho \"f5\""
+	elem "mac_ctrl"
+		name = "CTRL+E"
+		command = "skinxecho \"ctrl\""
+	elem
+		name = "F6"
+		command = "skinxecho \"f6\""
+
+macro "macro2"
+	elem "mac2_f7"
+		name = "F7"
+		command = "skinxecho \"f7\""
+
+menu "menu"
+	elem "m_file"
+		name = "&File"
+		command = ""
+	elem "m_chk"
+		name = "Check me"
+		command = "skinxecho \"chk\""
+		category = "&File"
+		can-check = true
+		is-checked = false
+	elem "m_r1"
+		name = "Radio one"
+		command = ""
+		category = "&File"
+		can-check = true
+		group = "mg"
+		is-checked = true
+	elem "m_r2"
+		name = "Radio two"
+		command = ""
+		category = "&File"
+		can-check = true
+		group = "mg"
+		is-checked = false
+	elem "m_dis"
+		name = "Disabled"
+		command = ""
+		category = "&File"
+		is-disabled = true
+	elem "m_cmd"
+		name = "Command"
+		command = "skinxecho \"menu\""
+		category = "&File"
+
+menu "menu2"
+	elem "m2_top"
+		name = "&Other"
+		command = ""
+	elem "m2_item"
+		name = "Item"
+		command = ""
+		category = "&Other"
+
+window "lpane"
+	elem "lpane"
+		type = MAIN
+		pos = 0,0
+		size = 200x200
+		anchor1 = none
+		anchor2 = none
+		background-color = #f0f0f0
+		is-pane = true
+		title = "Left"
+	elem "lp_lbl"
+		type = LABEL
+		pos = 0,0
+		size = 180x20
+		anchor1 = none
+		anchor2 = none
+		background-color = #f0f0f0
+		text-color = #000000
+		text = "left"
+	elem "dup"
+		type = LABEL
+		pos = 0,30
+		size = 100x20
+		anchor1 = none
+		anchor2 = none
+		text = "dupL"
+
+window "rpane"
+	elem "rpane"
+		type = MAIN
+		pos = 0,0
+		size = 200x200
+		anchor1 = none
+		anchor2 = none
+		is-pane = true
+		title = "Right"
+	elem "rp_btn"
+		type = BUTTON
+		pos = 0,0
+		size = 100x24
+		anchor1 = none
+		anchor2 = none
+		text = "R"
+		command = ""
+	elem "dup"
+		type = LABEL
+		pos = 0,30
+		size = 100x20
+		anchor1 = none
+		anchor2 = none
+		text = "dupR"
+
+window "tpane1"
+	elem "tpane1"
+		type = MAIN
+		pos = 0,0
+		size = 290x160
+		anchor1 = none
+		anchor2 = none
+		is-pane = true
+		title = "One"
+	elem "tp1_lbl"
+		type = LABEL
+		pos = 0,0
+		size = 200x20
+		anchor1 = none
+		anchor2 = none
+		text = "tab one"
+
+window "tpane2"
+	elem "tpane2"
+		type = MAIN
+		pos = 0,0
+		size = 290x160
+		anchor1 = none
+		anchor2 = none
+		is-pane = true
+		title = "Two"
+	elem "tp2_lbl"
+		type = LABEL
+		pos = 0,0
+		size = 200x20
+		anchor1 = none
+		anchor2 = none
+		text = "tab two"
+
+window "spane"
+	elem "spane"
+		type = MAIN
+		pos = 0,0
+		size = 200x150
+		anchor1 = none
+		anchor2 = none
+		is-pane = true
+		title = "Spare"
+	elem "sp_lbl"
+		type = LABEL
+		pos = 0,0
+		size = 150x20
+		anchor1 = none
+		anchor2 = none
+		text = "spare"
+
+window "win2"
+	elem "win2"
+		type = MAIN
+		pos = 120,120
+		size = 300x200
+		anchor1 = none
+		anchor2 = none
+		background-color = #e0e0e0
+		is-visible = false
+		title = "Second"
+		macro = "macro"
+		statusbar = false
+		can-close = true
+		can-minimize = true
+		can-resize = true
+		titlebar = true
+		alpha = 255
+	elem "win2_lbl"
+		type = LABEL
+		pos = 0,0
+		size = 200x20
+		anchor1 = none
+		anchor2 = none
+		text = "second"
+	elem "win2_btn"
+		type = BUTTON
+		pos = 0,30
+		size = 100x24
+		anchor1 = none
+		anchor2 = none
+		text = "Two"
+		command = ""
+
+window "mainwindow"
+	elem "mainwindow"
+		type = MAIN
+		pos = 0,0
+		size = 1040x720
+		anchor1 = none
+		anchor2 = none
+		background-color = #e0e0e0
+		is-default = true
+		title = "parity skin"
+		menu = "menu"
+		macro = "macro"
+		statusbar = true
+		can-resize = true
+	elem "map"
+		type = MAP
+		pos = 0,0
+		size = 288x224
+		anchor1 = none
+		anchor2 = none
+		is-default = true
+		zoom = 1
+		zoom-mode = normal
+		text-mode = false
+		letterbox = true
+		style = ""
+	elem "out"
+		type = OUTPUT
+		pos = 296,0
+		size = 300x160
+		anchor1 = none
+		anchor2 = none
+		background-color = #ffffff
+		text-color = #000000
+		is-default = true
+		max-lines = 1000
+		link-color = #0000ff
+		visited-color = #ff00ff
+		legacy-size = true
+		enable-http-images = false
+		style = ""
+	elem "inp"
+		type = INPUT
+		pos = 296,166
+		size = 300x24
+		anchor1 = none
+		anchor2 = none
+		background-color = #ffffff
+		text-color = #000000
+		is-default = true
+		command = ""
+		is-password = false
+		no-command = false
+	elem "brw"
+		type = BROWSER
+		pos = 604,0
+		size = 430x224
+		anchor1 = none
+		anchor2 = none
+		background-color = #ffffff
+		text-color = #000000
+		show-history = false
+		show-url = false
+		use-title = false
+		auto-format = false
+		inner-background-color = #ffffff
+	elem "btn"
+		type = BUTTON
+		pos = 0,232
+		size = 100x24
+		anchor1 = none
+		anchor2 = none
+		background-color = #d0d0d0
+		text-color = #000000
+		text = "Push"
+		command = ""
+		button-type = pushbutton
+		is-flat = false
+	elem "box"
+		type = BUTTON
+		pos = 104,232
+		size = 100x24
+		anchor1 = none
+		anchor2 = none
+		background-color = #d0d0d0
+		text-color = #000000
+		text = "Box"
+		command = ""
+		button-type = pushbox
+		is-checked = false
+	elem "chk"
+		type = BUTTON
+		pos = 208,232
+		size = 100x24
+		anchor1 = none
+		anchor2 = none
+		background-color = #d0d0d0
+		text-color = #000000
+		text = "Check"
+		command = ""
+		button-type = checkbox
+		is-checked = false
+	elem "rad1"
+		type = BUTTON
+		pos = 312,232
+		size = 70x24
+		anchor1 = none
+		anchor2 = none
+		text = "R1"
+		command = ""
+		button-type = radio
+		group = "grp1"
+		is-checked = true
+	elem "rad2"
+		type = BUTTON
+		pos = 386,232
+		size = 70x24
+		anchor1 = none
+		anchor2 = none
+		text = "R2"
+		command = ""
+		button-type = radio
+		group = "grp1"
+		is-checked = false
+	elem "rad3"
+		type = BUTTON
+		pos = 460,232
+		size = 70x24
+		anchor1 = none
+		anchor2 = none
+		text = "R3"
+		command = ""
+		button-type = radio
+		group = "grp1"
+		is-checked = false
+	elem "lbl"
+		type = LABEL
+		pos = 540,232
+		size = 200x24
+		anchor1 = none
+		anchor2 = none
+		background-color = #e0e0e0
+		text-color = #000000
+		text = "hello"
+		align = center
+		text-wrap = false
+		image-mode = center
+		keep-aspect = false
+		allow-html = false
+	elem "lbl2"
+		type = LABEL
+		pos = 744,232
+		size = 200x24
+		anchor1 = none
+		anchor2 = none
+		background-color = #e0e0e0
+		text-color = #000000
+		text = "world"
+	elem "bar"
+		type = BAR
+		pos = 0,262
+		size = 200x20
+		anchor1 = none
+		anchor2 = none
+		background-color = #ffffff
+		text-color = #000000
+		width = 10
+		dir = east
+		angle1 = 0
+		angle2 = 180
+		bar-color = #00ff00
+		is-slider = false
+		value = 30
+		on-change = ""
+	elem "sld"
+		type = BAR
+		pos = 208,262
+		size = 200x20
+		anchor1 = none
+		anchor2 = none
+		bar-color = #0000ff
+		is-slider = true
+		value = 50
+	elem "grd"
+		type = GRID
+		pos = 416,262
+		size = 300x120
+		anchor1 = none
+		anchor2 = none
+		background-color = #ffffff
+		text-color = #000000
+		cells = 3x2
+		current-cell = 1,1
+		show-lines = both
+		show-names = true
+		small-icons = false
+		is-list = false
+		line-color = #c0c0c0
+		link-color = #0000ff
+		visited-color = #ff00ff
+		highlight-color = #00ff00
+	elem "info"
+		type = INFO
+		pos = 724,262
+		size = 310x200
+		anchor1 = none
+		anchor2 = none
+		background-color = #ffffff
+		text-color = #000000
+		is-default = true
+		allow-html = true
+		has-stats = true
+		has-verbs = true
+		multi-line = true
+		highlight-color = #00ff00
+		prefix-color = #ff0000
+		suffix-color = #0000ff
+		tab-text-color = #000000
+		tab-background-color = #ffffff
+		tab-font-size = 0
+	elem "split"
+		type = CHILD
+		pos = 0,390
+		size = 400x200
+		anchor1 = none
+		anchor2 = none
+		background-color = #e0e0e0
+		left = "lpane"
+		right = "rpane"
+		is-vert = true
+		splitter = 50
+		show-splitter = true
+	elem "tabs"
+		type = TAB
+		pos = 408,390
+		size = 300x200
+		anchor1 = none
+		anchor2 = none
+		background-color = #e0e0e0
+		text-color = #000000
+		tabs = "tpane1,tpane2"
+		current-tab = "tpane1"
+		multi-line = true
+		on-tab = ""
+	elem "anc"
+		type = LABEL
+		pos = 0,600
+		size = 200x20
+		anchor1 = 0,0
+		anchor2 = 100,0
+		text = "anchored"
+	elem "dis_btn"
+		type = BUTTON
+		pos = 210,600
+		size = 100x24
+		anchor1 = none
+		anchor2 = none
+		text = "Off"
+		command = ""
+		is-disabled = true
+	elem "hid_lbl"
+		type = LABEL
+		pos = 320,600
+		size = 100x20
+		anchor1 = none
+		anchor2 = none
+		text = "hidden"
+		is-visible = false

@@ -1,0 +1,292 @@
+js#ab17d89097	j:["object","undefined","undefined"]
+js#4494bd17ad	j:["command","topic","winget","winset"]
+js#4ad89fb90b	j:{"winset":"function","winget":"function","command":"function","topic":"function","output":"undefined","callback":"undefined"}
+js#e0b29d15a4	j:"<no Byond>"
+js#f3e357d4b6	j:["[object Promise]","function"]
+js#2cb0610222	j:{"byondStorage":"undefined","hubStorage":"undefined","serverStorage":"undefined","domainStorage":"undefined","localStorage":"object","sessionStorage":"object"}
+js#560343442c	j:["v1",null]
+js#fdb2bd9f24	j:{"chrome":"object","external":"object","webview":"object"}
+js#ab50842070	j:["http:","127.0.0.1","",""]
+js#1cf92f3c10	j:["UTF-8","CSS1Compat","parity probes","complete"]
+js#6970032497	j:""
+js#b8a2cea61c	j:[640,480]
+js#c73a7cdc9e	j:["function","function",true,0]
+js#a118381a0b	j:{"size":{"x":640,"y":480}}
+js#5edb28c02c	j:{"type":"BROWSER"}
+js#688eace2d0	j:{"is-visible":true}
+js#d39735f875	j:{"background-color":{"value":"none","isDefault":true,"red":240,"green":240,"blue":240,"alpha":255,"css":"#f0f0f0"}}
+js#d4080de24e	j:{"size":{"x":640,"y":480},"type":"BROWSER","is-visible":true}
+js#5eacb0559e	j:{"is-visible":true}
+js#41eaeacb64	j:{}
+js#b11049e9d8	j:{}
+js#735d7d61c6	j:{"title":"parity"}
+js#9afc34eaca	j:{"size":{"x":972,"y":541}}
+js#b36b1d1421	j:{"can-resize":false,"statusbar":false,"is-default":true}
+js#518e8e98da	j:{"zoom":1}
+js#8c47725081	j:{"type":"MAP","zoom-mode":"distort","text-mode":true}
+js#9a00c66b25	j:{"view-size":{"x":144,"y":112}}
+js#5004063b03	j:{"type":"MAP"}
+js#ce270151f1	j:{"type":"MAP"}
+js#1ae5f00ff9	j:{"mainwindow.type":"MAIN","mainwindow.map.type":"MAP","mainwindow.probe.type":"BROWSER"}
+js#99e44d5db4	j:{"size":""}
+js#ecf767c860	j:{"size":"","type":""}
+js#b87077123b	j:{"windows":"mainwindow"}
+js#10638093f4	j:{"windows":"mainwindow","panes":"mainwindow","menus":"","macros":""}
+js#2aa72a6d50	j:{"windows":"mainwindow"}
+js#a0e7550a12	j:["anchor1","anchor2","auto-format","background-color","border","drop-zone","flash","font-family","font-size","font-style","inner-background-color","is-default","is-disabled","is-transparent","is-visible","on-hide","on-show","on-size","pos","right-click","runtime","saved-params","show-history","show-url","size","text-color","type","use-title"]
+js#454476aa36	j:["anchor1","anchor2","background-color","border","drop-zone","flash","font-family","font-size","font-style","icon-size","is-default","is-disabled","is-transparent","is-visible","letterbox","on-hide","on-show","on-size","pos","right-click","runtime","saved-params","size","style","text-color","text-mode","type","view-size","zoom","zoom-mode"]
+js#71868f04b8	j:{"before":{"title":"parity"},"after":{"title":"parity x"},"restored":{"title":"parity"}}
+js#a216968938	j:{"before":{"zoom":1},"after":{"zoom":2},"restored":{"zoom":1}}
+js#15308f3669	j:{"before":{"zoom":1},"after":{"zoom":2},"restored":{"zoom":1}}
+js#4d66f3020f	j:{"before":{"background-color":{"value":"none","isDefault":true,"red":0,"green":0,"blue":0,"alpha":255,"css":"#000000"}},"after":{"background-color":{"value":"#123456","red":18,"green":52,"blue":86,"alpha":255,"css":"#123456"}},"restored":{"background-color":{"value":"none","isDefault":true,"red":0,"green":0,"blue":0,"alpha":255,"css":"#000000"}}}
+js#885abe9ba6	j:{"before":{"is-disabled":false},"after":{"is-disabled":true},"restored":{"is-disabled":false}}
+js#02b27e2d12	j:{"before":{"text-color":{"value":"none","isDefault":true,"red":255,"green":255,"blue":255,"alpha":255,"css":"#ffffff"}},"after":{"text-color":{"value":"#00ff00","red":0,"green":255,"blue":0,"alpha":255,"css":"#00ff00"}},"restored":{"text-color":{"value":"none","isDefault":true,"red":255,"green":255,"blue":255,"alpha":255,"css":"#ffffff"}}}
+js#b146d031fc	j:[{"title":"parity"},{"title":"parity"}]
+js#0d636584e0	j:{"size":{"x":640,"y":480}}
+js#7faf0f1cba	j:[["ping"]]
+js#8bc5a726eb	j:[["ping"]]
+js#b462973073	j:[["echo","hello world"]]
+js#f62f7f2e65	j:[["echo","hello world"]]
+js#e283e7cdee	j:[["num","42","1"]]
+js#912f05a083	j:[["num","42","1"]]
+js#52d511840d	j:[["two","a b","3"]]
+js#e96a94e0b2	j:[["two","a b","3"]]
+js#f98aaf5675	j:[["echo","é😀"]]
+js#50ae3bbf19	j:[["echo","é😀"]]
+js#53ec6021d8	j:[["echo","a&b;c=d+e%"]]
+js#dfd015921b	j:[["echo","a&b;c=d+e%"]]
+js#c84d41f2a5	j:[]
+js#3da5073785	j:[]
+js#e32cb4fd3e	j:[{"title":"parity"},{"title":"parity"}]
+js#af6a35de2c	j:abc
+js#e6bd0ebbfc	j:a b&c=d;e+f%25 %
+js#a22be20db9	j:é😀
+js#21ab26226b	j:12.5
+js#9c89c881c8	j:1,2
+js#966c546503	j:{"size":{"x":640,"y":480}}
+js#8786132786	j:{"type":"BROWSER"}
+js#7c6e77c330	j:{"is-visible":true}
+js#a2bc00fe9c	j:{"is-disabled":false}
+js#3864ffaa36	j:{"background-color":{"value":"none","isDefault":true,"red":240,"green":240,"blue":240,"alpha":255,"css":"#f0f0f0"}}
+js#af713cd869	j:{"size":{"x":640,"y":480},"type":"BROWSER","is-visible":true}
+js#4ad4044284	j:{}
+js#8fb2dfc994	j:{}
+js#44d2336b0a	j:{"type":"MAIN"}
+js#e1c982ddf9	j:{"title":"parity"}
+js#ed24465381	j:{"size":{"x":972,"y":541}}
+js#6a533ec54f	j:{"can-resize":false}
+js#48007dfcf6	j:{"statusbar":false}
+js#59c3ca3311	j:{"titlebar":true}
+js#f73f18958b	j:{"can-close":true}
+js#d11c8774d3	j:{"is-default":true}
+js#615f064a5b	j:{"is-visible":true}
+js#0218eb5fe2	j:{"type":"MAP"}
+js#c71786ad27	j:{"zoom":1}
+js#97491a59a9	j:{"icon-size":32}
+js#1449f3f662	j:{"size":{"x":288,"y":224}}
+js#e098d35a1a	j:{"view-size":{"x":144,"y":112}}
+js#50a74a1753	j:{"probe.type":"BROWSER","map.type":"MAP"}
+js#056dffe70e	j:{"probe.size":{"x":640,"y":480},"probe.type":"BROWSER","map.size":{"x":288,"y":224},"map.type":"MAP"}
+js#d24e894178	j:{"type":"MAP"}
+js#f7181c606c	j:{"type":"MAP"}
+js#b1a695fdde	j:{"mainwindow.type":"MAIN","mainwindow.map.type":"MAP","mainwindow.probe.type":"BROWSER"}
+js#893ef67418	j:{"size":""}
+js#39b4bf8c3c	j:{"windows":"mainwindow"}
+js#6b49ac71dc	j:{"windows":"mainwindow","panes":"mainwindow","menus":"","macros":""}
+js#efb0e8b6fa	j:["anchor1","anchor2","auto-format","background-color","border","drop-zone","flash","font-family","font-size","font-style","inner-background-color","is-default","is-disabled","is-transparent","is-visible","on-hide","on-show","on-size","pos","right-click","runtime","saved-params","show-history","show-url","size","text-color","type","use-title"]
+js#2f79dace24	j:[1,"object"]
+js#3ed7aebffb	j:{"type":"BROWSER"}
+js#eba566b81f	j:{"after":{"title":"parity url"},"restored":{"title":"parity"}}
+js#9f89cad273	j:{"after":{"title":"parity dec"},"restored":{"title":"parity"}}
+js#e04cf94e62	j:{"after":{"mainwindow.title":"parity two","map.zoom":2},"restored":{"mainwindow.title":"parity","map.zoom":1}}
+js#83abef29c9	j:{"after":{"title":"a b&c=d;e+f"},"restored":{"title":"parity"}}
+js#41b8c2634b	j:{"after":{"title":"é😀"},"restored":{"title":"parity"}}
+js#083ecac660	j:{"after":{"title":"parity"},"restored":{"title":"parity"}}
+js#e06c34aaba	j:{"after":{"title":"parity"},"restored":{"title":"parity"}}
+js#24a1ac8211	j:{"after":{"size":{"x":640,"y":480}},"restored":{"size":{"x":640,"y":480}}}
+rt#b571015254	j:[["exists:MAIN","browser:BROWSER","visible:true"]]
+rt#c8df0921df	j:[["size:200x150","inner-size:200x150","type:MAIN","can-close:true","can-resize:true","can-minimize:true","titlebar:true","is-pane:false"],["exists:MAIN","browser:BROWSER","visible:true"],["exists:MAIN","browser:BROWSER","visible:false"]]
+rt#3a2b08d47b	j:[["size:400x400","inner-size:400x400","type:MAIN","can-close:true","can-resize:true","can-minimize:true","titlebar:true","is-pane:false"],["exists:MAIN","browser:BROWSER","visible:false"],["exists:MAIN","browser:BROWSER","visible:true"]]
+rt#01781a2246	j:[["size:200x150","inner-size:200x150","type:MAIN","can-close:false","can-resize:true","can-minimize:true","titlebar:true","is-pane:false"],["exists:MAIN","browser:BROWSER","visible:false"],["exists:MAIN","browser:BROWSER","visible:true"]]
+rt#103dcdcdf4	j:[["size:200x150","inner-size:200x150","type:MAIN","can-close:true","can-resize:false","can-minimize:true","titlebar:true","is-pane:false"],["exists:MAIN","browser:BROWSER","visible:false"],["exists:MAIN","browser:BROWSER","visible:true"]]
+rt#25f7056184	j:[["size:200x150","inner-size:200x150","type:MAIN","can-close:true","can-resize:true","can-minimize:true","titlebar:false","is-pane:false"],["exists:MAIN","browser:BROWSER","visible:false"],["exists:MAIN","browser:BROWSER","visible:true"]]
+rt#5809842464	j:[["size:200x150","inner-size:200x150","type:MAIN","can-close:false","can-resize:false","can-minimize:false","titlebar:false","is-pane:false"],["exists:MAIN","browser:BROWSER","visible:false"],["exists:MAIN","browser:BROWSER","visible:true"]]
+rt#71d1cdc27d	j:[["size:200x150","inner-size:200x150","type:MAIN","can-close:true","can-resize:true","can-minimize:true","titlebar:true","is-pane:false"],["exists:MAIN","browser:BROWSER","visible:false"],["exists:MAIN","browser:BROWSER","visible:true"]]
+rt#bd82d7d4d9	j:[["size:210x120","inner-size:210x120","type:MAIN","can-close:true","can-resize:false","can-minimize:true","titlebar:true","is-pane:false"],["size:220x130","can-close:false"],["exists:MAIN","browser:BROWSER","visible:false"],["exists:MAIN","browser:BROWSER","visible:false"]]
+rt#829ab02a76	j:[["title:browser x t"]]
+rt#a97fc0766c	j:[["type:BROWSER","parent:browser_x_pb","is-default:false","anchor1:0,0","anchor2:100,100"]]
+rt#cccd674a1e	j:[["browser_x_pw.type=MAIN;browser_x_pw.browser.type=BROWSER"]]
+rt#c8d81ead99	j:[["listed"],["listed"]]
+rt#8ce8e5ebb2	j:[["size:200x150","can-close:false"],["exists:MAIN","browser:BROWSER","visible:false"]]
+rt#e26740f1b5	j:[["size:260x180"],["exists:MAIN","browser:BROWSER","visible:true"]]
+rt#283fd56e0e	j:[["exists:","browser:","visible:"]]
+rt#213891decf	j:[["exists:MAIN","browser:BROWSER","visible:false"]]
+rt#676cfdbc1c	j:[["exists:","browser:","visible:"]]
+rt#260d4abf5c	j:[["a:","b:","c:BROWSER","d:BROWSER"]]
+rt#4c5bac663c	j:[["note","[\\"undefined\\",\\"http:\\",\\"rlocation.href='byond://winset?command='+encodeURIComponent('browserxnote '+encodeURIComponent(JSON.stringify([typeof window.BYOND, location.protocol, document.body.textContent])))\\"]"]]
+rt#9659fd558c	j:[["note","[\\"rlocation.href='byond://winset?command='+encodeURIComponent('browserxnote '+encodeURIComponent(JSON.stringify([document.body.textContent])))\\"]"]]
+js#ef089bfd96	j:{"ack":[],"img":"<error>"}
+js#08b8e9a52a	j:{"ack":[],"img":"<error>"}
+js#5ae19f145a	j:{"ack":[],"img":"<error>"}
+js#9228aa1a17	j:{"ack":[],"img":"<error>"}
+js#799aee0c42	j:{"ack":[],"img":"<error>"}
+js#8e249d0df2	j:{"ack":[],"img":"<error>"}
+js#07feee24a5	j:{"ack":[],"img":"<error>"}
+link#4d6fd5f21d:dm	L(1)[t:"a"=t:"x y"]
+link#4d6fd5f21d:href	t:"parity_link=link%234d6fd5f21d&a=x%20y"
+link#1f428af740:dm	L(1)[t:"a"=t:"x y"]
+link#1f428af740:href	t:"parity_link=link%231f428af740&a=x+y"
+link#685bd3dfe5:dm	L(1)[t:"a"=t:"x y"]
+link#685bd3dfe5:href	t:"parity_link=link%23685bd3dfe5&a=x%20y"
+link#36759a6963:dm	L(1)[t:"a b"=t:"1"]
+link#36759a6963:href	t:"parity_link=link%2336759a6963&a+b=1"
+link#7fa6e5c6b5:dm	L(1)[t:"a b"=t:"1"]
+link#7fa6e5c6b5:href	t:"parity_link=link%237fa6e5c6b5&a%20b=1"
+link#d1d9e343ec:dm	L(4)[t:"a"=t:"+", t:"b"=t:";", t:"c"=t:"&", t:"d"=t:"%"]
+link#d1d9e343ec:href	t:"parity_link=link%23d1d9e343ec&a=%2B&b=%3B&c=%26&d=%25"
+link#4644caab67:dm	L(2)[t:"a"=t:"x=y", t:"b=c"=t:"2"]
+link#4644caab67:href	t:"parity_link=link%234644caab67&a=x%3Dy&b%3Dc=2"
+link#908a70c084:dm	L(1)[t:"a"=t:"#x?y"]
+link#908a70c084:href	t:"parity_link=link%23908a70c084&a=%23x%3Fy"
+link#d59a4b78ad:dm	L(1)[t:"a"=t:"~!@$^*()'""]
+link#d59a4b78ad:href	t:"parity_link=link%23d59a4b78ad&a=%7E%21%40%24%5E%2A%28%29%27%22"
+link#1832d11032:dm	L(1)[t:"a"=t:"x\ty\nz\rw"]
+link#1832d11032:href	t:"parity_link=link%231832d11032&a=x%09y%0Az%0Dw"
+link#f679e2ced9:dm	L(1)[t:"a"=t:"<>"' &;=+%#?/"]
+link#f679e2ced9:href	t:"parity_link=link%23f679e2ced9&a=%3C%3E%22%27%20%26%3B%3D%2B%25%23%3F%2F"
+link#c2e7806c7c:dm	L(1)[t:"a"=t:"+;é"]
+link#c2e7806c7c:href	t:"parity_link=link%23c2e7806c7c&a=%2b%3b%c3%a9"
+link#38424f8662:dm	L(1)[t:"u"=t:"é"]
+link#38424f8662:href	t:"parity_link=link%2338424f8662&u=%C3%A9"
+link#c48893d411:dm	L(1)[t:"u"=t:"😀"]
+link#c48893d411:href	t:"parity_link=link%23c48893d411&u=%F0%9F%98%80"
+link#5f26a0c0d6:dm	L(1)[t:"u"=t:"é中😀"]
+link#5f26a0c0d6:href	t:"parity_link=link%235f26a0c0d6&u=%C3%A9%E4%B8%AD%F0%9F%98%80"
+link#e51e00b3cd:dm	L(1)[t:"u"=t:"é中"]
+link#e51e00b3cd:href	t:"parity_link=link%23e51e00b3cd&u=%C3%A9%E4%B8%AD"
+link#ab9f45320c:dm	L(1)[t:"u"=t:"é"]
+link#ab9f45320c:href	t:"parity_link=link%23ab9f45320c&u=%E9"
+link#f326111c83:dm	L(1)[t:"u"=t:"%u00e9"]
+link#f326111c83:href	t:"parity_link=link%23f326111c83&u=%u00e9"
+link#98fdd2dfe3:dm	L(1)[t:"a"=t:"%"]
+link#98fdd2dfe3:href	t:"parity_link=link%2398fdd2dfe3&a=%"
+link#666dd0a3d6:dm	L(1)[t:"a"=t:"%zz"]
+link#666dd0a3d6:href	t:"parity_link=link%23666dd0a3d6&a=%zz"
+link#44ac8df4bc:dm	L(1)[t:"a"=t:"%4"]
+link#44ac8df4bc:href	t:"parity_link=link%2344ac8df4bc&a=%4"
+link#02a39a8ab6:dm	L(1)[t:"a"=t:"Ã"]
+link#02a39a8ab6:href	t:"parity_link=link%2302a39a8ab6&a=%C3"
+link#7fab5694bd:dm	L(1)[t:"a"=t:"]
+link#7fab5694bd:href	t:"parity_link=link%237fab5694bd&a=%FF"
+link#c237cf61a3:dm	L(2)[t:"a"=t:"1", t:"b"=t:"2"]
+link#c237cf61a3:href	t:"parity_link=link%23c237cf61a3&a=1;b=2"
+link#559fa115c1:dm	L(3)[t:"a"=t:"1", t:"b"=t:"2", t:"c"=t:"3"]
+link#559fa115c1:href	t:"parity_link=link%23559fa115c1&a=1;b=2&c=3"
+link#028f471e02:dm	L(3)[t:"a"=t:"1", t:""=t:"", t:"b"=t:"2"]
+link#028f471e02:href	t:"parity_link=link%23028f471e02&a=1&&b=2"
+link#9d1a14ebbe:dm	L(1)[t:"a"=t:"1"]
+link#9d1a14ebbe:href	t:"parity_link=link%239d1a14ebbe&a=1&"
+link#b53e791fdb:dm	L(1)[t:"a"=t:"b=c"]
+link#b53e791fdb:href	t:"parity_link=link%23b53e791fdb&a=b=c"
+link#376359525f	j:{"error":"timeout"}
+link#76c75bb35b:dm	L(1)[t:"k"=L(2)[t:"1", t:"2"]]
+link#76c75bb35b:href	t:"parity_link=link%2376c75bb35b&k=1&k=2"
+link#4a0a443c7e:dm	L(1)[t:"k"=L(2)[t:"", t:"2"]]
+link#4a0a443c7e:href	t:"parity_link=link%234a0a443c7e&k=&k=2"
+link#3751730f66:dm	L(1)[t:"k"=L(2)[t:"1", t:"2"]]
+link#3751730f66:href	t:"parity_link=link%233751730f66&k=1;k=2"
+link#9d666442b8:dm	L(1)[t:"flag"=t:""]
+link#9d666442b8:href	t:"parity_link=link%239d666442b8&flag"
+link#4adc5122cf:dm	L(1)[t:"flag"=t:""]
+link#4adc5122cf:href	t:"parity_link=link%234adc5122cf&flag="
+link#3e0c179ba6:dm	L(3)[t:"a"=t:"", t:"b"=t:"", t:"c"=t:""]
+link#3e0c179ba6:href	t:"parity_link=link%233e0c179ba6&a&b&c"
+link#3541929e02:dm	L(1)[t:""=t:"v"]
+link#3541929e02:href	t:"parity_link=link%233541929e02&=v"
+link#ac4eb5eb93:dm	L(1)[t:""=t:""]
+link#ac4eb5eb93:href	t:"parity_link=link%23ac4eb5eb93&&"
+link#ddd934cc53:dm	L(3)[t:"Key"=t:"1", t:"key"=t:"2", t:"KEY"=t:"3"]
+link#ddd934cc53:href	t:"parity_link=link%23ddd934cc53&Key=1&key=2&KEY=3"
+link#6b7747f24e:dm	L(1)[t:"long"=t:"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"]
+link#6b7747f24e:href	t:"parity_link=link%236b7747f24e&long=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+link#ed58aa0aab:dm	L(1)[t:"long"=t:"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"]
+link#ed58aa0aab:href	t:"parity_link=link%23ed58aa0aab&long=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+link#4b9b666e0f:dm	L(200)[t:"k0"=t:"0", t:"k1"=t:"1", t:"k2"=t:"2", t:"k3"=t:"3", t:"k4"=t:"4", t:"k5"=t:"5", t:"k6"=t:"6", t:"k7"=t:"7", t:"k8"=t:"8", t:"k9"=t:"9", t:"k10"=t:"10", t:"k11"=t:"11", t:"k12"=t:"12", t:"k13"=t:"13", t:"k14"=t:"14", t:"k15"=t:"15", t:"k16"=t:"16", t:"k17"=t:"17", t:"k18"=t:"18", t:"k19"=t:"19", t:"k20"=t:"20", t:"k21"=t:"21", t:"k22"=t:"22", t:"k23"=t:"23", t:"k24"=t:"24", t:"k25"=t:"25", t:"k26"=t:"26", t:"k27"=t:"27", t:"k28"=t:"28", t:"k29"=t:"29", t:"k30"=t:"30", t:"k31"=t:"31", t:"k32"=t:"32", t:"k33"=t:"33", t:"k34"=t:"34", t:"k35"=t:"35", t:"k36"=t:"36", t:"k37"=t:"37", t:"k38"=t:"38", t:"k39"=t:"39", t:"k40"=t:"40", t:"k41"=t:"41", t:"k42"=t:"42", t:"k43"=t:"43", t:"k44"=t:"44", t:"k45"=t:"45", t:"k46"=t:"46", t:"k47"=t:"47", t:"k48"=t:"48", t:"k49"=t:"49", t:"k50"=t:"50", t:"k51"=t:"51", t:"k52"=t:"52", t:"k53"=t:"53", t:"k54"=t:"54", t:"k55"=t:"55", t:"k56"=t:"56", t:"k57"=t:"57", t:"k58"=t:"58", t:"k59"=t:"59", t:"k60"=t:"60", t:"k61"=t:"61", t:"k62"=t:"62", t:"k63"=t:"63", t:"k64"=t:"64", t:"k65"=t:"65", t:"k66"=t:"66", t:"k67"=t:"67", t:"k68"=t:"68", t:"k69"=t:"69", t:"k70"=t:"70", t:"k71"=t:"71", t:"k72"=t:"72", t:"k73"=t:"73", t:"k74"=t:"74", t:"k75"=t:"75", t:"k76"=t:"76", t:"k77"=t:"77", t:"k78"=t:"78", t:"k79"=t:"79", t:"k80"=t:"80", t:"k81"=t:"81", t:"k82"=t:"82", t:"k83"=t:"83", t:"k84"=t:"84", t:"k85"=t:"85", t:"k86"=t:"86", t:"k87"=t:"87", t:"k88"=t:"88", t:"k89"=t:"89", t:"k90"=t:"90", t:"k91"=t:"91", t:"k92"=t:"92", t:"k93"=t:"93", t:"k94"=t:"94", t:"k95"=t:"95", t:"k96"=t:"96", t:"k97"=t:"97", t:"k98"=t:"98", t:"k99"=t:"99", t:"k100"=t:"100", t:"k101"=t:"101", t:"k102"=t:"102", t:"k103"=t:"103", t:"k104"=t:"104", t:"k105"=t:"105", t:"k106"=t:"106", t:"k107"=t:"107", t:"k108"=t:"108", t:"k109"=t:"109", t:"k110"=t:"110", t:"k111"=t:"111", t:"k112"=t:"112", t:"k113"=t:"113", t:"k114"=t:"114", t:"k115"=t:"115", t:"k116"=t:"116", t:"k117"=t:"117", t:"k118"=t:"118", t:"k119"=t:"119", t:"k120"=t:"120", t:"k121"=t:"121", t:"k122"=t:"122", t:"k123"=t:"123", t:"k124"=t:"124", t:"k125"=t:"125", t:"k126"=t:"126", t:"k127"=t:"127", t:"k128"=t:"128", t:"k129"=t:"129", t:"k130"=t:"130", t:"k131"=t:"131", t:"k132"=t:"132", t:"k133"=t:"133", t:"k134"=t:"134", t:"k135"=t:"135", t:"k136"=t:"136", t:"k137"=t:"137", t:"k138"=t:"138", t:"k139"=t:"139", t:"k140"=t:"140", t:"k141"=t:"141", t:"k142"=t:"142", t:"k143"=t:"143", t:"k144"=t:"144", t:"k145"=t:"145", t:"k146"=t:"146", t:"k147"=t:"147", t:"k148"=t:"148", t:"k149"=t:"149", t:"k150"=t:"150", t:"k151"=t:"151", t:"k152"=t:"152", t:"k153"=t:"153", t:"k154"=t:"154", t:"k155"=t:"155", t:"k156"=t:"156", t:"k157"=t:"157", t:"k158"=t:"158", t:"k159"=t:"159", t:"k160"=t:"160", t:"k161"=t:"161", t:"k162"=t:"162", t:"k163"=t:"163", t:"k164"=t:"164", t:"k165"=t:"165", t:"k166"=t:"166", t:"k167"=t:"167", t:"k168"=t:"168", t:"k169"=t:"169", t:"k170"=t:"170", t:"k171"=t:"171", t:"k172"=t:"172", t:"k173"=t:"173", t:"k174"=t:"174", t:"k175"=t:"175", t:"k176"=t:"176", t:"k177"=t:"177", t:"k178"=t:"178", t:"k179"=t:"179", t:"k180"=t:"180", t:"k181"=t:"181", t:"k182"=t:"182", t:"k183"=t:"183", t:"k184"=t:"184", t:"k185"=t:"185", t:"k186"=t:"186", t:"k187"=t:"187", t:"k188"=t:"188", t:"k189"=t:"189", t:"k190"=t:"190", t:"k191"=t:"191", t:"k192"=t:"192", t:"k193"=t:"193", t:"k194"=t:"194", t:"k195"=t:"195", t:"k196"=t:"196", t:"k197"=t:"197", t:"k198"=t:"198", t:"k199"=t:"199"]
+link#4b9b666e0f:href	t:"parity_link=link%234b9b666e0f&k0=0&k1=1&k2=2&k3=3&k4=4&k5=5&k6=6&k7=7&k8=8&k9=9&k10=10&k11=11&k12=12&k13=13&k14=14&k15=15&k16=16&k17=17&k18=18&k19=19&k20=20&k21=21&k22=22&k23=23&k24=24&k25=25&k26=26&k27=27&k28=28&k29=29&k30=30&k31=31&k32=32&k33=33&k34=34&k35=35&k36=36&k37=37&k38=38&k39=39&k40=40&k41=41&k42=42&k43=43&k44=44&k45=45&k46=46&k47=47&k48=48&k49=49&k50=50&k51=51&k52=52&k53=53&k54=54&k55=55&k56=56&k57=57&k58=58&k59=59&k60=60&k61=61&k62=62&k63=63&k64=64&k65=65&k66=66&k67=67&k68=68&k69=69&k70=70&k71=71&k72=72&k73=73&k74=74&k75=75&k76=76&k77=77&k78=78&k79=79&k80=80&k81=81&k82=82&k83=83&k84=84&k85=85&k86=86&k87=87&k88=88&k89=89&k90=90&k91=91&k92=92&k93=93&k94=94&k95=95&k96=96&k97=97&k98=98&k99=99&k100=100&k101=101&k102=102&k103=103&k104=104&k105=105&k106=106&k107=107&k108=108&k109=109&k110=110&k111=111&k112=112&k113=113&k114=114&k115=115&k116=116&k117=117&k118=118&k119=119&k120=120&k121=121&k122=122&k123=123&k124=124&k125=125&k126=126&k127=127&k128=128&k129=129&k130=130&k131=131&k132=132&k133=133&k134=134&k135=135&k136=136&k137=137&k138=138&k139=139&k140=140&k141=141&k142=142&k143=143&k144=144&k145=145&k146=146&k147=147&k148=148&k149=149&k150=150&k151=151&k152=152&k153=153&k154=154&k155=155&k156=156&k157=157&k158=158&k159=159&k160=160&k161=161&k162=162&k163=163&k164=164&k165=165&k166=166&k167=167&k168=168&k169=169&k170=170&k171=171&k172=172&k173=173&k174=174&k175=175&k176=176&k177=177&k178=178&k179=179&k180=180&k181=181&k182=182&k183=183&k184=184&k185=185&k186=186&k187=187&k188=188&k189=189&k190=190&k191=191&k192=192&k193=193&k194=194&k195=195&k196=196&k197=197&k198=198&k199=199"
+rt#5faa14bbcd	j:[["hello world"]]
+rt#5ae50c3494	j:[["a","b","c","d","e","f","g","h","i","j","k","l"]]
+rt#06ff398444	j:[["v1","v2","v3","v4","v5","v6","v7","v8","v9","v10","v11","v12","v13","v14","v15","v16","v17","v18","v19","v20","v21","v22","v23","v24","v25","v26","v27","v28","v29","v30","v31","v32","v33","v34","v35","v36","v37","v38","v39","v40"]]
+rt#f0bdd7289e	j:[["a=1","b=x y","c"]]
+rt#31f681a29b	j:[["x y+z&w=v;u%"]]
+rt#0370939242	j:[["é 😀"]]
+rt#e671a7e319	j:[["a+b%26c"]]
+rt#ab6400c265	j:[["a","b"]]
+rt#a713b29d81	j:[["a&b"]]
+rt#c9ae0b276c	j:[["a","b"]]
+rt#e41cee6418	j:[["a;b"]]
+rt#3e66fb6c52	j:[["a=b"]]
+rt#74a60c10c2	j:[["a=b"]]
+rt#5cfec0dd67	j:[["a b"]]
+rt#2f7df7311b	j:[["a+b"]]
+rt#0523041734	j:[["100%"]]
+rt#d8fb8f22b6	j:[["100%"]]
+rt#1b6c0f5c3e	j:[["A"]]
+rt#2746dc34ff	j:[["%41"]]
+rt#8f725df381	j:[["%zz"]]
+rt#b01284e21d	j:[["%zz"]]
+rt#203af9cab6	j:[["a b"]]
+rt#cc7b6e8715	j:[["a%20b"]]
+rt#a285f84099	j:[["it's"]]
+rt#81e7093e64	j:[["it's"]]
+rt#f2d0303932	j:[["say \\"hi\\""]]
+rt#412c6b80fc	j:[["say \\"hi\\""]]
+rt#f2d7ba2fa2	j:[["<b>x</b>"]]
+rt#ea5e77abbd	j:[["<b>x</b>"]]
+rt#2ce71982e8	j:[["é"]]
+rt#b95de205d2	j:[["é"]]
+rt#f5144c8e3a	j:[["😀"]]
+rt#31fd3381e5	j:[["😀"]]
+rt#379a627bec	j:[["line1\\nline2"]]
+rt#946c6b8176	j:[["line1\\rline2"]]
+rt#48bb7b718b	j:[["back\\\\slash"]]
+rt#7131f78eb5	j:[["back\\\\slash"]]
+rt#d9ef3ee717	j:[["[x]"]]
+rt#e2111d4593	j:[["[x]"]]
+rt#3c34ecb601	j:[[]]
+rt#79c4933541	j:[["\\u0001"]]
+rt#7c2cd24d97	j:[["a b"]]
+rt#65ca79c11f	j:[["é"]]
+rt#2cd4c1be18	j:[[]]
+rt#f11cff1112	j:[[]]
+rt#a97871457b	j:[[""]]
+rt#3fddd466ea	j:[[""]]
+rt#64dc2203a6	j:[["",""]]
+rt#7951e8f670	j:[[""]]
+rt#910f871d7e	j:[["5"]]
+rt#9c90810746	j:[["-1.5"]]
+rt#0f5439a967	j:[["1e 10"]]
+rt#909958ce35	j:[["0.333333"]]
+rt#14b9d629db	j:[["1","2.5"]]
+rt#7ac044fca7	j:[["{\\"name\\":\\"fridge\\",\\"power\\":12}"]]
+rt#5ce6113c73	j:[["{\\"name\\":\\"fridge\\",\\"power\\":12}"]]
+rt#411fac73fa	j:[["{\\"t\\":\\"a&b;c=d+e%\\",\\"u\\":\\"\\\\u00e9\\"}"]]
+rt#fc67436a0c	j:[["[1,\\"two\\",[3]]"]]
+rt#cf20e29ea4	j:[["ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c ab&c "]]
+rt#fa4fd4a007	j:[["after"]]
+rt#663f6d4147	j:[["after"]]
+rt#0040bb734f	j:[["a","b"],["end"]]
+rt#5634e10f3d	j:[["b"],["end"]]
+rt#5fa30e2f75	j:[["a","b"],["end"]]
+rt#d5b4b1044e	j:[[],["end"]]
+rt#57508c3dd1	j:[["a","b"]]
+rt#db1172c15f	j:[["a","b"],["end"]]
+rt#3dc51757fb	j:[["1"],["2"],["3"],["4"],["5"]]
+rt#b713c67bf0	j:[["1"],["2"],["3"],["4"],["5"],["6"],["7"],["8"],["9"],["10"],["11"],["12"],["13"],["14"],["15"],["16"],["17"],["18"],["19"],["20"]]
+rt#0f3dc728e3	j:[["1"],["2"],["3"]]
+rt#c12e15a03b	j:[["a b"],["a b"],["a b"]]
+js#b9720951b7	j:[1,40625,-1246456540,"ab&c=d;e+f% éab&c=d;e+f%","&c=d;e+f% éab&c=d;e+f% é"]
+js#ddc9d50a63	j:[1,50000,529777320,"012345678901234567890123","678901234567890123456789"]
+js#f10c15ee42	j:[["a","b c"],true]
+js#df3c8fbf1a	j:[true,"object",2]
+js#feed308482	j:"a"
+js#239221dc8e	j:"a"
