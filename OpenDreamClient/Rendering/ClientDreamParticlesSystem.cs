@@ -69,22 +69,15 @@ public sealed partial class ClientDreamParticlesSystem : SharedDreamParticlesSys
                     return data.Gradient[colorIndex];
                 }
                 : _ => Color.White,
-            Acceleration = (_, velocity) => { // TODO: Acceleration needs to only update every tick
-                var drift = (data.Drift?.GenerateVector3(_random) ?? Vector3.Zero);
-                var friction = (data.Friction?.GenerateVector3(_random) ?? Vector3.Zero); // TODO: Only calculated once per particle
-
-                return drift - (velocity * friction);
-            },
             SpawnPosition = () => data.SpawnPosition?.GenerateVector3(_random) ?? Vector3.Zero,
             SpawnVelocity = () => data.SpawnVelocity?.GenerateVector3(_random) ?? Vector3.Zero,
-            Transform = _ => { // TODO: Needs to only be performed every tick
-                var scale = data.Scale.GenerateVector2(_random);
-                var rotation = data.Rotation?.Generate(_random) ?? 0f;
-                var growth = data.Growth?.GenerateVector2(_random) ?? Vector2.Zero;
-                var spin = data.Spin?.Generate(_random) ?? 0f;
-                return Matrix3x2.CreateScale(scale.X + growth.X, scale.Y + growth.Y) *
-                       Matrix3x2.CreateRotation(rotation + spin);
-            },
+            Scale = () => data.Scale.GenerateVector2(_random),
+            Rotation = () => data.Rotation?.Generate(_random) ?? 0f,
+            Spin = () => data.Spin?.Generate(_random) ?? 0f,
+            Growth = () => data.Growth?.GenerateVector2(_random) ?? Vector2.Zero,
+            Friction = () => data.Friction?.GenerateVector3(_random) ?? Vector3.Zero,
+            Drift = () => data.Drift?.GenerateVector3(_random) ?? Vector3.Zero,
+            Gravity = data.Gravity,
             BaseTransform = Matrix3x2.Identity
         };
 
