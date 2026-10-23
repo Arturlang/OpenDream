@@ -82,6 +82,7 @@ internal partial class DMCodeTree {
     private ObjectNode _root;
     private ObjectNode? _dmStandardRoot;
     private int _currentPass;
+    private int _nextVarTraversalOrder;
 
     public DMCodeTree(DMCompiler compiler) {
         // Yep, not _dmStandardRoot
@@ -136,6 +137,16 @@ internal partial class DMCodeTree {
                 varNode.LastError.Message);
         }
 
+        // Global initializers run in the order of the finished tree, not in the order their vars managed to resolve.
+        // A var whose initializer references something defined later in the tree only resolves on a later pass.
+        foreach (var root in (ObjectNode[])[_root, _dmStandardRoot!]) {
+            foreach (var node in TraverseNodes(root)) {
+                if (node is VarNode varNode)
+                    varNode.TraversalOrder = _nextVarTraversalOrder++;
+            }
+        }
+
+        _compiler.EmitGlobalInitializers();
         _compiler.GlobalInitProc.ResolveLabels();
     }
 

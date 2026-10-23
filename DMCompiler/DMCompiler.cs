@@ -33,6 +33,7 @@ public class DMCompiler {
 
     private readonly Dictionary<WarningCode, ErrorLevel> _errorConfig;
     private readonly HashSet<string> _resourceDirectories = new();
+    private readonly List<(DMCodeTree.VarNode Node, DMObject Owner, int GlobalId, DMExpression Value)> _globalInitializers = new();
     private string? _codeDirectory;
     private DateTime _compileStartTime;
 
@@ -54,6 +55,28 @@ public class DMCompiler {
     }
 
     public bool Compile(DMCompilerSettings settings) => Compile(settings, out _);
+
+    /// <summary>
+    /// Queues a global var's initializer for the global init proc. A var whose initializer only resolves on a later
+    /// pass still has to run in its declared place, e.g. tgstation's genesis hook that has to run before every other static.
+    /// </summary>
+    internal void AddGlobalInitializer(DMCodeTree.VarNode node, DMObject owner, int globalId, DMExpression value) {
+        _globalInitializers.Add((node, owner, globalId, value));
+    }
+
+    /// <summary>
+    /// Emits the queued global initializers in the order of their vars in the finished code tree
+    /// </summary>
+    internal void EmitGlobalInitializers() {
+        foreach (var (_, owner, globalId, value) in _globalInitializers.OrderBy(initializer => initializer.Node.TraversalOrder)) {
+            GlobalInitProc.DebugSource(value.Location);
+            value.EmitPushValue(new(this, owner, GlobalInitProc));
+            GlobalInitProc.Assign(DMReference.CreateGlobal(globalId));
+            GlobalInitProc.Pop();
+        }
+
+        _globalInitializers.Clear();
+    }
 
     public bool Compile(DMCompilerSettings settings, [NotNullWhen(true)] out DreamCompiledJson? compiledDream) {
         if (_compileStartTime != default)
