@@ -177,8 +177,30 @@ public sealed partial class DreamMapManager : IDreamMapManager {
         SetTurf((turf.X, turf.Y), turf.Z, type, creationArguments);
     }
 
+    /// <summary>
+    /// Caches the turf/area appearance pair instead of recreating and re-registering it for every turf in the game.
+    /// This is cleared out when an area appearance changes
+    /// </summary>
+    private readonly Dictionary<ValueTuple<ImmutableAppearance, uint>, ImmutableAppearance> _turfAreaLookup = new();
+
     public void SetTurfAppearance(DreamObjectTurf turf, ImmutableAppearance appearance) {
         appearance.EnabledMouseEvents = _atomManager.GetEnabledMouseEvents(turf);
+
+        // BYOND draws an area's appearance, overlays included, on every turf in it. tg relies on this for
+        // fullbright areas (/area/space's starlight is an additive overlay on the area) and area weather.
+        if (turf.Cell.Area.Appearance != _appearanceSystem.DefaultAppearance) {
+            if (!appearance.Overlays.Contains(turf.Cell.Area.Appearance)) {
+                if (!_turfAreaLookup.TryGetValue((appearance, turf.Cell.Area.Appearance.MustGetId()), out var newAppearance)) {
+                    var mutable = appearance.ToMutable();
+
+                    mutable.Overlays.Add(turf.Cell.Area.Appearance);
+                    newAppearance = _appearanceSystem.AddAppearance(mutable);
+                    _turfAreaLookup.Add((appearance, turf.Cell.Area.Appearance.MustGetId()), newAppearance);
+                }
+
+                appearance = newAppearance;
+            }
+        }
 
         var level = _levels[turf.Z - 1];
         var turfId = appearance.MustGetId();
@@ -194,8 +216,35 @@ public sealed partial class DreamMapManager : IDreamMapManager {
     }
 
     public void SetAreaAppearance(DreamObjectArea area, MutableAppearance appearance) {
+        //if an area changes appearance, invalidate the lookup
+        _turfAreaLookup.Clear();
+        var oldAppearance = area.Appearance;
         appearance.AppearanceFlags |= AppearanceFlags.ResetColor | AppearanceFlags.ResetAlpha | AppearanceFlags.ResetTransform;
         area.Appearance  = _appearanceSystem.AddAppearance(appearance);
+
+        //get all unique turf appearances
+        //create the new version of each of those appearances
+        //for each turf, update the appropriate ID
+
+        Dictionary<ImmutableAppearance, ImmutableAppearance> oldToNewAppearance = new();
+        foreach (var turf in area.Turfs) {
+            if(oldToNewAppearance.TryGetValue(turf.Appearance, out var newAppearance))
+                turf.Appearance = newAppearance;
+            else {
+                MutableAppearance turfAppearance = _atomManager.MustGetAppearance(turf).ToMutable();
+
+                turfAppearance.Overlays.Remove(oldAppearance);
+                turfAppearance.Overlays.Add(area.Appearance);
+                newAppearance = _appearanceSystem.AddAppearance(turfAppearance);
+                oldToNewAppearance.Add(turf.Appearance, newAppearance);
+                turf.Appearance = newAppearance;
+            }
+
+            var level = _levels[turf.Z - 1];
+            var turfId = newAppearance.MustGetId();
+            var turfPos = new Vector2i(turf.X, turf.Y);
+            level.QueuedTileUpdates.Add( (turfPos, new Tile((int)turfId)));
+        }
     }
 
     public bool TryGetCellAt(Vector2i pos, int z, [NotNullWhen(true)] out Cell? cell) {
