@@ -1335,8 +1335,9 @@ internal sealed partial class DreamViewOverlay : Overlay {
         min -= new Vector2(margin);
         max += new Vector2(margin);
 
-        if (IsScalingOrRotating(iconMetaData.TransformToApply)) {
-            var center = mainSize / 2;
+        var center = mainSize / 2;
+        var transformed = IsScalingOrRotating(iconMetaData.TransformToApply);
+        if (transformed) {
             var extent = Vector2.Max(center - min, max - center);
             min = center - extent;
             max = center + extent;
@@ -1351,6 +1352,12 @@ internal sealed partial class DreamViewOverlay : Overlay {
         var size = new Vector2i(
             Math.Clamp(RoundUp((int)MathF.Ceiling(max.X - min.X)), 1, maxSize),
             Math.Clamp(RoundUp((int)MathF.Ceiling(max.Y - min.Y)), 1, maxSize));
+
+        // The group's transform turns and scales about the texture's centre, so a transformed group must stay
+        // centred on its icon after rounding. Keeping the old corner put a lying (Turn(90)) mob tiles off.
+        if (transformed)
+            min = center - (Vector2)size / 2;
+
         return (min, size);
     }
 

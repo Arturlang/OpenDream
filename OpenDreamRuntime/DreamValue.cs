@@ -464,17 +464,17 @@ public struct DreamValue : IDisposable, IEquatable<DreamValue> {
                 }
 
                 if (floatValue > 16777216f) {
-                    return floatValue.ToString("g6");
+                    return floatValue.ToString("g6", CultureInfo.InvariantCulture);
                 }
 
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (floatValue >= 1000000 && ((int)floatValue == floatValue)) {
-                    return floatValue.ToString("g8");
+                    return floatValue.ToString("g8", CultureInfo.InvariantCulture);
                 }
 
                 if (float.IsNaN(floatValue)) return "nan";
 
-                return floatValue.ToString("g6");
+                return floatValue.ToString("g6", CultureInfo.InvariantCulture);
 
             case DreamValueType.DreamResource:
                 var rsc = MustGetValueAsDreamResource();

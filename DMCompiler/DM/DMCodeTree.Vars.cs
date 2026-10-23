@@ -12,6 +12,12 @@ internal partial class DMCodeTree {
     public abstract class VarNode : INode {
         public UnknownReference? LastError;
 
+        /// <summary>
+        /// This var's position in the finished code tree. Global initializers run in this order,
+        /// whichever pass the var was defined on.
+        /// </summary>
+        public int TraversalOrder = -1;
+
         protected bool IsFirstPass => (LastError == null);
 
         public abstract bool TryDefineVar(DMCompiler compiler, int pass);
@@ -166,10 +172,7 @@ internal partial class DMCodeTree {
 
             if (dmObject == compiler.DMObjectTree.Root || global.Type != DreamPath.MutableAppearance) {
                 compiler.VerbosePrint($"Adding {dmObject.Path}/var/static/{global.Name} to global init on pass {pass}");
-                compiler.GlobalInitProc.DebugSource(value.Location);
-                value.EmitPushValue(new(compiler, dmObject, compiler.GlobalInitProc));
-                compiler.GlobalInitProc.Assign(DMReference.CreateGlobal(globalId));
-                compiler.GlobalInitProc.Pop();
+                compiler.AddGlobalInitializer(this, dmObject, globalId, value);
             } else {
                 compiler.VerbosePrint($"Adding lazy initializer for {dmObject.Path}/var/static/{global.Name} on pass {pass}");
                 EmitGlobalInitializerProc(compiler, dmObject, global, globalId, value);
@@ -320,10 +323,7 @@ internal partial class DMCodeTree {
             if (value != null) {
                 // Initialize its value in the global init proc
                 compiler.VerbosePrint($"Adding {dmObject.Path}/proc/{proc.Name}/var/static/{global.Name} to global init on pass {pass}");
-                compiler.GlobalInitProc.DebugSource(value.Location);
-                value.EmitPushValue(new(compiler, dmObject, compiler.GlobalInitProc));
-                compiler.GlobalInitProc.Assign(DMReference.CreateGlobal(globalId));
-                compiler.GlobalInitProc.Pop();
+                compiler.AddGlobalInitializer(this, dmObject, globalId, value);
             }
 
             return true;

@@ -1,0 +1,3 @@
+// TGMC-style held-key movement: Any/Any+UP macros feed keyDown/keyUp, a loop moves while a key is held
+#include "skin.dmf"
+#include "scene.dm"

@@ -1,0 +1,22 @@
+macro "default"
+	elem "anydown"
+		name = "Any"
+		command = "KeyDown [[*]]"
+	elem "anyup"
+		name = "Any+UP"
+		command = "KeyUp [[*]]"
+
+window "mainwindow"
+	elem "mainwindow"
+		type = MAIN
+		pos = 0,0
+		size = 640x480
+		is-default = true
+		macro = "default"
+	elem "map"
+		type = MAP
+		pos = 0,0
+		size = 640x480
+		anchor1 = 0,0
+		anchor2 = 100,100
+		is-default = true

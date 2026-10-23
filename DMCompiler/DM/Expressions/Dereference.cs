@@ -67,6 +67,37 @@ internal class Dereference : LValue {
         ValType = DetermineValType(objectTree);
     }
 
+    /// <summary>
+    /// Whether evaluating <paramref name="expr"/> can't have side effects: constants and plain reads of vars, including
+    /// dereferences of those without any proc calls.
+    /// </summary>
+    public static bool IsSideEffectFree(ExpressionContext ctx, DMExpression expr) {
+        return expr switch {
+            Local or Field or GlobalField or Src or Usr or Args or World => true,
+            Dereference dereference => dereference.HasSideEffectFreeOperands(ctx),
+            _ => expr.TryAsConstant(ctx.Compiler, out _)
+        };
+    }
+
+    /// <summary>
+    /// Whether evaluating the object and indexes of this dereference can't have side effects.
+    /// </summary>
+    public bool HasSideEffectFreeOperands(ExpressionContext ctx) {
+        if (!IsSideEffectFree(ctx, _expression))
+            return false;
+
+        foreach (var operation in _operations) {
+            switch (operation) {
+                case CallOperation:
+                    return false;
+                case IndexOperation indexOperation when !IsSideEffectFree(ctx, indexOperation.Index):
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
     private DMComplexValueType DetermineValType(DMObjectTree objectTree) {
         var type = _expression.ValType;
         var i = 0;

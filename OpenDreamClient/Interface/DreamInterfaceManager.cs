@@ -865,7 +865,7 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
 
                                 // 64x64 or 64,64 gets split into two "64 64" args
                                 if (hadWinget && result.Split(['x', ',']) is {Length: 2} wingetSplit &&
-                                    float.TryParse(wingetSplit[0], out _) && float.TryParse(wingetSplit[1], out _)) {
+                                    float.TryParse(wingetSplit[0], NumberStyles.Float, CultureInfo.InvariantCulture, out _) && float.TryParse(wingetSplit[1], NumberStyles.Float, CultureInfo.InvariantCulture, out _)) {
                                     args.Add(wingetSplit[0]);
                                     args.Add(wingetSplit[1]);
                                 } else {
@@ -884,7 +884,7 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
 
                             // 64x64 or 64,64 gets split into two "64 64" args
                             if (hadWinget && result.Split(['x', ',']) is {Length: 2} wingetSplit &&
-                                float.TryParse(wingetSplit[0], out _) && float.TryParse(wingetSplit[1], out _)) {
+                                float.TryParse(wingetSplit[0], NumberStyles.Float, CultureInfo.InvariantCulture, out _) && float.TryParse(wingetSplit[1], NumberStyles.Float, CultureInfo.InvariantCulture, out _)) {
                                 args.Add(wingetSplit[0]);
                                 args.Add(wingetSplit[1]);
                             } else {
@@ -903,7 +903,7 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
 
                         // 64x64 or 64,64 gets split into two "64 64" args
                         if (hadWinget && result.Split(['x', ',']) is {Length: 2} wingetSplit &&
-                            float.TryParse(wingetSplit[0], out _) && float.TryParse(wingetSplit[1], out _)) {
+                            float.TryParse(wingetSplit[0], NumberStyles.Float, CultureInfo.InvariantCulture, out _) && float.TryParse(wingetSplit[1], NumberStyles.Float, CultureInfo.InvariantCulture, out _)) {
                             args.Add(wingetSplit[0]);
                             args.Add(wingetSplit[1]);
                         } else {
@@ -924,7 +924,7 @@ internal sealed partial class DreamInterfaceManager : IDreamInterfaceManager {
                         if (argumentType is DreamValueType.Text or DreamValueType.Message or DreamValueType.CommandText) {
                             arguments[i] = args[i];
                         } else if (argumentType == DreamValueType.Num) {
-                            if (!float.TryParse(args[i], out var numArg)) {
+                            if (!float.TryParse(args[i], NumberStyles.Float, CultureInfo.InvariantCulture, out var numArg)) {
                                 _sawmill.Error(
                                     $"Invalid number argument \"{args[i]}\"; ignoring command ({fullCommand})");
                                 return;

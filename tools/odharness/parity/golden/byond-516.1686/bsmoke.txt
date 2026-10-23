@@ -1,0 +1,12 @@
+js#ac645afe89	j:["undefined","object",2]
+js#42f3db8021	j:"http:"
+rt#8d8c52f534	j:[["a","b c","d&e"]]
+rt#5faa14bbcd	j:[["hello world"]]
+rt#70c23c2b4d	j:[["x y+z"]]
+link#83c53e64c9:dm	L(2)[t:"a"=t:"1", t:"b"=t:"two"]
+link#83c53e64c9:href	t:"parity_link=link%2383c53e64c9&a=1&b=two"
+link#b88b3091fd:dm	L(2)[t:"t"=t:"a b+c;d&e=f%", t:"u"=t:"A"]
+link#b88b3091fd:href	t:"parity_link=link%23b88b3091fd&t=a%20b%2Bc%3Bd%26e%3Df%25&u=%41"
+link#1a4aaa9280:dm	L(1)[t:"k"=L(3)[t:"1", t:"2", t:"3"]]
+link#1a4aaa9280:href	t:"parity_link=link%231a4aaa9280&k=1&k=2&k=3"
+js#f79f799db2	j:{"size":{"x":640,"y":480}}

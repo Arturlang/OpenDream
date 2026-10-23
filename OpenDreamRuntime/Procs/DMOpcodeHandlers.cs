@@ -42,7 +42,7 @@ namespace OpenDreamRuntime.Procs {
         public static ProcStatus AssignInto(DMProcState state) {
             var reference = state.ReadReference();
             using var value = state.Pop();
-            using var first = state.GetReferenceValue(reference);
+            using var first = state.GetReferenceValue(reference, peek: true);
 
             //TODO call operator:= for DreamObjects
             state.AssignReference(reference, value);

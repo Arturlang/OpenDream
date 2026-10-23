@@ -1001,6 +1001,18 @@ internal sealed partial class ControlBrowser : InterfaceControl {
                 }
             }
 
+            // Pages fall back to an XHR against DreamSeeker's HTTP server for topics too long for a byond:// URL
+            // (tgui does this past 2048 characters). A query on the page's own path is a topic, not a file.
+            if (newUri is {Scheme: "http", Host: "127.0.0.1"} && newUri.Query != string.Empty &&
+                !string.IsNullOrEmpty(_webView.Url) &&
+                (newUri.AbsolutePath == new Uri(_webView.Url).AbsolutePath || newUri.AbsolutePath == "/")) {
+                var query = newUri.Query;
+                // Arrives on a CEF thread, see HandleNativeDragBeacon
+                _taskManager.RunOnMainThread(() => _netManager.ClientSendMessage(new MsgTopic { Query = query }));
+                context.DoRespondStream(Stream.Null, "text/plain", HttpStatusCode.OK);
+                return;
+            }
+
             if (newUri is {Scheme: "http", Host: "127.0.0.1"}) {
                 Stream stream;
                 HttpStatusCode status;

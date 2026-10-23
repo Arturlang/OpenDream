@@ -1,0 +1,3 @@
+// Mirrors TGMC's parallax: white space turfs on PLANE_SPACE, multiplied by a parallax plane whose
+// layers are KEEP_TOGETHER screen objects (via vis_contents) tiled with pixel_w/pixel_z overlays.
+#include "scene.dm"

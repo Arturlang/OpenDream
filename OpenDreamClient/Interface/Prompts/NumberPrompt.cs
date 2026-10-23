@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using OpenDreamShared.Dream;
 using Robust.Client.UserInterface.Controls;
 
@@ -12,7 +13,7 @@ internal sealed class NumberPrompt : InputWindow {
         _numberInput = new() {
             Text = defaultValue,
             VerticalAlignment = VAlignment.Top,
-            IsValid = static str => float.TryParse(str, out float _),
+            IsValid = static str => float.TryParse(str, NumberStyles.Float, CultureInfo.InvariantCulture, out float _),
         };
 
         _numberInput.OnTextEntered += NumberInput_TextEntered;
@@ -20,7 +21,7 @@ internal sealed class NumberPrompt : InputWindow {
     }
 
     protected override void OkButtonClicked() {
-        if (!float.TryParse(_numberInput.Text, out float num)) {
+        if (!float.TryParse(_numberInput.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out float num)) {
             Logger.GetSawmill("opendream.prompt").Error($"Error while trying to convert {_numberInput.Text} to a number.");
         }
 

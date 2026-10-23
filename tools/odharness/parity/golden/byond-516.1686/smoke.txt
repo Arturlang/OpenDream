@@ -1,0 +1,19 @@
+smoke#c16fc80aef	n:42~42
+smoke#b7b623e054	n:12~12
+smoke#84a7f08414	m:[1~1, 2~2, 3~3, 4~4, 5~5, 6~6]
+smoke#0168f7db57	r:index=null next=null match=null group=null
+smoke#9ea1037eb6	r:index=n:2~2 next=null match=t:"bb" group=null
+smoke#774d3ca502	v:(n:1~1, n:2~2, n:3~3)
+smoke#66862f928d	e:t:"boom"
+smoke#3c6c68bf31	a:/turf@2,3,1
+smoke#fd5ce30179	a:/area
+smoke#83d0f4018d	a:/obj/smoke_thing@4,5,1 t:"thing"
+smoke#68dc117a9e	n:0~0
+smoke#d4aa789d67	i:32x32[solid:6c085812, grad:0b54bdba, alpha:a6791b9c, half:84bfed97, checker:24a3c9c9, asym:48eed683, dirs4:100d83ff, dirs8:2f01ddb9, anim:2f01ddb9, anim4:2f01ddb9, rewind:a2a197ec, moving:7e91ed7a, :8c9311ce, empty:adf1f328]
+smoke#19e767bdea	L(14)[t:"solid", t:"grad", t:"alpha", t:"half", t:"checker", t:"asym", t:"dirs4", t:"dirs8", t:"anim", t:"anim4", t:"rewind", t:"moving", t:"", t:"empty"]
+smoke#3a94e040fa	i:32x32[:0b54bdba]
+smoke#eeec0778bc	i:16x16[solid:b2f6d0d8, grad:a2019a48]
+smoke#b31d2e3556	f:test.dmi
+smoke#f61e4f68b0	L(3)[t:"#ff0000", t:"#0000ff", t:"#00c800"]
+smoke#2bb440118a	L(4)[null, null, null, null]
+smoke#f3f1571ace	L(3)[null, null, null]

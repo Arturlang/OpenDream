@@ -1,0 +1,6 @@
+initial scope#90086656b8	L(3)[n:5~5, n:9~9, n:9~9]
+for untyped#67c5f37c4b	L(2)[n:101~101, n:7~7]
+args param#0fae943f6b	L(2)[n:1~1, n:7~7]
+args param#44ff72cb93	L(2)[n:1~1, null]
+while multiline#c6a13d60c8	n:3~3
+do while multiline#2ba026b010	n:4~4

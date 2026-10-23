@@ -1,0 +1,23 @@
+macro "macro"
+
+menu "menu"
+
+window "mainwindow"
+	elem "mainwindow"
+		type = MAIN
+		pos = 0,0
+		size = 880x680
+		anchor1 = -1,-1
+		anchor2 = -1,-1
+		is-default = true
+		title = "fog"
+		macro = "macro"
+		menu = "menu"
+	elem "map"
+		type = MAP
+		pos = 0,0
+		size = 880x680
+		anchor1 = 0,0
+		anchor2 = 100,100
+		is-default = true
+		zoom = 0

@@ -1347,7 +1347,7 @@ internal static class DreamProcNativeRoot {
                     switch(first.Name) {
                         case "__number__": {
                             var raw = first.Value.GetString();
-                            var val = raw != null ? float.Parse(raw) : float.NaN;
+                            var val = raw != null ? float.Parse(raw, CultureInfo.InvariantCulture) : float.NaN;
                             return new DreamValue(val);
                         }
                     }
@@ -2013,15 +2013,15 @@ internal static class DreamProcNativeRoot {
         }
 
         if(bundle.Arguments.Length == 1) {
-            return new DreamValue(floatNum.ToString("g6"));
+            return new DreamValue(floatNum.ToString("g6", CultureInfo.InvariantCulture));
         }
 
         if(bundle.Arguments.Length == 2) {
             if(!bundle.GetArgument(1, "A").TryGetValueAsInteger(out var sigFig)) {
-                return new DreamValue(floatNum.ToString("g6"));
+                return new DreamValue(floatNum.ToString("g6", CultureInfo.InvariantCulture));
             }
 
-            return new DreamValue(floatNum.ToString($"g{sigFig}"));
+            return new DreamValue(floatNum.ToString($"g{sigFig}", CultureInfo.InvariantCulture));
         }
 
         if(bundle.Arguments.Length == 3) {
@@ -4022,7 +4022,7 @@ internal static class DreamProcNativeRoot {
 
         if (!winsetParams.TryGetValueAsString(out var winsetParamsStr)) {
             if (winsetParams.TryGetValueAsIDreamList(out var winsetParamsList)) {
-                winsetParamsStr = List2Params(winsetParamsList);
+                winsetParamsStr = List2WinsetParams(winsetParamsList);
             } else {
                 throw new ArgumentException($"Invalid \"params\" argument {winsetParams}");
             }
@@ -4030,5 +4030,32 @@ internal static class DreamProcNativeRoot {
 
         connection.WinSet(winsetControlId, winsetParamsStr);
         return DreamValue.Null;
+    }
+
+    /// <summary>
+    /// BYOND passes a winset() list through list2params() and the client url-decodes the values.
+    /// Our client doesn't decode, so send the values quoted in its own winset syntax instead.
+    /// </summary>
+    private static string List2WinsetParams(IDreamList list) {
+        StringBuilder paramBuilder = new StringBuilder();
+
+        foreach (DreamValue entry in list.EnumerateValues()) {
+            if (paramBuilder.Length > 0)
+                paramBuilder.Append(';');
+
+            paramBuilder.Append(entry.Stringify());
+            if (list.ContainsKey(entry)) {
+                using var entryValue = list.GetValue(entry);
+                var escaped = entryValue.Stringify()
+                    .Replace("\\", "\\\\")
+                    .Replace("\"", "\\\"")
+                    .Replace("\n", "\\n")
+                    .Replace("\t", "\\t");
+
+                paramBuilder.Append("=\"").Append(escaped).Append('"');
+            }
+        }
+
+        return paramBuilder.ToString();
     }
 }

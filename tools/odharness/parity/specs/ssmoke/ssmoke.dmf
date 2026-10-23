@@ -1,0 +1,35 @@
+window "mainwindow"
+	elem "mainwindow"
+		type = MAIN
+		pos = 0,0
+		size = 800x600
+		is-default = true
+		title = "parity"
+	elem "map"
+		type = MAP
+		pos = 0,0
+		size = 400x300
+		anchor1 = none
+		anchor2 = none
+		is-default = true
+	elem "out"
+		type = OUTPUT
+		pos = 400,0
+		size = 400x300
+		anchor1 = none
+		anchor2 = none
+		is-default = true
+	elem "btn"
+		type = BUTTON
+		pos = 0,310
+		size = 120x30
+		anchor1 = none
+		anchor2 = none
+		text = "Press"
+	elem "lbl"
+		type = LABEL
+		pos = 130,310
+		size = 200x30
+		anchor1 = none
+		anchor2 = none
+		text = "hello"

@@ -56,6 +56,7 @@ public enum WarningCode {
     PointlessPositionalArgument = 2210,
     ProcArgumentGlobal = 2211, // Prepending "/" on a proc arg (e.g. "/proc/example(/var/foo)" makes the arg a global var. Ref https://www.byond.com/forum/post/2830750
     AmbiguousVarStatic = 2212, // Referencing a static variable when an instance variable with the same name exists
+    ProcArgumentBuiltinName = 2213, // A proc parameter named like a built-in (args, usr, src...). BYOND accepts it, and the parameter wins.
     MalformedRange = 2300,
     InvalidRange = 2301,
     InvalidSetStatement = 2302,
@@ -166,6 +167,7 @@ public struct CompilerEmission {
         {WarningCode.PointlessPositionalArgument, ErrorLevel.Warning},
         {WarningCode.ProcArgumentGlobal, ErrorLevel.Warning}, // Ref BYOND issue https://www.byond.com/forum/post/2830750
         {WarningCode.AmbiguousVarStatic, ErrorLevel.Warning}, // https://github.com/OpenDreamProject/OpenDream/issues/997
+        {WarningCode.ProcArgumentBuiltinName, ErrorLevel.Warning},
         // NOTE: The next few pragmas are for OpenDream's experimental type checker
         // This feature is still in development, elevating these pragmas outside of local testing is discouraged
         // An RFC to finalize this feature is coming soon(TM)

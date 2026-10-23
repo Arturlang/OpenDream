@@ -76,13 +76,40 @@ public sealed class ParticleSystemArgs(Func<Texture?> icon, Vector2i particleSys
     /// </summary>
     public Func<float,Color>? Color;
 
-    /// <summary>
-    /// A function which takes the life time of this particles and returns the transform of this particle. Note that this is multiplied with the base transform.
-    /// </summary>
-    public Func<float,Matrix3x2>? Transform;
+    //queried on each particle spawn, in BYOND units: pixels, degrees clockwise, and rates per tick (0.1s)
 
     /// <summary>
-    /// A function which takes the life time of this particles and returns the an acceleration to apply to this particle
+    /// A function which returns this particle's scale at spawning
     /// </summary>
-    public Func<float,Vector3,Vector3>? Acceleration;
+    public Func<Vector2>? Scale;
+
+    /// <summary>
+    /// A function which returns this particle's rotation at spawning, in degrees
+    /// </summary>
+    public Func<float>? Rotation;
+
+    /// <summary>
+    /// A function which returns how many degrees this particle turns each tick
+    /// </summary>
+    public Func<float>? Spin;
+
+    /// <summary>
+    /// A function which returns how much this particle's scale changes each tick
+    /// </summary>
+    public Func<Vector2>? Growth;
+
+    /// <summary>
+    /// A function which returns the proportion of velocity this particle loses each tick
+    /// </summary>
+    public Func<Vector3>? Friction;
+
+    /// <summary>
+    /// A function which returns a random change in velocity, queried for each particle every tick
+    /// </summary>
+    public Func<Vector3>? Drift;
+
+    /// <summary>
+    /// The change in velocity applied to every particle each tick
+    /// </summary>
+    public Vector3 Gravity;
 }

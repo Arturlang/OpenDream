@@ -1,0 +1,23 @@
+out/
+state.json
+__pycache__/
+*.pyc
+# Local tool installs: see README "Setup"
+tracy-0.13.1/
+dotnet-tools/
+alloctop/bin/
+alloctop/obj/
+# Scene and parity build output
+scenes/**/*.dmb
+scenes/**/*.rsc
+scenes/**/*.lk
+scenes/**/scene.json
+scenes/fog/static_candidates/
+parity/build/
+parity/results/
+parity/findings/
+parity/state.json
+scenes/*/events_*.txt
+scenes/*/results_*.txt
+scenes/t2f/out.txt
+scenes/t2f/res.txt
